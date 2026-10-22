@@ -8,6 +8,7 @@ Everything written about DigiMenu TN that is not code. Pick the section that mat
 | [Decision records (ADRs)](adr/README.md) | Why the important technical choices were made, one short record each | Software Architect |
 | [Operations](operations/README.md) | Running the system: CI, deployments, secrets, backups, monitoring, runbooks | DevOps & Security Engineer |
 | [Product](product/README.md) | What the system must do: requirements, user stories, module catalogue from the user's side | Product Analyst |
+| [Design](design/README.md) | How DigiMenu looks and behaves: principles, tokens, components, screens and the design review | UI/UX Designer |
 
 Other useful files at the root of the repository: [README](../README.md) · [CONTRIBUTING](../CONTRIBUTING.md) · [SECURITY](../SECURITY.md) · [CHANGELOG](../CHANGELOG.md) · [LICENSE](../LICENSE)
 

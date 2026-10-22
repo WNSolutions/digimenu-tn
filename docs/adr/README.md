@@ -16,6 +16,7 @@ Short records of the important technical decisions in DigiMenu TN: the context, 
 | [0008](0008-module-system.md) | Optional features are modules with a manifest, switched per café by configuration only | Accepted | D-009, D-028 |
 | [0009](0009-certificates-outside-the-cafe-toolkit.md) | Youth certificates are a separate WNS tool in `WNSolutions/wns-certificates`, not a café module and not part of this repository | Accepted · repository to be created by Ahmed | D-032 |
 | [0010](0010-customer-data-consent-and-deletion.md) | Customer records with recorded consent, field encryption, Admin-only access and deletion on request | Accepted · retention open | D-027 |
+| [0011](0011-design-language-hig-inspired.md) | Design based on Apple's Human Interface Guidelines, applied as is for an iPhone-first audience; no Apple assets | Proposed | D-039, D-040 |
 
 **Source decisions** are IDs in the project's internal decision log, kept by the project lead. Each ADR restates what matters, so you do not need the log to understand it. Requirement IDs such as `MOD-14` or `US-36` refer to the [product requirements](../product/README.md).
 
