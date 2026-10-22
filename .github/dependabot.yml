@@ -1,0 +1,49 @@
+# Dependabot opens pull requests to keep our tools up to date (free on GitHub).
+# Each pull request runs CI like any other; merge it when CI is green.
+# Security fixes arrive as soon as an advisory is published, outside this weekly schedule.
+# Docs: https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+
+updates:
+  # npm development tools (ESLint, Prettier, TypeScript, ...): one grouped PR per week for
+  # minor and patch updates; each major update gets its own PR because it can break things.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Africa/Tunis
+    open-pull-requests-limit: 5
+    # Labels from _handoff/labels.json (create them first). Without this, Dependabot would
+    # create its own `javascript` / `github_actions` labels.
+    labels: ['dependencies', 'area: ci']
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm-minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      # @types/node follows the Node major we run (22, see .nvmrc). Bump it with Node itself.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # GitHub Actions used in .github/workflows (actions/checkout, actions/setup-node, ...).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Africa/Tunis
+    open-pull-requests-limit: 5
+    # Labels from _handoff/labels.json (create them first). Without this, Dependabot would
+    # create its own `javascript` / `github_actions` labels.
+    labels: ['dependencies', 'area: ci']
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ['*']

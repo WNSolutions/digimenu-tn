@@ -1,0 +1,59 @@
+{
+  "$comment": "Fictional demo café for the public toolkit (D-022). Not a real business. Must stay valid against core/schemas/cafe-config.schema.json.",
+  "schemaVersion": 0,
+  "slug": "demo",
+  "status": "demo",
+  "names": {
+    "fr": "Café Démo Jasmin",
+    "ar": "مقهى ياسمين التجريبي",
+    "en": "Jasmin Demo Café"
+  },
+  "languages": {
+    "enabled": ["fr", "ar", "en"],
+    "default": "fr"
+  },
+  "menu": {
+    "unavailable": "grey"
+  },
+  "info": {
+    "address": {
+      "fr": "Adresse fictive — café de démonstration",
+      "ar": "عنوان وهمي — مقهى للتجربة",
+      "en": "Fictional address — demonstration café"
+    }
+  },
+  "hours": {
+    "mon": [["07:00", "23:00"]],
+    "tue": [["07:00", "23:00"]],
+    "wed": [["07:00", "23:00"]],
+    "thu": [["07:00", "23:00"]],
+    "fri": [["07:00", "23:30"]],
+    "sat": [["08:00", "00:30"]],
+    "sun": [["08:00", "23:00"]]
+  },
+  "branding": {
+    "primaryColor": "#1F6F5C"
+  },
+  "ordering": {
+    "types": {
+      "dine_in": { "channel": "send_order" },
+      "takeaway": { "channel": "whatsapp_handoff", "prepMinutes": 15 }
+    },
+    "dineInDetails": "required",
+    "maxQtyPerLine": 20,
+    "maxOrderTotal": 300000
+  },
+  "modules": {
+    "languages": { "enabled": true },
+    "order_types": { "enabled": true },
+    "send_order": { "enabled": true, "settings": { "ackAlertMinutes": 3 } },
+    "whatsapp_handoff": { "enabled": true },
+    "payment_choice": { "enabled": true, "settings": { "methods": ["cash", "card"] } },
+    "dietary_tags": { "enabled": true },
+    "photos": { "enabled": false },
+    "google_review": { "enabled": false }
+  },
+  "release": {
+    "pinned": "0.1.0"
+  }
+}

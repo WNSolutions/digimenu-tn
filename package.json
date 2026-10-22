@@ -1,0 +1,36 @@
+{
+  "name": "digimenu-tn",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Open-source QR digital menu and ordering toolkit for small cafés, built on Cloudflare's free plan with plain JavaScript. A Why Not Solutions (WNS) project.",
+  "license": "MIT",
+  "author": "Why Not Solutions (WNS)",
+  "homepage": "https://github.com/WNSolutions/digimenu-tn#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WNSolutions/digimenu-tn.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WNSolutions/digimenu-tn/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test --test-reporter=spec",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,44 @@
+name: Engineering task
+description: A piece of technical work with a clear goal and a "done when" checklist.
+title: 'Task: '
+labels: ['type: task', 'status: needs-triage']
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this task is finished, and why? One or two sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: A checklist. Each line can be ticked when it is true.
+      value: |
+        - [ ] ...
+        - [ ] ...
+        - [ ] Tests added or updated, and `npm run check` passes
+    validations:
+      required: true
+
+  - type: input
+    id: linked-issue
+    attributes:
+      label: Linked issue
+      description: The feature, bug or parent issue this task belongs to.
+      placeholder: '#12'
+
+  - type: input
+    id: requirement
+    attributes:
+      label: Requirement IDs
+      description: Optional. See docs/product/requirements-index.md.
+      placeholder: US-27, NFR-01
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Files, links or hints for whoever picks this up.

@@ -1,0 +1,106 @@
+name: Bug report
+description: Something in DigiMenu does not work as expected.
+title: 'Bug: '
+labels: ['type: bug', 'status: needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us fix DigiMenu! Short answers are fine.
+
+        **Found a security problem?** Please do not open an issue. Report it privately as explained in [SECURITY.md](https://github.com/WNSolutions/digimenu-tn/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Tell us what went wrong, in a few sentences.
+      placeholder: When I tap "+" on an item in Arabic, the total does not change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we see the problem ourselves?
+      placeholder: |
+        1. Open the demo café menu from table 5
+        2. Switch to Arabic
+        3. Tap "+" on an item
+        4. Look at the total
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: The total goes up by the price of the item.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Android phone
+        - iPhone
+        - Tablet
+        - Computer
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: For example Chrome 129, Samsung Internet 26, Safari on iOS 17, or "opened from the camera app".
+      placeholder: Chrome 129 on Android 12
+    validations:
+      required: true
+
+  - type: dropdown
+    id: cafe
+    attributes:
+      label: Which café?
+      description: This repository only holds the made-up demo café. For a real café, do not paste its menu, prices or names here; maintainers of pilot cafés report in the private deploy repository.
+      options:
+        - Demo café
+        - Other café
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language on screen
+      multiple: true
+      options:
+        - French
+        - Arabic
+        - English
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or screen recording
+      description: Drag files here. Crop or blur any names, phone numbers or order details first.
+
+  - type: input
+    id: version
+    attributes:
+      label: DigiMenu version (if you know it)
+      placeholder: v0.1.0
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: 'I removed personal data: customer names, phone numbers.'
+          required: true

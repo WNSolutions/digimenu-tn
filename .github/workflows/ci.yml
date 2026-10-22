@@ -1,0 +1,97 @@
+# CI: the automatic checks that run on every pull request and on every push to `main`.
+#
+# A pull request can be merged only when this workflow is green (the `main` ruleset requires
+# the status check named "ci"). Beginner guide: docs/operations/ci.md
+#
+# ARCHITECTURE §8 lists 13 CI stages. Live in this file today:
+#   1  Hygiene ........ npm ci from the lockfile + secret/forbidden-file guard   (licence check: planned)
+#   2  Lint + types ... ESLint (incl. import boundaries) + Prettier + tsc --checkJs (Stylelint: planned)
+#   4  Unit ........... node:test
+# Added when the MVP code they test lands (each becomes one more step or job below):
+#   3  Module contract  manifest, FR/AR/EN keys, tests + guide, version bump; full import scan
+#   5  Config validation  demo café + fixtures against the candidate release
+#   6  Migrations ..... fresh database + forward/back round-trip on fixtures
+#   7  Build .......... esbuild, content hashes, release manifest
+#   8  Snapshots ...... demo + all-on + all-off fixtures
+#   9  E2E smoke ...... Playwright, mobile + throttled 3G
+#   10 Budgets ........ <= 200 KB and <= 15 requests per café; all-off vs core <= 2 KB
+#   11 Accessibility .. axe-core, LTR and RTL
+# Stage 12 (printed links) runs only in the private deploy repo; stage 13 (release) is release.yml.
+#
+# Secret scanning: GitHub's own secret scanning and push protection (free for public
+# repositories) scan every push and the whole history. The guard step below adds a quick,
+# dependency-free check that also blocks forbidden files such as .dev.vars.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# The workflow's GitHub token can only READ the repository. CI never needs to write.
+permissions:
+  contents: read
+
+# A new push to the same pull request cancels the older, now useless run.
+# Runs on `main` are never cancelled, so every commit on `main` gets a result.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    # This name is the required status check in the `main` ruleset. Do not rename it
+    # without updating the ruleset (see _handoff/GITHUB_SETTINGS_CHECKLIST.md).
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+        with:
+          # Do not leave the token in .git/config: later steps don't need it.
+          persist-credentials: false
+
+      - name: Set up Node.js (version from .nvmrc) with npm cache
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Stage 1: install exactly what package-lock.json lists. Fails if the lockfile and
+      # package.json disagree (fix: run `npm install` locally and commit package-lock.json).
+      - name: Install dependencies (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      # Stage 1: fail if a file that must never be public is tracked, or if a private key is
+      # pasted into any file. The patterns are written so this file does not match itself.
+      - name: Guard against secrets and forbidden files
+        run: |
+          status=0
+          forbidden=$(git ls-files | grep -E '(^|/)(\.dev\.vars(\..+)?|\.env(\..+)?|[^/]+\.(pem|key|p12|pfx|agekey|sqlite3?|db))$' | grep -v -E '\.example$' || true)
+          if [ -n "$forbidden" ]; then
+            echo "::error::These files must never be committed (see docs/operations/secrets.md):"
+            echo "$forbidden"
+            status=1
+          fi
+          if git grep -n -I -E 'AGE-SECRET-KEY-[1]|-----BEGIN [A-Z ]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{36}'; then
+            echo "::error::A private key or token appears in the files above. Remove it AND revoke it: once pushed, treat it as leaked."
+            status=1
+          fi
+          exit $status
+
+      # Stage 2
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Type-check JSDoc (tsc --checkJs)
+        run: npm run typecheck
+
+      # Stage 4
+      - name: Unit tests (node:test)
+        run: npm test

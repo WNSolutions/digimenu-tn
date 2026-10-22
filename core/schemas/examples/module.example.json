@@ -1,0 +1,49 @@
+{
+  "$comment": "Example only — shows a complete manifest for module M-04 payment_choice. Not a real module yet. Must stay valid against ../module.schema.json.",
+  "key": "payment_choice",
+  "id": "M-04",
+  "title": {
+    "fr": "Choix du paiement",
+    "ar": "اختيار طريقة الدفع",
+    "en": "Payment choice"
+  },
+  "summary": {
+    "fr": "Le client indique s'il paiera en espèces ou par carte au comptoir.",
+    "ar": "يختار الحريف الدفع نقدا أو بالبطاقة عند الكونتوار.",
+    "en": "The customer says whether they will pay cash or card at the counter."
+  },
+  "version": "1.0.0",
+  "stability": "experimental",
+  "platformApi": 1,
+  "coreApi": "^1.0",
+  "requires": ["order_types"],
+  "requiresAnyOf": [["send_order", "whatsapp_handoff"]],
+  "conflicts": [],
+  "settings": {
+    "schema": "settings.schema.json",
+    "version": 1
+  },
+  "texts": {
+    "fr": "i18n/fr.json",
+    "ar": "i18n/ar.json",
+    "en": "i18n/en.json"
+  },
+  "extends": {
+    "client": ["checkout.fields"],
+    "staff": ["staff.orderCardBlock"],
+    "server": ["order.validate"]
+  },
+  "data": {
+    "orderExt": ["method"],
+    "itemExt": [],
+    "records": [],
+    "personalFields": []
+  },
+  "customerRecords": {
+    "access": "none"
+  },
+  "analyticsEvents": ["payment_selected"],
+  "tests": "tests/",
+  "guide": "GUIDE.md",
+  "changelog": "CHANGELOG.md"
+}

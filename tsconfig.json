@@ -1,0 +1,41 @@
+// Type checking for our plain JavaScript (ARCHITECTURE §9: "plain JavaScript + JSDoc types
+// checked by tsc --checkJs").
+//
+// - We do NOT compile TypeScript. The .js files you write are the files that run.
+// - `tsc` only READS the JSDoc comments (/** @param {number} priceMillimes */) and reports
+//   type mistakes, like a spell-checker for code. `noEmit` means it never writes files.
+// - Run it with: npm run typecheck   (CI runs it on every pull request)
+//
+// If a check feels too strict, add a JSDoc type to explain your code to the checker.
+// Please do not switch `strict` off: ask the Tech Lead first.
+{
+  "compilerOptions": {
+    // Check .js files using their JSDoc comments; produce no output files.
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+
+    // Catch the most mistakes (null/undefined checks, missing types on parameters, ...).
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Modern JavaScript, as supported by Node 22, Cloudflare Workers and current phone browsers.
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+
+    // ES modules with explicit file extensions (import './price.js'), which works the same
+    // in Node (tests, tools), in browsers and in the Worker.
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+
+    // Node's built-in types (node:test, node:fs, ...) for tests and tools.
+    // Cloudflare Workers types are added when the platform code lands (see docs/operations/ci.md).
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  // Folders that hold (or will hold) our JavaScript. Data folders (cafes/, docs/) are not code.
+  "include": ["platform", "core", "modules", "tools", "tests", "eslint.config.js"],
+  "exclude": ["node_modules", "dist", "coverage"]
+}
