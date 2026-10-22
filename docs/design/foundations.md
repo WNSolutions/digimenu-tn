@@ -265,7 +265,7 @@ Weights are 400, 600 and 700 only (`typography.md › Ensuring legibility`: "In 
 | Thousands with a narrow no-break space | `1 250,000 DT` | French convention |
 | No-break space before `DT` | `4,500 DT` never breaks before `DT` | Craft |
 | `font-variant-numeric: tabular-nums` on prices, quantities, order numbers, times | Columns of prices line up | Judgment |
-| Every price inside `<bdi>` (direction from its own first letter) | With `DT` the price reads left to right inside Arabic text; with an Arabic unit (`د.ت`) it follows the Arabic order | `right-to-left.md › Numbers and characters`: "Don’t reverse the order of numerals in a specific number." |
+| The unit is `DT` in every language, Arabic included (D-045); every price inside `<bdi>` (direction from its own first letter) | The price reads left to right inside Arabic text: `4,500 DT` | `right-to-left.md › Numbers and characters`: "Don’t reverse the order of numerals in a specific number." |
 | Phone numbers, order numbers (`A12`), table labels (`T2`) in `<bdi dir="ltr">` | `+216 XX XXX XXX` stays in order inside Arabic | NFR-21 |
 
 ## 5. Layout and navigation

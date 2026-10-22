@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | Proposed |
+| **Status** | Accepted (22 Oct 2026: Ahmed reviewed and merged the design foundation, pull request #4) |
 | **Date** | 2026-10-22 |
-| **Source decisions** | D-039 (Ahmed's order, 22 Oct 2026: "I want to use Apple guidelines and have my DigiMenu design based on that and inspired from it"), D-040 (22 Oct 2026: 80–90 % of customers use iPhone; apply the apple-design skill as is, iOS conventions included) · WO-049 · NFR-01, NFR-02, NFR-06, NFR-07, NFR-21 |
+| **Source decisions** | D-044 (accepted), D-039 (Ahmed's order, 22 Oct 2026: "I want to use Apple guidelines and have my DigiMenu design based on that and inspired from it"), D-040 (22 Oct 2026: 80–90 % of customers use iPhone; apply the apple-design skill as is, iOS conventions included) · WO-049 · NFR-01, NFR-02, NFR-06, NFR-07, NFR-21 |
 | **Deciders** | Ahmed (project lead), on the UI/UX Designer's proposal |
 
 ## Context

@@ -19,7 +19,7 @@
 |---|---|
 | **Identifiers** | ULIDs (sortable, generated in code). |
 | **Café scope** | Every café-scoped table has `cafe_id`. The data-access layer adds the café scope from the session or the URL to every query, so café A never sees café B. |
-| **Money** | Integer **millimes** end to end: `4500` means 4,500 DT. The editor accepts "4,5", "4.500" or "4500" and stores 4500; it refuses more than 3 decimals. |
+| **Money** | Integer **millimes** end to end: `4500` means 4,500 DT. The editor accepts "4,5" or "4.500" and stores 4500; a whole number of 100 or more typed without a comma ("4500") is always confirmed first ("4,500 DT or 4 500,000 DT?", D-045); it refuses more than 3 decimals. |
 | **Translations** | `LocalizedText` is JSON `{"fr", "ar", "en"}` inside the row. French is required and is the fallback. Interface texts live in text files, not in the database. |
 | **Variants** | Every item has at least one variant; a single-price item has one unnamed variant, so there is only one price path. |
 | **Order lines** | Stored as JSON inside the order, with the name and unit price at the time of the order. Saves database writes. |
@@ -40,7 +40,7 @@
 | Menu | `categories`, `sub_groups`, `items`, `variants` | The menu tree. `items.ext` holds module fields under each module's key. |
 | | `menu_snapshots` | Published menu revisions built by the café's pinned release (body, checksum, building release). |
 | | `menu_changes` | Change history: entity, field, before, after, actor role, source (editor, import, undo, migration). Feeds undo and the autonomy indicator. |
-| Orders and requests | `orders` | Client key (unique per café), number of the day, type, status, release, total, note, customer link, encrypted contact snapshot, `ext` per module, test flag, timestamps. |
+| Orders and requests | `orders` | Client key (unique per café), number of the day, type, status, release, total, lines (each with an optional note, D-045), customer link, encrypted contact snapshot, `ext` per module, test flag, timestamps. |
 | | `staff_requests` | Inbox items from modules (events, reservations, call waiter). |
 | | `module_records` | Other module rows, namespaced by `module_key`. |
 | Customers and consent (C-15) | `customers` | One record per phone number across all WNS cafés: encrypted first name and phone, keyed hash of the phone for lookup, last 3 digits for masked display. |
@@ -138,7 +138,7 @@ classDiagram
   class Order {
     +TEXT client_key UNIQUE per cafe, number, type, status, release
     +Millimes total
-    +TEXT note, customer_id
+    +TEXT customer_id
     +BLOB contact_ct - encrypted first name, phone, address
     +INT menu_rev, schema_version
     +JSON ext per module key
@@ -147,7 +147,7 @@ classDiagram
   }
   class OrderLine {
     <<JSON inside Order>>
-    +TEXT item_id, variant_id, name_fr
+    +TEXT item_id, variant_id, name_fr, note
     +Millimes unit_price, line_total
     +INT qty
   }

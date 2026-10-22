@@ -139,6 +139,10 @@ Medium detent; dragging the grabber up shows the long description and module blo
 ││ Quantité          ╭───────────────╮      ││
 ││                   │ (−)   2   (+) │      ││   stepper on --dm-fill
 ││                   ╰───────────────╯      ││
+││ Note (facultatif)                        ││   this line only, 200 characters (D-045)
+││ ╭──────────────────────────────────────╮ ││
+││ │ Ex. : sans sucre                     │ ││   placeholder, Callout
+││ ╰──────────────────────────────────────╯ ││
 ││ ╭──────────────────────────────────────╮ ││
 ││ │        Ajouter  ·  5,600 DT          │ ││   prominent, 50 px
 ││ ╰──────────────────────────────────────╯ ││
@@ -159,6 +163,7 @@ Step 1, the list (large detent because it has more than 3 lines):
 ││ (x)            Ma liste                  ││   Close leading, title
 ││ Table 5 · Sur place                      ││   where it goes
 ││ Café crème · Grand            5,600 DT   ││   Headline + line total
+││ Note : sans sucre             Modifier   ││   the line's note; Modifier reopens it
 ││ 2,800 DT        ╭─────────────╮          ││   unit price, Footnote
 ││                 │ (−)  2  (+) │          ││
 ││                 ╰─────────────╯          ││
@@ -168,10 +173,6 @@ Step 1, the list (large detent because it has more than 3 lines):
 ││                 ╭─────────────╮          ││
 ││                 │ (−)  1  (+) │          ││
 ││                 ╰─────────────╯          ││
-││ Note pour le café (facultatif)           ││
-││ ╭──────────────────────────────────────╮ ││
-││ │ Sans sucre, s'il vous plaît          │ ││   one note, 200 chars
-││ ╰──────────────────────────────────────╯ ││
 ││ Total                         7,400 DT   ││   Headline, tabular
 ││ Vider la liste                           ││   destructive plain
 ││ ╭──────────────────────────────────────╮ ││
