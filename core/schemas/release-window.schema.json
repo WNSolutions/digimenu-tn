@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wns:digimenu:schema:release-window:v0",
+  "$comment": "draft v0 — WO-048. Shape of releases.json in a private deploy repository (digimenu-deploy-<city>). It lists the releases bundled into one production deployment. Café pins are NOT stored here: they are data in the database. See docs/architecture/releases.md.",
+  "title": "DigiMenu release window",
+  "description": "At most 3 immutable releases deployed together: at most one 'previous', one 'stable' and one 'candidate'. Normal operation uses 2 (stable + candidate).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "releases"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "$comment": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 0,
+      "description": "Format version of releases.json. 0 = draft (WO-048)."
+    },
+    "releases": {
+      "type": "array",
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/release" },
+      "allOf": [
+        {
+          "contains": { "properties": { "role": { "const": "previous" } } },
+          "minContains": 0,
+          "maxContains": 1
+        },
+        {
+          "contains": { "properties": { "role": { "const": "stable" } } },
+          "minContains": 0,
+          "maxContains": 1
+        },
+        {
+          "contains": { "properties": { "role": { "const": "candidate" } } },
+          "minContains": 0,
+          "maxContains": 1
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "role",
+        "platformApi",
+        "dataSchema",
+        "artifactSha256",
+        "addedOn",
+        "approval"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$",
+          "description": "Release version; the git tag is v<version> in the public toolkit repository."
+        },
+        "role": {
+          "enum": ["previous", "stable", "candidate"]
+        },
+        "platformApi": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Must match the platform shell of the deployment, or the deploy is refused."
+        },
+        "dataSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "description": "Database schema versions this release can work with. Every release in the window must accept the current one.",
+          "properties": {
+            "min": { "type": "integer", "minimum": 1 },
+            "max": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "artifactSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Checksum of the immutable build attached to the GitHub Release."
+        },
+        "addedOn": {
+          "type": "string",
+          "format": "date"
+        },
+        "approval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "description": "Ahmed approves every release before it reaches a café (D-021). The approving run records who approved; no names here.",
+          "properties": {
+            "status": { "enum": ["pending", "approved"] },
+            "on": { "type": "string", "format": "date" },
+            "run": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://github\\.com/",
+              "description": "Link to the approved production workflow run."
+            }
+          },
+          "if": {
+            "properties": { "status": { "const": "approved" } }
+          },
+          "then": {
+            "required": ["on", "run"]
+          }
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300
+        }
+      }
+    }
+  }
+}

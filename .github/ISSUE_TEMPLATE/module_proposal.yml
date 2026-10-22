@@ -1,0 +1,139 @@
+name: Module proposal
+description: Propose a new optional module that each café can switch on or off (module contract, MOD-04).
+title: 'Module: '
+labels: ['type: module', 'area: modules', 'status: needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A **module** is an optional feature that a café switches on or off by configuration, with no café-specific code.
+        Please read the [module contract](https://github.com/WNSolutions/digimenu-tn/blob/main/docs/architecture/modules.md) first. Fill in what you can; maintainers will help with the rest.
+
+  - type: input
+    id: key
+    attributes:
+      label: Module key
+      description: Short name in snake_case. It is used in café configuration and in the folder name `modules/<key>/`.
+      placeholder: table_reservations
+    validations:
+      required: true
+
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      value: |
+        As a ...
+        I want ...
+        so that ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] Given ..., when ..., then ...
+        - [ ] Given the module is off, then customers see no screen, field, request or extra download for it
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Modules it needs (`requires`), needs one of (`requiresAnyOf`), or cannot run with (`conflicts`). Write "none" if there are none.
+      placeholder: |
+        requires: order_types
+        requiresAnyOf: send_order or whatsapp_handoff
+        conflicts: none
+    validations:
+      required: true
+
+  - type: textarea
+    id: extension-points
+    attributes:
+      label: Extension points used
+      description: Where it plugs into the core (see the list in the module contract). A module never changes the core or another module.
+      placeholder: checkout.fields, staff.orderCardBlock, order.validate
+    validations:
+      required: true
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings and safe defaults
+      description: What a café can set, and the default value when nothing is set. Every module is off by default.
+      placeholder: 'methods: ["cash"] by default; "card" only if the café has a card terminal'
+    validations:
+      required: true
+
+  - type: textarea
+    id: texts
+    attributes:
+      label: Texts in French, Arabic and English
+      description: The main labels customers or staff will see. Drafts are fine.
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Data it stores
+      description: New fields on items or orders, or its own records. Write "none" if it stores nothing.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: personal-data
+    attributes:
+      label: Does it read or write personal data?
+      description: Names, phone numbers, addresses or customer records.
+      options:
+        - 'No'
+        - 'Yes: it writes personal fields (list them below)'
+        - 'Yes: it needs access to customer records (Admin only, every access is logged)'
+    validations:
+      required: true
+
+  - type: textarea
+    id: personal-fields
+    attributes:
+      label: Personal fields (if any)
+      description: Which fields, why they are needed, and who can see them.
+
+  - type: dropdown
+    id: paid-service
+    attributes:
+      label: Does it call a paid outside service?
+      description: Paid services are off by default, switched on only by Admin with the café's written agreement, use the café's own account, have a daily cap and never block an order (MOD-18).
+      options:
+        - 'No'
+        - 'Yes'
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost on the free plan and page weight
+      description: Extra requests per visit or per order, and extra kilobytes for the customer. "Off" must mean zero bytes and zero requests.
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: How will we test it?
+      description: Unit tests, and what the end-to-end smoke test should check when the module is on.
+
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Contract check
+      options:
+        - label: It works for any café by configuration only (no café-specific code).
+          required: true
+        - label: It talks to the core only through extension points, never to another module.
+          required: true
+        - label: It will ship with FR/AR/EN texts, tests, a one-page GUIDE.md and a CHANGELOG.md.
+          required: true
+        - label: This proposal contains no personal data and no private café content.
+          required: true

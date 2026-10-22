@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wns:digimenu:schema:module:v0",
+  "$comment": "draft v0 — WO-048. Contract for modules/<key>/module.json (module contract MOD-04, docs/architecture/modules.md). Not frozen: field names may still change before release v0.1.0. Extension-point names follow docs/architecture/modules.md; a new point is added only in a core MINOR release.",
+  "title": "DigiMenu module manifest",
+  "description": "Declares what a module is, what it needs, where it plugs into the core, what data it touches and how it is tested. One file per module: modules/<key>/module.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "id",
+    "title",
+    "version",
+    "platformApi",
+    "coreApi",
+    "texts",
+    "extends",
+    "data",
+    "customerRecords",
+    "tests",
+    "guide",
+    "changelog"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional pointer used by code editors for autocompletion."
+    },
+    "$comment": {
+      "type": "string"
+    },
+    "key": {
+      "$ref": "#/$defs/moduleKey",
+      "description": "Stable machine name. Equals the folder name under modules/. Never renamed once released."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^M-[0-9]{2}$",
+      "description": "Requirement ID of the module, e.g. M-04."
+    },
+    "title": {
+      "$ref": "#/$defs/localizedText",
+      "description": "Human name shown in the admin app."
+    },
+    "summary": {
+      "$ref": "#/$defs/localizedText",
+      "description": "One sentence shown next to the module switch."
+    },
+    "version": {
+      "$ref": "#/$defs/semver",
+      "description": "Module version (semver). A MAJOR bump needs a settings migration."
+    },
+    "stability": {
+      "enum": ["experimental", "stable", "deprecated"],
+      "default": "experimental"
+    },
+    "platformApi": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Platform shell API generation this module needs."
+    },
+    "coreApi": {
+      "type": "string",
+      "pattern": "^(\\^|~)?(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)){0,2}$",
+      "description": "Compatible core API range, e.g. \"^1.0\"."
+    },
+    "requires": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/moduleKey" },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Modules that must be enabled for this one to be enabled."
+    },
+    "requiresAnyOf": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/moduleKey" },
+        "minItems": 2,
+        "uniqueItems": true
+      },
+      "default": [],
+      "description": "Groups of modules of which at least one must be enabled, e.g. [[\"send_order\", \"whatsapp_handoff\"]]."
+    },
+    "conflicts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/moduleKey" },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Modules that may not be enabled at the same café."
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version"],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/relativePath",
+          "description": "JSON Schema of the module settings, with safe defaults. Also generates the admin form."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Settings format version."
+        },
+        "migrate": {
+          "$ref": "#/$defs/relativePath",
+          "description": "Pure function file that migrates settings between versions. Required once version > 1."
+        }
+      }
+    },
+    "texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fr", "ar", "en"],
+      "description": "Interface texts per language, outside the code (MOD-17). Keys must be identical in all three files.",
+      "properties": {
+        "fr": { "$ref": "#/$defs/relativePath" },
+        "ar": { "$ref": "#/$defs/relativePath" },
+        "en": { "$ref": "#/$defs/relativePath" }
+      }
+    },
+    "extends": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Extension points this module contributes to, grouped by the file that implements them (client.js, staff.js, server.js). Settings forms, analytics events and texts are declared by other fields of this manifest.",
+      "properties": {
+        "client": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "menu.itemBadge",
+              "menu.itemMedia",
+              "menu.itemDetail",
+              "menu.section",
+              "menu.filter",
+              "header.action",
+              "table.action",
+              "list.lineNote",
+              "list.action",
+              "checkout.fields",
+              "checkout.validators",
+              "checkout.channel",
+              "postOrder.block",
+              "sheet.page"
+            ]
+          }
+        },
+        "staff": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "staff.orderCardBlock",
+              "staff.panel",
+              "staff.requestType",
+              "admin.itemFields",
+              "admin.dashboardCard"
+            ]
+          }
+        },
+        "server": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "order.validate",
+              "order.enrich",
+              "order.afterStore",
+              "order.statusChanged",
+              "staff.requestType",
+              "schedule.daily"
+            ]
+          }
+        },
+        "shared": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["pricing.rules"]
+          },
+          "description": "Declarative contributions applied the same way on the phone and on the server."
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orderExt", "itemExt", "records", "personalFields"],
+      "description": "Everything the module stores. The data layer only lets a module write its own namespace.",
+      "properties": {
+        "orderExt": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fieldName" },
+          "uniqueItems": true,
+          "description": "Fields stored in orders.ext.<key>."
+        },
+        "itemExt": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fieldName" },
+          "uniqueItems": true,
+          "description": "Fields stored in items.ext.<key>."
+        },
+        "records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fieldName" },
+          "uniqueItems": true,
+          "description": "Kinds of rows stored in module_records with module_key = <key>."
+        },
+        "personalFields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["firstName", "phone", "address", "freeText"]
+          },
+          "description": "Personal data the module asks for, reads or writes (MOD-04). An empty list means none."
+        }
+      }
+    },
+    "customerRecords": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["access"],
+      "description": "Whether the module needs the central customer records (C-15). Access goes only through the permission-checked core API and is logged (NFR-22).",
+      "properties": {
+        "access": {
+          "enum": ["none", "read", "readWrite"]
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Plain-language reason, shown in review and in the module guide."
+        }
+      },
+      "if": {
+        "properties": { "access": { "enum": ["read", "readWrite"] } }
+      },
+      "then": {
+        "required": ["purpose"]
+      }
+    },
+    "externalService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "paid", "failMode"],
+      "description": "Only for modules that call an outside service (MOD-18). Paid services are paid by the café on its own account, never by the project.",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 2
+        },
+        "paid": {
+          "type": "boolean"
+        },
+        "paidBy": {
+          "const": "cafe"
+        },
+        "failMode": {
+          "const": "open",
+          "description": "An order or status change never waits for the outside service."
+        },
+        "dailyCapSetting": {
+          "$ref": "#/$defs/fieldName",
+          "description": "Name of the settings field holding the per-café daily cap."
+        }
+      },
+      "if": {
+        "properties": { "paid": { "const": true } }
+      },
+      "then": {
+        "required": ["paidBy", "dailyCapSetting"]
+      }
+    },
+    "analyticsEvents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fieldName" },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Allow-listed analytics event names. Counts only, never personal data."
+    },
+    "tests": {
+      "$ref": "#/$defs/relativePath",
+      "description": "Folder with the module's tests."
+    },
+    "guide": {
+      "$ref": "#/$defs/relativePath",
+      "description": "One-page guide for maintainers (GUIDE.md)."
+    },
+    "changelog": {
+      "$ref": "#/$defs/relativePath",
+      "description": "Module changelog (CHANGELOG.md)."
+    }
+  },
+  "$defs": {
+    "moduleKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,31}$"
+    },
+    "fieldName": {
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9_]{0,47}$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_./-]+$",
+      "description": "Path relative to the module folder. No leading slash, no '..'."
+    },
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fr"],
+      "properties": {
+        "fr": { "type": "string", "minLength": 1 },
+        "ar": { "type": "string", "minLength": 1 },
+        "en": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

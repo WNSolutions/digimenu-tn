@@ -1,0 +1,54 @@
+name: Feature request
+description: Suggest a new feature or an improvement, written as a user story.
+title: 'Feature: '
+labels: ['type: feature', 'status: needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! We describe features as **user stories**: who needs it, what they want, and why.
+        Please check the [requirements index](https://github.com/WNSolutions/digimenu-tn/blob/main/docs/product/requirements-index.md) first: your idea may already be planned.
+
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: 'Who is it for? For example: customer, waiter, café manager, youth maintainer or admin.'
+      value: |
+        As a ...
+        I want ...
+        so that ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know it works? One line per check. "Given ..., when ..., then ..." is a good pattern.
+      value: |
+        - [ ] Given ..., when ..., then ...
+        - [ ] Given ..., when ..., then ...
+    validations:
+      required: true
+
+  - type: input
+    id: requirement
+    attributes:
+      label: Related requirement ID
+      description: If it extends a planned requirement, give its ID. Leave empty if the idea is new.
+      placeholder: US-12, MOD-04
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does it matter? Examples, sketches or links are welcome.
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: This request contains no personal data and no private café content.
+          required: true

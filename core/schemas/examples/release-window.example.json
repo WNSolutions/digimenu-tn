@@ -1,0 +1,31 @@
+{
+  "$comment": "Example only — a window with a stable release and a candidate waiting for approval. Version numbers, checksums and links are made up. Must stay valid against ../release-window.schema.json.",
+  "schemaVersion": 0,
+  "releases": [
+    {
+      "version": "0.2.0",
+      "role": "stable",
+      "platformApi": 1,
+      "dataSchema": { "min": 1, "max": 2 },
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000001",
+      "addedOn": "2026-11-08",
+      "approval": {
+        "status": "approved",
+        "on": "2026-11-08",
+        "run": "https://github.com/WNSolutions/digimenu-tn/actions/runs/1"
+      }
+    },
+    {
+      "version": "0.3.0",
+      "role": "candidate",
+      "platformApi": 1,
+      "dataSchema": { "min": 2, "max": 2 },
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000002",
+      "addedOn": "2026-11-20",
+      "approval": {
+        "status": "pending"
+      },
+      "notes": "Waiting for Ahmed's approval; no café pinned yet."
+    }
+  ]
+}

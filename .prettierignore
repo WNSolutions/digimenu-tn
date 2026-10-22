@@ -1,0 +1,9 @@
+# Files Prettier does not format. Prettier also skips everything in .gitignore.
+# Prettier formats our code and config: JavaScript, JSON and YAML (`npm run format`).
+
+# Generated
+package-lock.json
+
+# Markdown is prose written by many people: Prettier would re-pad whole tables when one cell
+# changes, which makes reviews noisy. Write Markdown by hand, following .editorconfig.
+*.md

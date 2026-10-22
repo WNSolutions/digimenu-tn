@@ -1,0 +1,89 @@
+# Release (CI stage 13): PLACEHOLDER. It checks its input and the changelog, then prints the
+# plan; it creates, tags, uploads and deploys nothing yet.
+#
+# What it will do when the build exists (docs/operations/branching-and-releases.md):
+#   1. Run the full CI on the `main` commit being released.
+#   2. Check that CHANGELOG.md has a section `## [X.Y.Z]` that starts with an `**EN:**` and a
+#      `**FR:**` summary line (MOD-07). LIVE already (read-only).
+#   3. Build the release once (esbuild, content hashes, release-manifest.json) (stage 7).
+#   4. Create the tag vX.Y.Z and a GitHub Release with the build attached.
+# A release never reaches a café from here. That happens in the PRIVATE deploy repo, where
+# only Ahmed (and later the Tech Lead) can run the production deploy (D-021).
+#
+# Until then, a release is made by hand: GitHub -> Releases -> "Draft a new release".
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. v0.1.0 (SemVer with a leading "v")'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: release (placeholder)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the version format and branch
+        env:
+          # Inputs are passed through env, never pasted into the script, so a strange
+          # input cannot run as a shell command.
+          VERSION: ${{ inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if ! printf '%s' "$VERSION" | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$VERSION' is not a valid version. Use vMAJOR.MINOR.PATCH, e.g. v0.1.0 or v1.2.0-rc.1"
+            exit 1
+          fi
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "::error::Releases are made from main only (this run uses $REF)."
+            exit 1
+          fi
+
+      - name: Check out the code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # MOD-07: every release section in CHANGELOG.md starts with a one-line summary in English
+      # and in French, e.g.  ## [0.2.0] - 2026-11-08  /  **EN:** ...  /  **FR:** ...
+      - name: Check the changelog has EN and FR lines for this version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          version="${VERSION#v}"
+          section=$(awk -v h="## [$version]" 'index($0, h) == 1 { found = 1; next } found && /^## \[/ { exit } found { print }' CHANGELOG.md)
+          if [ -z "$section" ]; then
+            echo "::error file=CHANGELOG.md::No section '## [$version]' in CHANGELOG.md. Turn [Unreleased] into this version first."
+            exit 1
+          fi
+          status=0
+          for lang in EN FR; do
+            if ! printf '%s\n' "$section" | grep -Eq "^\*\*$lang:\*\* *[^ ]"; then
+              echo "::error file=CHANGELOG.md::Section [$version] has no '**$lang:**' summary line."
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Print the plan (placeholder)
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          echo "Release workflow is a placeholder. Nothing was tagged or published."
+          echo "Planned for $VERSION: full CI -> build -> tag + GitHub Release."
+          {
+            echo "### Release $VERSION (placeholder)"
+            echo "Changelog EN/FR check passed. Nothing was tagged or published."
+          } >> "$GITHUB_STEP_SUMMARY"

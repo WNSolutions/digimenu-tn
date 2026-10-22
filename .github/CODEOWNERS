@@ -1,0 +1,18 @@
+# CODEOWNERS: who is asked to review a pull request that changes these files.
+# The last matching line wins. Docs:
+# https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Today Ahmed reviews everything. When the organisation team exists, replace
+# @ahmed1bouabid with @WNSolutions/maintainers on the first line, and keep Ahmed
+# (or add the Tech Lead) as owner of the sensitive paths below.
+
+# Everything
+*                          @ahmed1bouabid
+
+# Sensitive: CI/CD, security policy and the rules that protect the code
+/.github/                  @ahmed1bouabid
+/SECURITY.md               @ahmed1bouabid
+/docs/operations/          @ahmed1bouabid
+/eslint.config.js          @ahmed1bouabid
+/package.json              @ahmed1bouabid
+/package-lock.json         @ahmed1bouabid

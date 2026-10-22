@@ -1,0 +1,32 @@
+# .gitattributes: how Git treats each kind of file.
+#
+# Line endings: the repository always stores LF ("\n"), and files are checked out with LF on
+# every computer, including Windows. Without this, a youth on Windows and one on Linux would
+# produce pull requests that change every line of a file.
+* text=auto eol=lf
+
+# Data and code files are always text.
+*.csv  text eol=lf
+*.tsv  text eol=lf
+*.json text eol=lf
+*.sql  text eol=lf
+*.js   text eol=lf
+*.md   text eol=lf diff=markdown
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Binary files: never convert, never show a text diff.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.xlsx  binary
+*.docx  binary
+*.woff2 binary
+*.age   binary
+
+# GitHub: collapse the generated lockfile in pull-request diffs.
+package-lock.json linguist-generated=true
