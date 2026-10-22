@@ -49,13 +49,13 @@ jobs:
 
     steps:
       - name: Check out the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           # Do not leave the token in .git/config: later steps don't need it.
           persist-credentials: false
 
       - name: Set up Node.js (version from .nvmrc) with npm cache
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
