@@ -14,6 +14,7 @@ The **customer-side core** of each release: what every café gets on the custome
 - **Core API** (`@digimenu/core-api`): the only thing modules may import.
 - **Module registry:** loads exactly the modules enabled for the café.
 - [`schemas/`](schemas/README.md): JSON Schema contracts. [`i18n/`](i18n/README.md): core interface texts.
+- [`ui/`](ui/README.md): design tokens (CSS custom properties) and, later, shared styles and the icon sprite; rules in [docs/design](../docs/design/README.md).
 
 ## Rules
 
