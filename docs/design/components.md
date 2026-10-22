@@ -81,6 +81,7 @@ The order as a ticket: **the one object the customer, the waiter and the counter
 │ 2 × Café crème · Grand      5,600 DT │   Title 3 on show-to-waiter, Body elsewhere
 │     Note : sans sucre                │   the line's note, Callout, ink-2
 │ 1 × Croissant               1,800 DT │
+│ Note : à servir ensemble             │   the order's note, Callout, ink-2
 │ Total                       7,400 DT │   Headline, end-aligned
 ╰──────────────────────────────────────╯
 ```
@@ -182,7 +183,7 @@ Orange de Tunisie, sans sucre ajouté
 - **Anatomy (medium detent):** grabber; Close (leading); photo if any (16:9, at most 200 px high); name (Title 2); description (Body, full); **variants** as a list with a `check` on the selected row (`lists-and-tables.md › Best practices`: "Provide appropriate feedback when people select a list item."), the first available variant selected by default; **quantity stepper**; module blocks (`menu.itemDetail`, e.g. dietary tags and their disclaimer); bottom: prominent **"Ajouter · 5,600 DT"** (quantity × variant price, updated live).
 - **Large detent:** the same content with the long description and all module blocks visible.
 - **Quantity stepper:** `−` value `+`, three 44 px parts on a `--dm-fill` capsule; value in Headline, tabular; minimum 1; at the café's maximum (default 20), `+` is disabled and "20 au maximum" appears (US-08).
-- **Note (one per line, D-045):** an optional "Note" field (Callout, up to 200 characters, counter shown at 150), placeholder "Ex. : sans sucre". The note belongs to this line: the same item with a different note is a separate line in the list. There is no list-wide note.
+- **Note for this item (D-045, D-046):** an optional "Note" field (Callout, up to 200 characters, counter shown at 150), placeholder "Ex. : sans sucre". The note belongs to this line: the same item with a different note is a separate line in the list. The list also has **one optional note for the whole order** ([§8](#8-my-list-capsule-and-list-sheet)).
 - **States:** sold-out item (the sheet opens for information; the bottom action is replaced by the "Épuisé" chip); sold-out variant (row shown with the chip, not selectable); after adding: the sheet closes and the live region confirms.
 - **RTL:** stepper mirrors (`−` on the right, `+` on the left; `right-to-left.md › Numbers and characters`: reverse "a counting direction"); Close on the right.
 - **Accessibility:** dialog named by the item name; variants are a radio group named "Taille" (or the item's variant label); stepper buttons named "Moins" and "Plus" with the value announced; the add button says the total.
@@ -266,7 +267,7 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 **Job:** a clear summary the waiter can read at arm's length; it sends nothing and asks for nothing (US-10).
 
 - **Full screen**, not a sheet (`modality.md › Best practices`: "Consider using a full-screen modal style for in-depth content or a complex task."): top bar with Close (leading) and a **segmented control "FR · عربي · EN"** that changes only this summary's language, for the waiter (US-10).
-- **The ticket** with the **table number in Display** (or "Sans table"), lines in **Title 3 (20 px, ≥ 18 px)**, quantities in 700, variants, each line's note under its line, total.
+- **The ticket** with the **table number in Display** (or "Sans table"), lines in **Title 3 (20 px, ≥ 18 px)**, quantities in 700, variants, each line's note under its line, the order's note, total.
 - Works in landscape (the phone can be turned toward the waiter). No timer; it stays until closed.
 - **RTL:** follows the summary's chosen language, not the page's.
 - **Accessibility:** heading "Table 5"; lines as a list.
@@ -284,6 +285,7 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 │ 2 × Café crème · Grand                           │  Headline
 │     « sans sucre »                               │  the line's note, Callout, plain text, quoted
 │ 1 × Croissant                                    │
+│ Note : « à servir ensemble »                     │  the order's note, Callout, plain text
 │ Total                                 7,400 DT   │
 │ ╭────────────────────────────╮  Refuser          │  Accepter: prominent, 56 px
 │ │          Accepter          │                   │  Refuser: destructive plain
@@ -291,7 +293,7 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 ╰──────────────────────────────────────────────────╯
 ```
 
-- **Content:** order number (Title 1, tabular), type icon and "Table 5" or "À emporter · 14:45 ·" and the customer's first name, payment choice, lines, each line's note under its line as **plain text** in quotes (US-16), module blocks (`staff.orderCardBlock`), total, age ("il y a 0:42", live).
+- **Content:** order number (Title 1, tabular), type icon and "Table 5" or "À emporter · 14:45 ·" and the customer's first name, payment choice, lines, each line's note under its line and the order's note before the total, as **plain text** in quotes (US-16), module blocks (`staff.orderCardBlock`), total, age ("il y a 0:42", live).
 - **Actions** (56 px, `--dm-target-staff`): one prominent next step: **Accepter** → **Prête** → **Servie** (or **Récupérée**). **Refuser** opens an action sheet of reasons (Épuisé · Trop d'attente · Autre). Accepted on another device: "Acceptée · Comptoir" (the display name of the account that accepted) and the alert stops (US-45).
 - **Strip states (always words + icon):** **Nouvelle** (`bell-ring`, `--dm-warning-fill` with Ink text, 9.52:1); **En retard · 3 min** after the café's alert time (`clock`, `--dm-danger` with `--dm-on-danger`, 5.66:1 / 7.36:1); "WhatsApp — à confirmer" for hand-offs (`message-circle`). Only Ink text goes on the amber fill (Ink 2 would be 3.66:1).
 

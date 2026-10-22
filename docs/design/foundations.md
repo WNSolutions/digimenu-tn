@@ -124,7 +124,7 @@ Without these values, `tokens.css` falls back to a **monochrome** accent (Ink fi
 | Check | Result |
 |---|---|
 | Not a 6-digit hex colour | **Error** (already in the [café config schema](../../core/schemas/cafe-config.schema.json)) |
-| Light fill had to be darkened by **more than 25 %** to reach 3:1 | **Error**: "This colour is too light for buttons on a white page. Choose a deeper shade, for example `#B98D00`." The café's logo keeps its own colours. |
+| Light fill had to be darkened by **more than 25 %** to reach 3:1 | **Error**: "This colour is too light for buttons on a white page. Choose a deeper shade, for example `#B98D00`." The café's logo keeps its own colours. There is no separate button-colour field (accepted 22 Oct 2026, D-047). |
 | Dark fill had to be lightened by 40 % or more | Warning |
 | Hue within 20° of the danger red or success green, with OKLCH chroma above 0.1 | Warning: errors and confirmations still carry an icon and words, so nothing relies on colour |
 | OKLCH chroma below 0.04 (almost grey) | Warning: the primary action will not stand out from text |

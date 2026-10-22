@@ -40,7 +40,7 @@
 | Menu | `categories`, `sub_groups`, `items`, `variants` | The menu tree. `items.ext` holds module fields under each module's key. |
 | | `menu_snapshots` | Published menu revisions built by the café's pinned release (body, checksum, building release). |
 | | `menu_changes` | Change history: entity, field, before, after, actor role, source (editor, import, undo, migration). Feeds undo and the autonomy indicator. |
-| Orders and requests | `orders` | Client key (unique per café), number of the day, type, status, release, total, lines (each with an optional note, D-045), customer link, encrypted contact snapshot, `ext` per module, test flag, timestamps. |
+| Orders and requests | `orders` | Client key (unique per café), number of the day, type, status, release, total, note for the whole order, lines (each with its own optional note; D-045, D-046), customer link, encrypted contact snapshot, `ext` per module, test flag, timestamps. |
 | | `staff_requests` | Inbox items from modules (events, reservations, call waiter). |
 | | `module_records` | Other module rows, namespaced by `module_key`. |
 | Customers and consent (C-15) | `customers` | One record per phone number across all WNS cafés: encrypted first name and phone, keyed hash of the phone for lookup, last 3 digits for masked display. |
@@ -138,7 +138,7 @@ classDiagram
   class Order {
     +TEXT client_key UNIQUE per cafe, number, type, status, release
     +Millimes total
-    +TEXT customer_id
+    +TEXT note, customer_id
     +BLOB contact_ct - encrypted first name, phone, address
     +INT menu_rev, schema_version
     +JSON ext per module key

@@ -173,6 +173,10 @@ Step 1, the list (large detent because it has more than 3 lines):
 ││                 ╭─────────────╮          ││
 ││                 │ (−)  1  (+) │          ││
 ││                 ╰─────────────╯          ││
+││ Note pour toute la commande (facultatif) ││
+││ ╭──────────────────────────────────────╮ ││
+││ │ À servir ensemble, s'il vous plaît   │ ││   order note, 200 chars (D-046)
+││ ╰──────────────────────────────────────╯ ││
 ││ Total                         7,400 DT   ││   Headline, tabular
 ││ Vider la liste                           ││   destructive plain
 ││ ╭──────────────────────────────────────╮ ││
