@@ -125,6 +125,25 @@ export default defineConfig([
     files: ['tools/**/*.js', 'tests/**/*.js', 'modules/*/tests/**/*.js', '*.config.js'],
     languageOptions: { globals: { ...globals.node } },
   },
+  {
+    // Throwaway spikes (spikes/README.md): Worker code, browser pages, Node tools and tests.
+    files: ['spikes/*/src/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        WebSocketPair: 'readonly',
+        WebSocketRequestResponsePair: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['spikes/*/public/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
+    files: ['spikes/*/tools/**/*.{js,mjs}', 'spikes/*/tests/**/*.js'],
+    languageOptions: { globals: { ...globals.node } },
+  },
 
   // 3b. Import boundaries (see the comment at the top of this file).
   //     Note: when several blocks set the same rule for one file, the LAST block wins,
