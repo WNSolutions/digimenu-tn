@@ -130,6 +130,11 @@
           "pattern": "^#[0-9a-fA-F]{6}$",
           "description": "Accent colour. The core checks text contrast (WCAG 2.1 AA) before publishing."
         },
+        "buttonColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "description": "Optional colour for filled buttons, for brands whose primary colour is too light for them (ADR-0012). Absent: buttons use primaryColor, darkened to pass contrast. Checked with the same contrast rules."
+        },
         "logo": {
           "type": "string",
           "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_./-]+\\.(svg|png|webp)$",

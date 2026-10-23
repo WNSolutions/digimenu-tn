@@ -79,8 +79,9 @@ The order as a ticket: **the one object the customer, the waiter and the counter
 │ 5                                    │   Display 48/700, tabular digits
 ◖┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄◗   tear line: dashed --dm-sep, two 12 px notches
 │ 2 × Café crème · Grand      5,600 DT │   Title 3 on show-to-waiter, Body elsewhere
+│     Note : sans sucre                │   the line's note, Callout, ink-2
 │ 1 × Croissant               1,800 DT │
-│ Note : sans sucre                    │   Callout, ink-2
+│ Note : à servir ensemble             │   the order's note, Callout, ink-2
 │ Total                       7,400 DT │   Headline, end-aligned
 ╰──────────────────────────────────────╯
 ```
@@ -182,7 +183,7 @@ Orange de Tunisie, sans sucre ajouté
 - **Anatomy (medium detent):** grabber; Close (leading); photo if any (16:9, at most 200 px high); name (Title 2); description (Body, full); **variants** as a list with a `check` on the selected row (`lists-and-tables.md › Best practices`: "Provide appropriate feedback when people select a list item."), the first available variant selected by default; **quantity stepper**; module blocks (`menu.itemDetail`, e.g. dietary tags and their disclaimer); bottom: prominent **"Ajouter · 5,600 DT"** (quantity × variant price, updated live).
 - **Large detent:** the same content with the long description and all module blocks visible.
 - **Quantity stepper:** `−` value `+`, three 44 px parts on a `--dm-fill` capsule; value in Headline, tabular; minimum 1; at the café's maximum (default 20), `+` is disabled and "20 au maximum" appears (US-08).
-- **Note:** a "Note" field (Callout, up to 200 characters, counter shown at 150) appears here **only if a per-line note is confirmed** (open question). US-08 today defines one note per list, which lives in the list sheet ([§8](#8-my-list-capsule-and-list-sheet)).
+- **Note for this item (D-045, D-046):** an optional "Note" field (Callout, up to 200 characters, counter shown at 150), placeholder "Ex. : sans sucre". The note belongs to this line: the same item with a different note is a separate line in the list. The list also has **one optional note for the whole order** ([§8](#8-my-list-capsule-and-list-sheet)).
 - **States:** sold-out item (the sheet opens for information; the bottom action is replaced by the "Épuisé" chip); sold-out variant (row shown with the chip, not selectable); after adding: the sheet closes and the live region confirms.
 - **RTL:** stepper mirrors (`−` on the right, `+` on the left; `right-to-left.md › Numbers and characters`: reverse "a counting direction"); Close on the right.
 - **Accessibility:** dialog named by the item name; variants are a radio group named "Taille" (or the item's variant label); stepper buttons named "Moins" and "Plus" with the value announced; the add button says the total.
@@ -266,7 +267,7 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 **Job:** a clear summary the waiter can read at arm's length; it sends nothing and asks for nothing (US-10).
 
 - **Full screen**, not a sheet (`modality.md › Best practices`: "Consider using a full-screen modal style for in-depth content or a complex task."): top bar with Close (leading) and a **segmented control "FR · عربي · EN"** that changes only this summary's language, for the waiter (US-10).
-- **The ticket** with the **table number in Display** (or "Sans table"), lines in **Title 3 (20 px, ≥ 18 px)**, quantities in 700, variants, the list note, total.
+- **The ticket** with the **table number in Display** (or "Sans table"), lines in **Title 3 (20 px, ≥ 18 px)**, quantities in 700, variants, each line's note under its line, the order's note, total.
 - Works in landscape (the phone can be turned toward the waiter). No timer; it stays until closed.
 - **RTL:** follows the summary's chosen language, not the page's.
 - **Accessibility:** heading "Table 5"; lines as a list.
@@ -282,8 +283,9 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 ╭ Nouvelle · il y a 0:42 ──────────────────────────╮  strip: --dm-warning-fill, on-warning text
 │ A12          Table 5 · Sur place        Espèces  │  Title 1 28/700 · Headline · Caption chip
 │ 2 × Café crème · Grand                           │  Headline
+│     « sans sucre »                               │  the line's note, Callout, plain text, quoted
 │ 1 × Croissant                                    │
-│ « sans sucre »                                   │  note, Callout, plain text, quoted
+│ Note : « à servir ensemble »                     │  the order's note, Callout, plain text
 │ Total                                 7,400 DT   │
 │ ╭────────────────────────────╮  Refuser          │  Accepter: prominent, 56 px
 │ │          Accepter          │                   │  Refuser: destructive plain
@@ -291,7 +293,7 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 ╰──────────────────────────────────────────────────╯
 ```
 
-- **Content:** order number (Title 1, tabular), type icon and "Table 5" or "À emporter · 14:45 ·" and the customer's first name, payment choice, lines, note shown as **plain text** in quotes (US-16), module blocks (`staff.orderCardBlock`), total, age ("il y a 0:42", live).
+- **Content:** order number (Title 1, tabular), type icon and "Table 5" or "À emporter · 14:45 ·" and the customer's first name, payment choice, lines, each line's note under its line and the order's note before the total, as **plain text** in quotes (US-16), module blocks (`staff.orderCardBlock`), total, age ("il y a 0:42", live).
 - **Actions** (56 px, `--dm-target-staff`): one prominent next step: **Accepter** → **Prête** → **Servie** (or **Récupérée**). **Refuser** opens an action sheet of reasons (Épuisé · Trop d'attente · Autre). Accepted on another device: "Acceptée · Comptoir" (the display name of the account that accepted) and the alert stops (US-45).
 - **Strip states (always words + icon):** **Nouvelle** (`bell-ring`, `--dm-warning-fill` with Ink text, 9.52:1); **En retard · 3 min** after the café's alert time (`clock`, `--dm-danger` with `--dm-on-danger`, 5.66:1 / 7.36:1); "WhatsApp — à confirmer" for hand-offs (`message-circle`). Only Ink text goes on the amber fill (Ink 2 would be 3.66:1).
 
@@ -331,7 +333,7 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 
 - **A full screen, not a sheet** (`sheets.md › Best practices`: "For complex or prolonged user flows, consider alternatives to sheets."). Top bar: Back "Carte" (leading), title "Modifier", prominent **"Enregistrer"** on the trailing side (`toolbars.md › Actions`).
 - **Groups:** Noms (three fields: "Nom (français)", "الاسم (عربي)" with `dir="rtl"`, "Name (English)"; an empty translation shows "Vide : le français sera affiché"); Descriptions (same); Catégorie (pop-up button); **Prix** or **Variantes** (name + price each, "Ajouter une variante"); Disponible (switch); module fields (`admin.itemFields`, e.g. photo, dietary tags); Historique (who changed what, when, US-28); at the bottom "Supprimer l'article" (destructive, confirmed by an action sheet).
-- **Price field (millimes):** `inputmode="decimal"`, the unit "DT" fixed at the trailing end, placeholder "0,000". Accepts "4,5", "4.5", "4,500" → shown as **4,500 DT** with the reading underneath in words: "= 4 dinars 500 millimes". More than 3 decimals is refused ("3 chiffres au maximum après la virgule", US-27). A whole number of 100 or more without a comma ("4500") is ambiguous in Tunisia, where prices are often said in millimes, so the field asks: **"4500 : 4,500 DT ou 4 500,000 DT ?"** with two buttons. A change of more than 5 times the old price asks for confirmation. Stored as integer millimes. `entering-data.md › Best practices`: "Dynamically validate field values."; `text-fields.md › Best practices`: "Use a number formatter to help with numeric data."
+- **Price field (millimes):** `inputmode="decimal"`, the unit "DT" fixed at the trailing end, placeholder "0,000". Accepts "4,5", "4.5", "4,500" → shown as **4,500 DT** with the reading underneath in words: "= 4 dinars 500 millimes". More than 3 decimals is refused ("3 chiffres au maximum après la virgule", US-27). A whole number of 100 or more without a comma ("4500") is ambiguous in Tunisia, where prices are often said in millimes, so the field **always** asks: **"4500 : 4,500 DT ou 4 500,000 DT ?"** with two buttons, and nothing is saved until the owner picks one (D-045). A change of more than 5 times the old price asks for confirmation. Stored as integer millimes. `entering-data.md › Best practices`: "Dynamically validate field values."; `text-fields.md › Best practices`: "Use a number formatter to help with numeric data."
 - **Saving:** "Enregistré · visible par les clients dans 1 min environ" with "Annuler" (US-27, US-28). Unsaved changes + Back → action sheet "Abandonner les modifications ?" [Abandonner] [Continuer à modifier].
 - **RTL:** the screen mirrors; each text field keeps the direction of its language (`right-to-left.md › Text alignment`: "Align a paragraph based on its language"); the price field is always left-to-right.
 - **Accessibility:** labels above fields; the price reading is linked with `aria-describedby`; errors next to the field.

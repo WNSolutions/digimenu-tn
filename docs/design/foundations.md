@@ -117,6 +117,8 @@ The validator ([`tools/validate/`](../../tools/validate/README.md)) turns the br
 | `--dm-cafe-accent-text` | The brand colour, darkened until **4.5:1 on page, grouped page and surface**, and 3:1 on Fill (for `+` glyphs) |
 | `-dark` variants of the three | The same rules against the dark surfaces, **lightening** toward white |
 
+**Two ways to colour buttons** ([ADR-0012](../adr/0012-optional-button-colour.md), D-049). By default the fills come from `branding.primaryColor`, darkened as above. A café may also set an optional **`branding.buttonColor`**, for example when its brand colour is a light yellow: then `--dm-cafe-accent`, `--dm-cafe-on-accent` and their `-dark` variants come from `buttonColor` instead, with the same rules and the same errors, while links and `+` glyphs (`--dm-cafe-accent-text`) still come from `primaryColor`. The café chooses; the validator checks either one.
+
 Without these values, `tokens.css` falls back to a **monochrome** accent (Ink fill, page-colour label: 17.40:1 light, 16.73:1 dark).
 
 **What the validator rejects or warns about** (thresholds are judgment, tested on the brands below):
@@ -124,7 +126,7 @@ Without these values, `tokens.css` falls back to a **monochrome** accent (Ink fi
 | Check | Result |
 |---|---|
 | Not a 6-digit hex colour | **Error** (already in the [café config schema](../../core/schemas/cafe-config.schema.json)) |
-| Light fill had to be darkened by **more than 25 %** to reach 3:1 | **Error**: "This colour is too light for buttons on a white page. Choose a deeper shade, for example `#B98D00`." The café's logo keeps its own colours. |
+| Light fill had to be darkened by **more than 25 %** to reach 3:1 | **Error**: "This colour is too light for buttons on a white page. Choose a deeper shade, for example `#B98D00`, or a separate button colour." The café's logo keeps its own colours. Or set a separate button colour (below). |
 | Dark fill had to be lightened by 40 % or more | Warning |
 | Hue within 20° of the danger red or success green, with OKLCH chroma above 0.1 | Warning: errors and confirmations still carry an icon and words, so nothing relies on colour |
 | OKLCH chroma below 0.04 (almost grey) | Warning: the primary action will not stand out from text |
@@ -265,7 +267,7 @@ Weights are 400, 600 and 700 only (`typography.md › Ensuring legibility`: "In 
 | Thousands with a narrow no-break space | `1 250,000 DT` | French convention |
 | No-break space before `DT` | `4,500 DT` never breaks before `DT` | Craft |
 | `font-variant-numeric: tabular-nums` on prices, quantities, order numbers, times | Columns of prices line up | Judgment |
-| Every price inside `<bdi>` (direction from its own first letter) | With `DT` the price reads left to right inside Arabic text; with an Arabic unit (`د.ت`) it follows the Arabic order | `right-to-left.md › Numbers and characters`: "Don’t reverse the order of numerals in a specific number." |
+| The unit is `DT` in every language, Arabic included (D-045); every price inside `<bdi>` (direction from its own first letter) | The price reads left to right inside Arabic text: `4,500 DT` | `right-to-left.md › Numbers and characters`: "Don’t reverse the order of numerals in a specific number." |
 | Phone numbers, order numbers (`A12`), table labels (`T2`) in `<bdi dir="ltr">` | `+216 XX XXX XXX` stays in order inside Arabic | NFR-21 |
 
 ## 5. Layout and navigation
