@@ -9,6 +9,7 @@ Everything written about DigiMenu TN that is not code. Pick the section that mat
 | [Operations](operations/README.md) | Running the system: CI, deployments, secrets, backups, monitoring, runbooks | DevOps & Security Engineer |
 | [Product](product/README.md) | What the system must do: requirements, user stories, module catalogue from the user's side | Product Analyst |
 | [Design](design/README.md) | How DigiMenu looks and behaves: principles, tokens, components, screens and the design review | UI/UX Designer |
+| [Spikes](spikes/README.md) | Short experiments that test an assumption before we build on it, each with a go / no-go and its numbers | Software Architect |
 
 Other useful files at the root of the repository: [README](../README.md) · [CONTRIBUTING](../CONTRIBUTING.md) · [SECURITY](../SECURITY.md) · [CHANGELOG](../CHANGELOG.md) · [LICENSE](../LICENSE)
 
