@@ -1,0 +1,51 @@
+// Wrangler configuration TEMPLATE for spike #5.
+//
+// The deploy repository's spike workflow copies this file to wrangler.jsonc and replaces
+// REPLACE_ME_DATABASE_ID with the id of the D1 database `digimenu-spike` (an identifier, not a
+// secret). The account comes from CLOUDFLARE_ACCOUNT_ID. Never put a token here.
+//
+// For local work: copy it to wrangler.jsonc (git-ignored) and run `npx wrangler@4.151.3 dev`;
+// Wrangler then uses a local database and does not need the real id.
+{
+  "$schema": "https://unpkg.com/wrangler@4.151.3/config-schema.json",
+  "name": "digimenu-spike",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-15",
+  "workers_dev": true,
+  "preview_urls": false,
+
+  // Static files are free and do not run the Worker. With "single-page-application", a browser
+  // opening /<café>/t/<table> (a navigation request) gets index.html straight from the asset
+  // layer, so menus keep loading even if the Worker's daily request quota runs out.
+  // Only /api/* and /ssr/* run the Worker first.
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ssr/*"],
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "digimenu-spike",
+      "database_id": "REPLACE_ME_DATABASE_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+
+  // The free plan allows Durable Objects with SQLite storage only.
+  "durable_objects": {
+    "bindings": [{ "name": "CAFE_HUB", "class_name": "CafeHub" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["CafeHub"] }],
+
+  // Invocation logs (with CPU time) in the dashboard: Workers & Pages > digimenu-spike > Logs.
+  "observability": { "enabled": true },
+
+  "vars": {
+    // A test value for the spike's password-hash endpoint. NOT a secret: the real pepper is a
+    // Worker secret of the production Worker (docs/operations/secrets.md).
+    "SPIKE_PEPPER": "spike-test-pepper-not-a-secret",
+  },
+}

@@ -36,6 +36,7 @@ steps, are placeholders today: they print what they will do.
 | `publish-media.yml` | publish logos, photos and daily fallback menus to `digimenu-media` | `DEPLOY_ALLOWED_ACTORS` |
 | `backup.yml` | weekly encrypted D1 export, kept 8 weeks | `DEPLOY_ALLOWED_ACTORS` |
 | `migrate.yml` | D1 migrations: plan (dry run), backup, apply, verify, undo | plan: `PIN_ALLOWED_ACTORS`; the others: `DEPLOY_ALLOWED_ACTORS` |
+| `spike.yml` | deploy a throwaway spike Worker (fictional data) on workers.dev, measure it and attach the report to the run (issue #5, [`spikes/`](../../spikes/README.md)) | `DEPLOY_ALLOWED_ACTORS` |
 
 The allow-lists are **repository variables** (deploy repo → Settings → Secrets and variables →
 Actions → Variables), comma-separated GitHub usernames. Only repository admins can change them.
