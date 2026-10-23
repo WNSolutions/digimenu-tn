@@ -27,6 +27,8 @@ Behaviour only; local CPU numbers do not count.
 | 3 | push 1 reached 2/2 sockets; after 15 s idle the hub's `wakes` went 1 → 2 and push 2 still reached 2/2 sockets |
 | 4–6 | all requests 200 (10,000 to 100,000 iterations; 1,000 AES records) |
 
+Test pages at 360 px (local): [menu, French](img/0005-menu-fr.png) · [menu, Arabic](img/0005-menu-ar.png) · [hub test page](img/0005-hub.png). They are spike pages, not the design (docs/design).
+
 ## Run on Cloudflare
 
 _To be filled from the workflow's `summary.md` after the first run: one line per question with
