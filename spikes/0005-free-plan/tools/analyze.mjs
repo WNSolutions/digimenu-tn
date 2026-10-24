@@ -33,7 +33,40 @@ try {
 }
 const events = parseJsonStream(tailText);
 const groups = groupEvents(events);
-const haveCpu = Object.values(groups).some((g) => g.cpu.length > 0);
+
+/**
+ * The live log can drop events when requests come fast ("sampling mode"). A CPU result counts
+ * only when the tail saw at least this share of the requests that were sent for it.
+ */
+const MIN_COVERAGE = 0.8;
+
+/** @param {Record<string, number> | undefined} statuses */
+const total = (statuses) => Object.values(statuses ?? {}).reduce((a, b) => a + b, 0);
+
+/**
+ * How many requests measure.mjs sent for a route label (null when it does not count them).
+ * @param {string} label
+ * @returns {number | null}
+ */
+function sentFor(label) {
+  if (label === 'ssr-menu-150') return total(results.serverRender?.statuses) || null;
+  if (label.startsWith('hash:')) return total(results.hashing?.[label.slice(5)]) || null;
+  if (label.startsWith('aes:')) return total(results.encryption?.[label.slice(4)]) || null;
+  return null;
+}
+
+/**
+ * True when the tail saw enough of a route's requests for its CPU numbers to count.
+ * @param {string} label
+ */
+function covered(label) {
+  const sent = sentFor(label);
+  const seen = groups[label]?.cpu.length ?? 0;
+  return sent !== null && seen >= MIN_COVERAGE * sent;
+}
+
+/** @param {string} label */
+const seenOf = (label) => `tail saw ${groups[label]?.cpu.length ?? 0} of ${sentFor(label) ?? '?'}`;
 
 /** @param {boolean | null} ok */
 const mark = (ok) => (ok === null ? '⚪ unknown' : ok ? '✅ go' : '❌ no-go');
@@ -80,27 +113,40 @@ verdicts.push({
 const ssr = summarize(groups['ssr-menu-150']?.cpu ?? []);
 verdicts.push({
   question: `Rendering a 150-line menu at the edge stays under the ${CPU_LIMIT_MS} ms CPU limit`,
-  verdict: haveCpu && ssr.p99 !== null ? ssr.p99 < CPU_LIMIT_MS : null,
-  evidence: haveCpu
-    ? `CPU p50 ${ssr.p50} ms, p99 ${ssr.p99} ms, max ${ssr.max} ms over ${ssr.count} requests`
-    : 'CPU time not in the tail output: read it in the dashboard (Workers Logs)',
+  verdict: covered('ssr-menu-150') && ssr.p99 !== null ? ssr.p99 < CPU_LIMIT_MS : null,
+  evidence:
+    ssr.count > 0
+      ? `CPU p50 ${ssr.p50} ms, p99 ${ssr.p99} ms, max ${ssr.max} ms (${seenOf('ssr-menu-150')} requests)`
+      : 'not measured: no CPU time in the tail output (read it in Workers Logs)',
 });
 
-// 5. Password hashing iterations.
-const best = haveCpu ? bestIterations(groups, HASH_BUDGET_MS) : null;
+// 5. Password hashing iterations: only counts whose requests the tail saw well enough.
+const hashLabels = Object.keys(results.hashing ?? {}).map((n) => `hash:${n}`);
+const hashCovered = Object.fromEntries(
+  Object.entries(groups).filter(([label]) => label.startsWith('hash:') && covered(label)),
+);
+const hashSent = hashLabels.reduce((a, label) => a + (sentFor(label) ?? 0), 0);
+const hashOk = hashLabels.reduce(
+  (a, label) => a + (results.hashing?.[label.slice(5)]?.['200'] ?? 0),
+  0,
+);
+const best =
+  Object.keys(hashCovered).length > 0 ? bestIterations(hashCovered, HASH_BUDGET_MS) : null;
 verdicts.push({
   question: `PBKDF2-SHA256 + pepper: highest iteration count with p99 CPU ≤ ${HASH_BUDGET_MS} ms (expected 30,000–40,000)`,
-  verdict: haveCpu ? best !== null && best >= 30_000 : null,
-  evidence: haveCpu
-    ? best === null
-      ? 'no measured count fits'
-      : `${best.toLocaleString('en')} iterations`
-    : 'CPU time not in the tail output',
+  verdict: Object.keys(hashCovered).length === 0 ? null : best !== null && best >= 30_000,
+  evidence:
+    Object.keys(hashCovered).length === 0
+      ? `not measured: the tail saw too few hash requests; ${hashOk} of ${hashSent} answered 200`
+      : best === null
+        ? `no measured count fits (${hashOk} of ${hashSent} answered 200)`
+        : `${best.toLocaleString('en')} iterations (${hashOk} of ${hashSent} answered 200)`,
 });
 
 // 6. AES-GCM per record.
-const aes0 = percentile(groups['aes:0']?.cpu ?? [], 50);
-const aes1000 = percentile(groups['aes:1000']?.cpu ?? [], 50);
+const aesMeasured = covered('aes:0') && covered('aes:1000');
+const aes0 = aesMeasured ? percentile(groups['aes:0']?.cpu ?? [], 50) : null;
+const aes1000 = aesMeasured ? percentile(groups['aes:1000']?.cpu ?? [], 50) : null;
 // (ms for 1,000 records − ms for none) / 1,000 records = µs per record.
 const perRecordUs = aes0 !== null && aes1000 !== null ? aes1000 - aes0 : null;
 verdicts.push({
@@ -108,7 +154,7 @@ verdicts.push({
   verdict: perRecordUs === null ? null : perRecordUs <= AES_BUDGET_US,
   evidence:
     perRecordUs === null
-      ? 'CPU time not in the tail output'
+      ? `not measured (${seenOf('aes:0')}, ${seenOf('aes:1000')})`
       : `≈ ${perRecordUs} µs per record (median ${aes1000} ms for 1,000 vs ${aes0} ms for 0)`,
 });
 
@@ -124,8 +170,8 @@ const lines = [
   '',
   '## CPU time per route (ms, from tail events)',
   '',
-  '| Route | Requests | p50 | p90 | p99 | max | Outcomes |',
-  '| --- | ---: | ---: | ---: | ---: | ---: | --- |',
+  '| Route | Seen | Sent | p50 | p90 | p99 | max | Outcomes |',
+  '| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
 ];
 const order = (/** @type {string} */ label) =>
   label.startsWith('hash:')
@@ -133,13 +179,19 @@ const order = (/** @type {string} */ label) =>
     : label.startsWith('aes:')
       ? 300
       : 0;
-for (const label of Object.keys(groups).sort((a, b) => order(a) - order(b) || a.localeCompare(b))) {
-  const s = summarize(groups[label].cpu);
-  const outcomes = Object.entries(groups[label].outcomes)
+// Every route the tail saw, plus every measured route it missed entirely.
+const allLabels = new Set([
+  ...Object.keys(groups),
+  ...hashLabels,
+  ...['ssr-menu-150', 'aes:0', 'aes:1000'].filter((label) => sentFor(label) !== null),
+]);
+for (const label of [...allLabels].sort((a, b) => order(a) - order(b) || a.localeCompare(b))) {
+  const s = summarize(groups[label]?.cpu ?? []);
+  const outcomes = Object.entries(groups[label]?.outcomes ?? {})
     .map(([k, v]) => `${k} ${v}`)
     .join(', ');
   lines.push(
-    `| ${label} | ${s.count} | ${s.p50 ?? '–'} | ${s.p90 ?? '–'} | ${s.p99 ?? '–'} | ${s.max ?? '–'} | ${outcomes} |`,
+    `| ${label} | ${s.count} | ${sentFor(label) ?? '–'} | ${s.p50 ?? '–'} | ${s.p90 ?? '–'} | ${s.p99 ?? '–'} | ${s.max ?? '–'} | ${outcomes || '–'} |`,
   );
 }
 lines.push('', '## Request status codes seen by the test client', '', '```json');

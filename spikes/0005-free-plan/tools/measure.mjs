@@ -7,8 +7,8 @@
  *
  * It checks behaviour (status codes, counts, hub delivery, hibernation). CPU time is not visible
  * from outside: run `wrangler tail --format json` during this script and pass both files to
- * tools/analyze.mjs. The full run sends about 700 requests, well under the free plan's 100,000
- * per day. It needs no credentials.
+ * tools/analyze.mjs. The full run sends about 500 requests, one at a time, over about 6 minutes:
+ * well under the free plan's 100,000 per day. It needs no credentials.
  */
 import { writeFileSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -20,6 +20,10 @@ const { values: args } = parseArgs({
     out: { type: 'string', default: 'results.json' },
     quick: { type: 'boolean', default: false },
     cafe: { type: 'string', default: 'demo' },
+    // Pause between measured requests. The live log (wrangler tail) drops events when a Worker
+    // gets many requests per second ("sampling mode"), and the first run lost every hash
+    // request that way. One request at a time, with a pause, keeps every event.
+    pace: { type: 'string', default: '350' },
   },
 });
 if (!args.base) {
@@ -30,7 +34,8 @@ const BASE = args.base.replace(/\/$/, '');
 const CAFE = args.cafe;
 const QUICK = args.quick;
 const ITERATIONS = [10_000, 20_000, 30_000, 40_000, 50_000, 60_000, 80_000, 100_000];
-const HASH_REQUESTS = QUICK ? 5 : 60;
+const HASH_REQUESTS = QUICK ? 5 : 40;
+const PACE_MS = QUICK ? 0 : Number(args.pace);
 const HIBERNATION_WAIT_MS = QUICK ? 15_000 : 40_000;
 
 /** @type {Record<string, unknown>} */
@@ -56,6 +61,24 @@ async function pool(count, limit, task) {
     }
   }
   await Promise.all(Array.from({ length: Math.min(limit, count) }, worker));
+  return out;
+}
+
+/**
+ * Runs `count` calls of `task` one after the other, with PACE_MS between them, so the live log
+ * keeps every event (see the `pace` option).
+ * @template T
+ * @param {number} count
+ * @param {(index: number) => Promise<T>} task
+ * @returns {Promise<T[]>}
+ */
+async function paced(count, task) {
+  /** @type {T[]} */
+  const out = [];
+  for (let i = 0; i < count; i += 1) {
+    out.push(await task(i));
+    if (PACE_MS > 0) await sleep(PACE_MS);
+  }
   return out;
 }
 
@@ -86,12 +109,12 @@ async function staticPage() {
 
 /** 2. D1: read the 150-line menu, and write + read one row. */
 async function database() {
-  const menus = await pool(QUICK ? 3 : 20, 4, async () => {
+  const menus = await paced(QUICK ? 3 : 20, async () => {
     const r = await fetch(`${BASE}/api/${CAFE}/menu`);
     const body = r.ok ? await r.json() : null;
     return { status: r.status, items: body?.items?.length ?? 0 };
   });
-  const writes = await pool(QUICK ? 3 : 20, 4, async () => {
+  const writes = await paced(QUICK ? 3 : 20, async () => {
     const r = await fetch(`${BASE}/api/spike/db`, { method: 'POST' });
     return { status: r.status, body: r.ok ? await r.json() : null };
   });
@@ -106,7 +129,7 @@ async function database() {
 
 /** 3. Server-side render of the 150-line menu. */
 async function serverRender() {
-  const responses = await pool(QUICK ? 5 : 100, 4, () => fetch(`${BASE}/ssr/${CAFE}/t/5`));
+  const responses = await paced(QUICK ? 5 : 60, () => fetch(`${BASE}/ssr/${CAFE}/t/5`));
   const first = await responses[0].text();
   await Promise.all(responses.slice(1).map((r) => r.arrayBuffer()));
   return {
@@ -118,11 +141,11 @@ async function serverRender() {
 
 /** 4. Password hashing at each iteration count, plus a no-op baseline. */
 async function hashing() {
-  await pool(QUICK ? 3 : 30, 4, () => fetch(`${BASE}/api/spike/ping`).then((r) => r.text()));
+  await paced(QUICK ? 3 : 20, () => fetch(`${BASE}/api/spike/ping`).then((r) => r.text()));
   /** @type {Record<string, Record<string, number>>} */
   const byIterations = {};
   for (const iterations of ITERATIONS) {
-    const responses = await pool(HASH_REQUESTS, 4, async () => {
+    const responses = await paced(HASH_REQUESTS, async () => {
       const r = await fetch(`${BASE}/api/spike/hash?iter=${iterations}`);
       await r.arrayBuffer();
       return r;
@@ -137,7 +160,7 @@ async function encryption() {
   /** @type {Record<string, Record<string, number>>} */
   const out = {};
   for (const n of [0, 1000]) {
-    const responses = await pool(QUICK ? 3 : 30, 4, async () => {
+    const responses = await paced(QUICK ? 3 : 20, async () => {
       const r = await fetch(`${BASE}/api/spike/aes?n=${n}`);
       await r.arrayBuffer();
       return r;
