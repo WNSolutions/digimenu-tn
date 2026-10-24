@@ -2,8 +2,8 @@
 
 **Issue:** [#5](https://github.com/WNSolutions/digimenu-tn/issues/5) · **Code:** [`spikes/0005-free-plan/`](../../spikes/0005-free-plan/README.md) · **Requirements:** NFR-02, NFR-17, NFR-23 · **Owner:** Software Architect, with the DevOps & Security Engineer
 
-**Status:** waiting for the first run on Cloudflare. It needs the deploy key in the private
-deploy repository (SETUP_GUIDE_ACCOUNTS.md, step 6). Local checks have passed.
+**Status:** first Cloudflare run done (Fri 23 Oct 2026): 4 of 6 questions are a go. PBKDF2 and
+AES-GCM still need one paced run (the live log dropped their events).
 
 ## Questions and decision rules
 
@@ -31,8 +31,29 @@ Test pages at 360 px (local): [menu, French](img/0005-menu-fr.png) · [menu, Ara
 
 ## Run on Cloudflare
 
-_To be filled from the workflow's `summary.md` after the first run: one line per question with
-the numbers, then the decision._
+### Run 1: Fri 23 Oct 2026, 21:04 UTC (deploy repo check run `120655644563`, Worker `digimenu-spike`)
+
+| # | Result | Numbers |
+| --- | --- | --- |
+| 1 | ✅ go | boot page served for `/demo/t/5`; **0** Worker runs for table-page requests |
+| 2 | ✅ go | 150 menu rows read on every request; 20 writes, all 200 |
+| 3 | ✅ go | push 1 reached 2/2; after 40 s idle the hub's `wakes` went 1 → 2 (it hibernated) and push 2 still reached 2/2; both sockets stayed open |
+| 4 | ✅ go, to confirm | CPU p50 3 ms, p99 4 ms, max 4 ms; but the tail saw only 7 of 100 renders |
+| 5 | ⚪ not measured | all 480 hash requests answered 200, even at 100,000 iterations, but the tail kept **none** of their events |
+| 6 | ⚪ not measured | no AES events in the tail |
+
+Other CPU figures from the same run (p99): menu JSON from D1 5 ms, D1 write + read 3 ms, hub
+requests 2 ms.
+
+**Why 5 and 6 are missing.** `wrangler tail` enters *sampling mode* when a Worker gets many
+requests per second, and drops events. The tool sent 4 requests at a time and the tail kept 60
+of about 700 events. The first analysis also turned "no data" into a false no-go. Both are fixed
+on this branch: measured requests now go one at a time with a 350 ms pause, and a CPU verdict
+counts only when the tail saw at least 80 % of that route's requests (`tools/analyze.mjs`).
+
+### Run 2
+
+_Pending: after deploy-repo PR #4, run **Actions → Spike** again._
 
 ## Decision
 

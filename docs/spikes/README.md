@@ -7,4 +7,4 @@ no.
 
 | Note | Question | Status |
 | --- | --- | --- |
-| [0005-free-plan](0005-free-plan.md) | Does the chosen design fit Cloudflare's free plan? | Waiting for the first run on Cloudflare |
+| [0005-free-plan](0005-free-plan.md) | Does the chosen design fit Cloudflare's free plan? | 4 of 6 go; password hash and AES need run 2 |
