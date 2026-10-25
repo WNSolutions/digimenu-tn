@@ -1,0 +1,100 @@
+/* Minimal styles for the spike pages. Not the design system: see docs/design/. */
+:root {
+  color-scheme: light dark;
+  --bg: #fbf7ee;
+  --fg: #1b4332;
+  --muted: #5b6b62;
+  --line: #e4ddcc;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12241b;
+    --fg: #fbf7ee;
+    --muted: #b9c4bd;
+    --line: #2a4235;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    16px/1.45 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+h3 {
+  margin: 24px 0 8px;
+  font-size: 1.05rem;
+  text-transform: capitalize;
+}
+.menu-table,
+.menu-item-desc,
+.attribution,
+.loading {
+  color: var(--muted);
+}
+.menu-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.menu-item-text {
+  display: flex;
+  flex-direction: column;
+}
+.menu-item-desc {
+  font-size: 0.875rem;
+}
+.menu-item-price {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.attribution {
+  margin-top: 32px;
+  font-size: 0.8rem;
+}
+.error {
+  color: #b42318;
+}
+.log {
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+.log li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: inherit;
+}

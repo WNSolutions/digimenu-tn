@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Status** | Accepted — minimum password length and reset-code lifetime still to settle (see Consequences) |
-| **Date** | 2026-10-21 (decision approved 2026-10-14) |
-| **Source decisions** | D-026 · C-14, US-36, US-37, US-38, NFR-11, NFR-23 |
+| **Date** | 2026-10-21 (decision approved 2026-10-14); password hashing revised 2026-10-26 after the free-plan spike (D-053) |
+| **Source decisions** | D-026, D-053 · C-14, US-36, US-37, US-38, NFR-11, NFR-23 · [spike note 0005](../spikes/0005-free-plan.md) |
 | **Deciders** | Ahmed (project lead) for sign-in and roles; Software Architect for the mechanism |
 
 ## Context
@@ -30,11 +30,16 @@ The full permission table is in the [requirements](../product/README.md) (§2.1)
 
 ### Passwords
 
-- Stored as `pbkdf2-sha256$<iterations>$<salt>$<HMAC-SHA256(pepper, PBKDF2(password, salt, iterations))>$p<pepper version>`. The **pepper** is a secret key in Worker secrets, so a leaked database or backup alone cannot be cracked.
-- Iterations = the highest count whose p99 CPU is ≤ 7 ms on the deployed preview Worker (expected 30,000–40,000), measured in the Sprint 1 spike. Hashes upgrade transparently at the next sign-in.
+- **The phone does the slow part; the server adds the pepper (D-053).** The free-plan spike measured server-side PBKDF2-SHA256 at about 0.2 ms of CPU per 1,000 iterations: only 20,000 iterations stay under a 7 ms budget, against the 30,000 minimum this ADR set. So the slow stretching moves to the browser:
+  1. The sign-in page asks the server for the account's salt (`POST /auth/salt` with café + username). Unknown usernames get a fake salt computed as `HMAC-SHA256(pepper, café|username)`, cut to 16 bytes, so the answer never reveals which accounts exist. The call is rate-limited like sign-in.
+  2. The browser derives `key = PBKDF2-SHA256(password, salt, iterations)` with Web Crypto, `iterations` = **600,000** by default, and sends only `key` over HTTPS. The password itself never leaves the device.
+  3. The server stores and checks `pbkdf2c-sha256$<iterations>$<salt>$<HMAC-SHA256(pepper, key)>$p<pepper version>` with a constant-time comparison: under 1 ms of CPU.
+- The **pepper** is a secret key in Worker secrets, so a leaked database or backup alone cannot be cracked. Even with the pepper, every guess costs the attacker the full 600,000 iterations.
+- `key` is password-equivalent in transit: HTTPS only, never logged, never stored.
+- The iteration count is stored per account. Before v1.0 it is measured on the slowest staff phone of the pilots (target: sign-in under 1.5 s); a lower count, never under 310,000, is chosen only if that phone is too slow. Raising it later re-wraps the hash at the next sign-in.
 - Hashing happens **only** when a password is set or at sign-in. Every other request uses the session token.
 - Rules follow NIST SP 800-63B: no composition rules, no forced periodic changes, maximum 128 characters, paste and password managers allowed, checked against a list of common passwords plus the café name and username.
-- Unknown usernames still run a dummy hash, so timing does not reveal which accounts exist. One generic error message.
+- Unknown usernames get a fake salt and still run the server-side HMAC, so neither the answer nor its timing reveals which accounts exist. One generic error message.
 
 ### Sessions
 
@@ -59,8 +64,8 @@ The full permission table is in the [requirements](../product/README.md) (§2.1)
 ## Consequences
 
 - **Positive:** works on any device with no app, email or SMS; managers are autonomous; a database or backup leak alone does not expose passwords; role changes take effect immediately.
-- **Negative / costs:** password hashing is weaker per guess than the common recommendation because of the CPU limit; the pepper compensates. Losing the pepper key means nobody can sign in, so it is escrowed offline with the other keys ([ADR-0010](0010-customer-data-consent-and-deletion.md)).
-- **If the spike fails** (fewer than about 30,000 iterations fit): the browser stretches the password with PBKDF2 at a high count, and the server applies a fast keyed hash with the pepper. Proposed to the Tech Lead before relying on it.
+- **Negative / costs:** sign-in needs JavaScript and takes about a second on a cheap phone while the browser stretches the password; the sign-in flow is two calls (salt, then sign-in). Losing the pepper key means nobody can sign in, so it is escrowed offline with the other keys ([ADR-0010](0010-customer-data-consent-and-deletion.md)).
+- **Spike result (26 Oct 2026):** server-side hashing at 30,000 iterations did not fit the free CPU budget, so the fallback planned here became the decision (D-053, Ahmed). Server-only hashing at 20,000 iterations was the simpler alternative, rejected because each guess would cost an attacker who also holds the pepper about 30 times less.
 - **Still to settle:**
   - **Minimum password length.** The requirement says at least 8 characters; the security review recommends 15 for Admin and Maintainer and 12 for Manager and Staff. Ahmed decides.
   - **Reset-code lifetime.** The requirement says the temporary password is valid 24 hours; the security review recommends 30 minutes, handed over in person. The shorter value is safer; to confirm with the Tech Lead.

@@ -39,7 +39,7 @@ Every new runtime dependency needs a short written justification in its pull req
 
 - **Positive:** $0/month with about 14× headroom on the binding quota; menus stay up even if the request quota runs out; one deployable artifact; small pages for 3G; one way of writing UI everywhere.
 - **Negative / costs:** more code to write and own than with a hosted backend. Cloudflare-specific bindings (D1, Durable Objects), contained by a thin data-access layer and standard SQLite SQL. The 10 ms CPU limit per request shapes several designs: password hashing ([ADR-0006](0006-accounts-passwords-and-roles.md)), server rendering only for the café home page, paginated exports.
-- **Risks:** free-plan terms can change; we alert at 70 % of any quota, and the documented exit is Workers Paid ($5/month), which needs Ahmed's written approval. Durable Object WebSocket hibernation on the free plan is confirmed in the Sprint 1 spike.
+- **Risks:** free-plan terms can change; we alert at 70 % of any quota, and the documented exit is Workers Paid ($5/month), which needs Ahmed's written approval. Durable Object WebSocket hibernation on the free plan was confirmed in the Sprint 1 spike ([note 0005](../spikes/0005-free-plan.md), 23 and 25 Oct 2026).
 - **Follow-ups:** DevOps owns the tool configuration (`package.json`, lint and type settings, `wrangler.toml`); see [operations](../operations/README.md).
 
 ## Alternatives considered
