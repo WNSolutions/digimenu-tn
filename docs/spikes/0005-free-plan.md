@@ -2,8 +2,8 @@
 
 **Issue:** [#5](https://github.com/WNSolutions/digimenu-tn/issues/5) · **Code:** [`spikes/0005-free-plan/`](../../spikes/0005-free-plan/README.md) · **Requirements:** NFR-02, NFR-17, NFR-23 · **Owner:** Software Architect, with the DevOps & Security Engineer
 
-**Status:** first Cloudflare run done (Fri 23 Oct 2026): 4 of 6 questions are a go. PBKDF2 and
-AES-GCM still need one paced run (the live log dropped their events).
+**Status:** measured (runs of 23 and 25 Oct 2026). 5 of 6 go. **Password hashing is a no-go at
+30,000 iterations**: the ADR-0006 fallback is needed, and Ahmed chooses its form.
 
 ## Questions and decision rules
 
@@ -51,12 +51,43 @@ of about 700 events. The first analysis also turned "no data" into a false no-go
 on this branch: measured requests now go one at a time with a 350 ms pause, and a CPU verdict
 counts only when the tail saw at least 80 % of that route's requests (`tools/analyze.mjs`).
 
-### Run 2
+### Run 2: Sun 25 Oct 2026, 22:55 UTC (check run `121316817417`), paced requests
 
-_Pending: after deploy-repo PR #4, run **Actions → Spike** again._
+The tail still sampled (it kept about 38 % of the events, evenly across routes), so each figure
+below rests on 15 or 16 random requests per iteration count, 27 renders and 7–8 AES requests.
+That is too few for a true p99, but the trend is unambiguous.
+
+| PBKDF2-SHA256 + pepper | CPU p50 | CPU p90 | CPU max | Requests answered |
+| ---: | ---: | ---: | ---: | --- |
+| 10,000 iterations | 2 ms | 3 ms | 4 ms | 40 of 40 |
+| 20,000 | 4 ms | 6 ms | 6 ms | 40 of 40 |
+| 30,000 | 7 ms | 11 ms | 11 ms | 40 of 40 |
+| 40,000 | 8 ms | 13 ms | 16 ms | 40 of 40 |
+| 50,000 | 11 ms | 12 ms | 18 ms | 40 of 40 |
+| 60,000 | 12 ms | 18 ms | 19 ms | 40 of 40 |
+| 80,000 | 16 ms | 18 ms | 18 ms | 40 of 40 |
+| 100,000 | 20 ms | 32 ms | 33 ms | 40 of 40 |
+
+- **Hash:** about 0.2 ms of CPU per 1,000 iterations at the median. Only **20,000** stays under the
+  7 ms budget; 30,000 already reaches 11 ms at p90. Every request still answered 200, even at
+  33 ms: Cloudflare tolerates occasional overruns of the 10 ms free limit, but a design that
+  overruns on every sign-in would be cut off, so it must not rely on that.
+- **AES-GCM:** median 8 ms for 1,000 records vs 0 ms for none, **about 8 µs per record**: go (budget
+  50 µs).
+- **Edge render, 150 lines:** p50 1 ms, max 3 ms over 27 renders: go, confirming run 1.
+- **Hub:** woke 3 → 4 after 40 s idle, both pushes reached 2/2: go again.
 
 ## Decision
 
-_Pending._ Once filled in: the iteration count goes into ADR-0006, the hub result into
+| # | Answer |
+| --- | --- |
+| 1 | **Go.** Table pages are static files; menus keep loading when the Worker quota runs out |
+| 2 | **Go.** D1 reads 150 rows in about 1–5 ms of CPU |
+| 3 | **Go.** The café hub keeps staff screens connected through hibernation; no polling needed |
+| 4 | **Go.** A 150-line edge render costs about 1–4 ms of CPU |
+| 5 | **No-go at 30,000 iterations.** ADR-0006's fallback applies; its exact form is Ahmed's choice (pending) |
+| 6 | **Go.** About 8 µs per encrypted record |
+
+Once the hashing choice is made: the iteration count goes into ADR-0006, the hub result into
 ADR-0002 and `platform/hub/README.md`, the static-page result into ADR-0004, and the "Still to
 verify in the spike" table of the architecture overview is updated.
