@@ -2,7 +2,7 @@
 
 The **café hub** — one Durable Object per café — and the **scheduled jobs**. Both run inside the same Worker as the shell.
 
-**Status:** Planned — go/no-go in the Sprint 1 spike (WebSocket hibernation on the free plan); orders in Sprint 2.
+**Status:** Planned. WebSocket hibernation on the free plan is confirmed ([spike note 0005](../../docs/spikes/0005-free-plan.md)); orders in Sprint 2.
 
 ## What lives here
 

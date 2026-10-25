@@ -85,9 +85,9 @@ That is too few for a true p99, but the trend is unambiguous.
 | 2 | **Go.** D1 reads 150 rows in about 1–5 ms of CPU |
 | 3 | **Go.** The café hub keeps staff screens connected through hibernation; no polling needed |
 | 4 | **Go.** A 150-line edge render costs about 1–4 ms of CPU |
-| 5 | **No-go at 30,000 iterations.** ADR-0006's fallback applies; its exact form is Ahmed's choice (pending) |
+| 5 | **No-go at 30,000 iterations.** Ahmed chose ADR-0006's fallback on 26 Oct (D-053): the browser stretches the password with PBKDF2 at 600,000 iterations, the server adds the pepper with one HMAC (under 1 ms) |
 | 6 | **Go.** About 8 µs per encrypted record |
 
-Once the hashing choice is made: the iteration count goes into ADR-0006, the hub result into
-ADR-0002 and `platform/hub/README.md`, the static-page result into ADR-0004, and the "Still to
-verify in the spike" table of the architecture overview is updated.
+Carried into the design in the same pull request: ADR-0006 (password hashing, D-053), ADR-0002
+and `platform/hub/README.md` (hub), ADR-0004 (static table page) and the architecture overview
+("Checked in the spike").

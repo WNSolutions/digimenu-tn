@@ -18,7 +18,7 @@ DigiMenu TN gives each partner café a QR-code menu that customers open on their
 - [Security and privacy in brief](#security-and-privacy-in-brief)
 - [Free-plan budget](#free-plan-budget)
 - [What changed since v0.1](#what-changed-since-v01)
-- [Still to verify in the spike](#still-to-verify-in-the-spike)
+- [Checked in the spike](#checked-in-the-spike)
 
 ## Constraints that shape everything
 
@@ -294,15 +294,16 @@ ARCHITECTURE v0.1 (10 Oct) was written before Ahmed's decisions of 14–21 Oct a
 | Deferred items | media host + daily fallback menus, anonymised preview copy, full migration runner, 13 CI stages from day one | deferred to Sprint 3 or v1.0; until then service-worker copy, demo data on preview, SQL files + export + Time Travel, a minimal CI | Tech Lead review §3 |
 | Certificates | — | youth certificates are a separate WNS tool, not a café module | D-032, [ADR-0009](../adr/0009-certificates-outside-the-cafe-toolkit.md) |
 
-## Still to verify in the spike
+## Checked in the spike
 
-These are design assumptions to confirm on a preview Worker before they are relied on.
+These design assumptions were tested on a Worker on Cloudflare's free plan, 23 and 25 Oct 2026 ([spike note 0005](../spikes/0005-free-plan.md)).
 
-| Assumption | Why it matters | If it fails |
+| Assumption | Why it matters | Result |
 |---|---|---|
-| `/<café>/t/<table>` can be served as **one static file** without running the Worker (asset rewrite rule) | menus must keep working when the request quota runs out | serve the boot page through the Worker with long edge caching; re-check the quota table |
-| PBKDF2 at ≈ 30,000–40,000 iterations fits p99 ≤ 7 ms of CPU | password sign-in within the 10 ms free CPU limit | browser-side stretching + server pepper ([ADR-0006](../adr/0006-accounts-passwords-and-roles.md)) |
-| Durable Object WebSocket hibernation on the free plan | staff screen without polling | fall back to 30 s polling only for the staff screen (≈ 6.5× headroom) and report to the Tech Lead |
-| AES-GCM field encryption costs ≤ 50 µs per record | encrypted customer fields | paginate exports more finely |
+| `/<café>/t/<table>` can be served as **one static file** without running the Worker | menus must keep working when the request quota runs out | **Confirmed**: `assets.not_found_handling = "single-page-application"` serves `index.html` to browsers; 0 Worker runs seen |
+| PBKDF2 at ≈ 30,000–40,000 iterations fits p99 ≤ 7 ms of CPU | password sign-in within the 10 ms free CPU limit | **Failed**: only 20,000 fit (about 0.2 ms per 1,000 iterations) → browser-side stretching at 600,000 + server pepper, D-053 ([ADR-0006](../adr/0006-accounts-passwords-and-roles.md)) |
+| Durable Object WebSocket hibernation on the free plan | staff screen without polling | **Confirmed**: two sockets kept, pushes delivered before and after hibernation |
+| AES-GCM field encryption costs ≤ 50 µs per record | encrypted customer fields | **Confirmed**: about 8 µs per record |
+| A 150-line menu renders at the edge within the 10 ms CPU limit | server render when needed | **Confirmed**: about 1–4 ms |
 
 Related: [modules](modules.md) · [data model](data-model.md) · [releases](releases.md) · [ADR index](../adr/README.md) · [requirements](../product/README.md)

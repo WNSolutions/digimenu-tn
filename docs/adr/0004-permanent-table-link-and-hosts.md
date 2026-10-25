@@ -53,7 +53,7 @@ The domain and host names come from deployment configuration, never from code (N
 
 - **Positive:** no DNS work per café, so a trained youth can onboard a new café in under 2 hours; the same link works on `workers.dev`; one certificate covers everything; session cookies cannot leak to menu pages or to other WNS products.
 - **Negative / costs:** all cafés share one browser origin, so storage is isolated by a key prefix (`dm:<café>:`) and there is one service worker. Slugs share the URL space with platform routes (reserved list above).
-- **Risk to verify:** the table page must be served as **one static file** for every `/<café>/t/<table>` path without running the Worker, so menus keep working when the request quota runs out. This needs an asset rewrite rule and is checked in the Sprint 1 spike ([overview](../architecture/overview.md#still-to-verify-in-the-spike)).
+- **Verified (spike 0005, Oct 2026):** the table page is served as **one static file** for every `/<café>/t/<table>` path without running the Worker, so menus keep working when the request quota runs out. The asset setting `not_found_handling = "single-page-application"` does it; no rewrite rule is needed ([note 0005](../spikes/0005-free-plan.md)).
 - **Risk:** the domain is a single point of failure for every printed card. Mitigations: buy 2–3 years if the budget line allows (D-024), name a renewal owner and a backup, set renewal reminders, keep the DNS zone on Cloudflare.
 
 ## Alternatives considered
