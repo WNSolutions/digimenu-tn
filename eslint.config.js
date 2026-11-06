@@ -111,6 +111,11 @@ export default defineConfig([
     languageOptions: { globals: { ...globals.serviceworker } },
   },
   {
+    // Static boot page script: runs in the browser before any release is loaded.
+    files: ['platform/shell/public/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
     // Admin app, staff screen: runs in the browser.
     files: ['platform/admin/**/*.js'],
     languageOptions: { globals: { ...globals.browser } },
