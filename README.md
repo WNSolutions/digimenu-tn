@@ -8,14 +8,15 @@ A project of **Why Not Solutions (WNS)** · Licence: [MIT](LICENSE) · Status: *
 
 ## What it is
 
-Customers scan the QR card on their table and the café's menu opens on their own phone, with the table already known. They browse in their language, build a list, and either send the order to the staff screen or show the list to the waiter. The café owner changes prices and marks items sold out from a phone, without a developer.
+Customers scan the QR card on their table and the café's menu opens on their own phone, with the table already known. They browse in their language, build a list, and send the order through WhatsApp or to the staff screen, or show the list to the waiter. Each order earns a loyalty stamp on a card they keep in Apple Wallet or Google Wallet. The café owner changes prices and marks items sold out from a phone, without a developer.
 
 | For customers | For café staff and owners | For maintainers |
 |---|---|---|
 | Menu opens from the table QR in about 3 s on 3G | Orders arrive on the counter tablet or a waiter's phone, with a loud alert | Set up a new café from a template in under 2 hours, without code |
 | French, Arabic (right-to-left) and English | Edit prices and availability from a phone, live within a minute | Switch features per café; switch a failing one off in minutes |
 | Prices to the millime (4,500 DT) | Sales dashboard: orders through DigiMenu, best sellers, busy hours | Roll a café back to its previous version in under 15 minutes |
-| No app to install; works on entry-level phones | Optional WhatsApp hand-off for takeaway | Print QR table cards from the café's table list |
+| No app to install; works on entry-level phones | Orders through the café's WhatsApp, free, or on the staff screen | Print QR table cards from the café's table list |
+| A loyalty card in the phone's wallet, with stamps for every order | Set the reward; stamp and redeem with a scan | Turn loyalty on per café, with its own rule |
 
 **Every café runs the same code.** What differs is a set of switches and settings: optional features are **modules** that each café turns on or off. Each café is **pinned** to a tested release, and a new release reaches one pilot café before the others.
 
@@ -27,9 +28,9 @@ This repository holds the **foundation** (folder structure, contracts, architect
 |---|---|
 | v0.1.0 — demo café on a test address: menu, languages, list, show-to-waiter | end of Sprint 1 (late Oct 2026) |
 | Real menus, staff screen, accounts and roles, checkout with consent | Sprint 2 (by 8 Nov 2026) |
-| Go-live release candidate; printed table links frozen on 13 Nov | 20 Nov 2026 |
+| Go-live release candidate with loyalty (D-064); printed table links frozen on 13 Nov | 20 Nov 2026 |
 | Live at the pilot cafés in Monastir | 23 Nov – 4 Dec 2026 |
-| v1.1 — loyalty and rewards; optional WhatsApp Business messages | Dec 2026 – Jan 2027 |
+| v1.1 — optional WhatsApp Business messages | Dec 2026 – Jan 2027 |
 | Toolkit v1.0 with maintainer guides | by 3 Jan 2027 |
 
 See the [changelog](CHANGELOG.md) for what has shipped.

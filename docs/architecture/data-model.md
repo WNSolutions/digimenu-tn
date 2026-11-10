@@ -289,14 +289,22 @@ Decision D-027: WNS keeps customer data (first name, phone, order history) for e
 | Backups | rolling 8 weeks, encrypted | Deleted data disappears from backups when they expire. Backups are not committed to git history. |
 | D1 Time Travel | 7 days | Cloudflare's built-in point-in-time restore. |
 
+## Loyalty (go-live, D-064)
+
+Module M-15 `loyalty`, design in [ADR-0013](../adr/0013-loyalty-at-launch-phone-number-and-wallet-card.md).
+
+| Table | Module | Purpose |
+|---|---|---|
+| `loyalty_cards` | M-15 `loyalty` | One card per customer record and café: card number, keyed hash of the signed card token, wallet object references (Google, Apple), status. No phone number. |
+| `loyalty_ledger` | M-15 `loyalty` | Every earn, redeem and reversal, per café, linked to a staff-confirmed order or a staff scan, with the staff member and time. |
+| `loyalty_rewards` | M-15 `loyalty` | The café's rule set by the manager: stamps needed, reward text in FR/AR/EN, optional minimum order total, version. |
+
 ## Planned for v1.1
 
 Not in the go-live release. Listed so the go-live schema does not block them.
 
 | Table | Module | Purpose |
 |---|---|---|
-| `loyalty_ledger` | M-15 `loyalty` | Every earn, redeem and reversal, per café, linked to staff-confirmed orders. |
-| `loyalty_rewards` | M-15 `loyalty` | Rewards defined per café by the manager. |
 | `wa_accounts` | M-16 `whatsapp_business` | Café's WhatsApp Business connection; tokens encrypted, never sent to a browser. |
 | outbox (café hub's own storage) | M-16 `whatsapp_business` | Messages to send, retries and statuses, kept off D1 to save quota. |
 

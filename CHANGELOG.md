@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Static boot page: one `/api/boot` call, saved copy when offline, names-and-prices fallback if the release cannot load.
 - Menu import from the spreadsheet (CSV) with plain-language reports, including ambiguous prices such as "4500" (D-045).
 - Ordering through WhatsApp (D-063, module `whatsapp_handoff`, M-03): "Commander par WhatsApp" in Ma liste opens the customer's WhatsApp with the order written in the café's language; "Montrer au serveur" stays as a second choice; a closed café shows when orders start again. First piece of the module system: the customer page's extension registry (`list.action`), and a channel can now be one module or two.
+- Loyalty moves into the go-live release (D-064): [ADR-0013](docs/adr/0013-loyalty-at-launch-phone-number-and-wallet-card.md) (phone number per café, stamps on staff-confirmed orders or a staff scan, web card with QR, Apple Wallet and Google Wallet); roadmap, requirements, module catalogue and data model updated.
 - `npm run dev` (local server with the demo café) and `npm run demo` (the demo café as one standalone HTML file, with a size check against the 20 KB budget).
 
 [Unreleased]: https://github.com/WNSolutions/digimenu-tn/commits/main
