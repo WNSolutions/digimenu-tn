@@ -34,9 +34,9 @@ gantt
 | **S2 Cohort start**       | 26 Oct–8 Nov | Real menus in preview     | Orders reach the staff screen; staff screen on phones and tablets; accounts, roles and password resets; checkout with privacy notice and consent; full menu editor with history; module switches and kill switch; check codes. Real menus in preview for café managers (private repository). Certificate design. |
 | **S3 Train & build**      | 9–22 Nov     | Go-live release candidate | Menu links frozen; QR cards printed; Admin customer area with export and deletion; release pins and rehearsed rollback; Google review invitation; dashboards and impact export; optional go-live modules; workshop-ready demo café and youth guide; certificate tools.                                           |
 | **S4 Deploy**             | 23 Nov–6 Dec | All pilot cafés live      | Wave 1 (2 cafés), then wave 2 (3 cafés). Patch releases only. First certificates and the LinkedIn guide.                                                                                                                                                                                                         |
-| **S5 Evaluate & certify** | 7–20 Dec     | Stable, measured          | Mid-project evaluation with visit and sales data. After-go-live features (loyalty) built on their own branch, pilot café first. Completion certificates.                                                                                                                                                         |
+| **S5 Evaluate & certify** | 7–20 Dec     | Stable, measured          | Mid-project evaluation with visit and sales data. After-go-live features built on their own branch, pilot café first. Completion certificates.                                                                                                                                                         |
 | **S6 Toolkit public**     | 21 Dec–3 Jan | Toolkit v1.0              | **v1.0 public release on Thu 31 Dec:** repository checked for private data, FR/EN guides, a guide for every module, new-café template.                                                                                                                                                                           |
-| **S7 Close**              | 4–15 Jan     | Handover                  | Final data export; loyalty on all cafés by mid-January; handover to café owners and youth maintainers.                                                                                                                                                                                                           |
+| **S7 Close**              | 4–15 Jan     | Handover                  | Final data export; handover to café owners and youth maintainers.                                                                                                                                                                                                           |
 
 The detailed backlog is in GitHub issues, grouped by milestone. Which requirement lands in which milestone: [requirements index](requirements-index.md).
 
@@ -72,7 +72,7 @@ The detailed backlog is in GitHub issues, grouped by milestone. Which requiremen
 | Preview releases       | S2 and S3            | Real menus in preview for managers; no live café yet          |
 | Go-live release        | Candidate Fri 20 Nov | Pilot cafés, pilot café first, after Ahmed's approval         |
 | Patch releases         | 20 Nov–4 Dec         | Fixes only, during the go-live waves                          |
-| After-go-live features | From December        | Loyalty first; optional WhatsApp Business when a café opts in |
+| After-go-live features | From December        | Optional WhatsApp Business when a café opts in; loyalty points mode if chosen |
 | v1.0 · public toolkit  | Thu 31 Dec           | Anyone who wants to deploy DigiMenu for their own city        |
 
 In the requirements, "v1.1" is the name of a **scope** (features built after go-live), not a version number. Version numbers follow Semantic Versioning ([CHANGELOG.md](../../CHANGELOG.md)) and the rules in [branching and releases](../operations/branching-and-releases.md). No release reaches a café before Ahmed approves it in writing (decision D-021).
@@ -83,7 +83,7 @@ These protect the 4 December go-live. They are checked for each café in the pri
 
 1. **No real customer data** before the privacy checks pass: role tests, details and consent at checkout, customer records with access log, export and deletion, privacy notice approved in FR/AR/EN, encrypted backup with a tested restore, and the legal check. Until then, the café goes live with the menu and show-to-waiter only.
 2. **Ordering is switched on at a café only after the staff screen has been checked on that café's own devices.**
-3. **No after-go-live code in the go-live release.** Loyalty and WhatsApp Business are built on their own branch after 20 Nov. From 20 Nov to 4 Dec, only patch releases.
+3. **No after-go-live code in the go-live release.** WhatsApp Business is built on its own branch after 20 Nov. From 20 Nov to 4 Dec, only patch releases. **Loyalty is in the go-live release** (D-064, [ADR-0013](../adr/0013-loyalty-at-launch-phone-number-and-wallet-card.md)); its wallet passes can be switched on during the waves, as they depend on Apple's and Google's approval, not on new code.
 4. **If S3 runs late, the manager sales dashboard moves first** (patch during wave 2, or later). It does not affect customers.
 
 ## Not planned for go-live
