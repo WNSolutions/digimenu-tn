@@ -28,13 +28,40 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const BUDGET_CORE_GZ = 20 * 1024;
 const TARGET = ['es2022', 'chrome100', 'safari15.4', 'firefox110'];
 
-/** @param {string} format @returns {Promise<string>} */
-async function bundleJs(format) {
+/** The customer core alone, as a release ships it (measured against the budget). */
+async function bundleCore() {
   const out = await build({
     entryPoints: [path.join(root, 'core/app/main.js')],
     bundle: true,
-    format: /** @type {'esm' | 'iife'} */ (format),
-    globalName: format === 'iife' ? 'DigiMenu' : undefined,
+    format: 'esm',
+    minify: true,
+    target: TARGET,
+    legalComments: 'none',
+    write: false,
+    logLevel: 'silent',
+  });
+  return out.outputFiles[0].text;
+}
+
+/**
+ * One script for the standalone page: the core plus the café's enabled modules, passed to
+ * `start` directly instead of being loaded from the release.
+ * @param {string[]} moduleKeys
+ */
+async function bundleStandalone(moduleKeys) {
+  const imports = moduleKeys
+    .map((key, i) => `import m${i} from './modules/${key}/client.js';`)
+    .join('\n');
+  const map = moduleKeys.map((key, i) => `${JSON.stringify(key)}: m${i}`).join(', ');
+  const out = await build({
+    stdin: {
+      contents: `import { start } from './core/app/main.js';\n${imports}\nexport function run(boot) { return start(boot, { modules: { ${map} } }); }\n`,
+      resolveDir: root,
+      loader: 'js',
+    },
+    bundle: true,
+    format: 'iife',
+    globalName: 'DigiMenu',
     minify: true,
     target: TARGET,
     legalComments: 'none',
@@ -107,7 +134,8 @@ async function run() {
     { table: values.table, code },
     { version: 'demo', entry: '', css: '' },
   );
-  const [esm, iife, css] = await Promise.all([bundleJs('esm'), bundleJs('iife'), bundleCss()]);
+  const keys = demo.modules.map((m) => m.key);
+  const [esm, iife, css] = await Promise.all([bundleCore(), bundleStandalone(keys), bundleCss()]);
   const name = demo.info.names.fr;
 
   const html = `<!doctype html>
@@ -125,7 +153,7 @@ async function run() {
 <div id="app"></div>
 <script type="application/json" id="dm-boot">${scriptJson(boot)}</script>
 <script>${iife}
-DigiMenu.start(JSON.parse(document.getElementById('dm-boot').textContent));</script>
+DigiMenu.run(JSON.parse(document.getElementById('dm-boot').textContent));</script>
 </body>
 </html>
 `;
@@ -137,6 +165,7 @@ DigiMenu.start(JSON.parse(document.getElementById('dm-boot').textContent));</scr
   const lines = [
     `Wrote ${path.relative(process.cwd(), path.join(outDir, 'index.html'))} (table ${values.table}).`,
     `Customer code: ${kb(coreGz)} gzipped (budget ${kb(BUDGET_CORE_GZ)}) · CSS ${kb(gz(css))} · menu ${kb(gz(JSON.stringify(boot.menu)))}.`,
+    `Modules switched on: ${keys.join(', ') || 'none'} (${kb(gz(iife) - gz(esm))} with the core in one file).`,
     `Whole page: ${kb(gz(html))} gzipped.`,
     '',
     demo.report,

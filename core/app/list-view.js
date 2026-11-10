@@ -1,15 +1,16 @@
 // @ts-check
 /**
  * The list sheet (components §8) and the show-to-waiter screen (§11, §1.3 "the ticket").
- * In Sprint 1 ordering is not built yet, so the list's one prominent action is
- * "Montrer au serveur": it sends nothing and asks for no personal data (US-10).
+ * The list's main button comes from the café's order channel (a module contributing
+ * `list.action`, e.g. "Commander par WhatsApp"). Without one, or when the café is closed, the
+ * main button is "Montrer au serveur": it sends nothing and asks for no personal data (US-10).
  */
 import { h, icon, bdi, langText } from './dom.js';
 import { openSheet } from './sheet.js';
 import { setQty, setListNote, checkList, NOTE_MAX, DEFAULT_MAX_QTY, emptyList } from '../list.js';
 import { indexSnapshot } from '../menu/snapshot.js';
 import { langParts } from './context.js';
-import { formatClock } from '../hours.js';
+import { formatClock, openStatus } from '../hours.js';
 
 /** @typedef {import('./context.js').Ctx} Ctx */
 /** @typedef {import('../list.js').CheckedLine} CheckedLine */
@@ -35,6 +36,10 @@ export function openListSheet(ctx) {
     dir: ctx.dir,
   });
   let confirming = false;
+  /** Key of the action the customer has tapped (its "after" line is shown). */
+  let tapped = '';
+  // Modules finish loading in the background; draw again once they are there.
+  ctx.ready.then(() => sheet.dialog.open && render());
 
   function render() {
     const checked = checkList(ctx.list, ctx.index);
@@ -162,19 +167,69 @@ export function openListSheet(ctx) {
             t('list.clear'),
           ),
     );
-    actions.replaceChildren(
-      h('p', { class: 'dm-actions-note' }, t('list.showOnly')),
+    actions.replaceChildren(...orderActions(checked));
+  }
+
+  /**
+   * The main button: the café's order channel when it has one and is open, otherwise
+   * "Montrer au serveur" (which stays as a second choice under the channel).
+   * @param {ReturnType<typeof checkList>} checked
+   * @returns {Node[]}
+   */
+  function orderActions(checked) {
+    const showWaiter = (/** @type {boolean} */ main) =>
       h(
         'button',
         {
           type: 'button',
-          class: 'dm-prominent',
+          class: main ? 'dm-prominent' : 'dm-plain dm-plain--center',
           disabled: checked.count === 0,
           onclick: () => openWaiter(ctx),
         },
         t('list.showWaiter'),
+      );
+    const channel = ctx.ext.listActions({
+      checked,
+      note: ctx.list.note,
+      cafe: ctx.boot.cafe,
+      table: ctx.boot.table,
+      lang: ctx.lang,
+      now: ctx.now(),
+    })[0];
+    if (!channel || checked.count === 0) {
+      return [h('p', { class: 'dm-actions-note' }, t('list.showOnly')), showWaiter(true)];
+    }
+    const hours = openStatus(ctx.boot.cafe.hours, ctx.now(), ctx.boot.cafe.timeZone);
+    if (hours && !hours.open) {
+      const closed = hours.opensAt
+        ? t('list.orderClosed', { time: hours.opensAt })
+        : t('list.orderClosedNoTime');
+      return [h('p', { class: 'dm-actions-note' }, closed), showWaiter(true)];
+    }
+    return [
+      h(
+        'p',
+        { class: 'dm-actions-note', 'aria-live': 'polite' },
+        tapped === channel.key && channel.after ? channel.after : (channel.note ?? ''),
       ),
-    );
+      h(
+        'a',
+        {
+          class: 'dm-prominent',
+          href: channel.href,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          onclick: () => {
+            tapped = channel.key;
+            if (channel.after) ctx.announce(channel.after);
+            setTimeout(render, 0);
+          },
+        },
+        channel.icon ? icon(channel.icon) : null,
+        channel.label,
+      ),
+      showWaiter(false),
+    ];
   }
 
   /** @param {CheckedLine} c */

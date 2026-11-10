@@ -36,7 +36,7 @@
   },
   "ordering": {
     "types": {
-      "dine_in": { "channel": "send_order" },
+      "dine_in": { "channel": ["whatsapp_handoff", "send_order"] },
       "takeaway": { "channel": "whatsapp_handoff", "prepMinutes": 15 }
     },
     "dineInDetails": "required",

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WNSolutions/digimenu-tn/modules/whatsapp_handoff/settings.schema.json",
+  "title": "whatsapp_handoff settings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "number": {
+      "type": "string",
+      "pattern": "^\\+[1-9][0-9]{6,14}$",
+      "description": "The café's WhatsApp number in international format (+216 and 8 digits). A business number the café agrees to publish, never a staff member's personal number unless the owner chooses it. Required for a real café; the demo café has none, so WhatsApp asks whom to send to."
+    },
+    "messageLanguage": {
+      "enum": ["default", "fr", "ar", "en"],
+      "default": "default",
+      "description": "Language of the message staff receive: the café's default language, or a fixed one."
+    }
+  }
+}

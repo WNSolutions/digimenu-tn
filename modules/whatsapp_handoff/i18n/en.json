@@ -1,0 +1,18 @@
+{
+  "action.label": "Order on WhatsApp",
+  "action.note": "WhatsApp opens with your order already written: tap Send.",
+  "action.after": "In WhatsApp, tap Send. Your list stays here.",
+  "msg.title": "New order · {cafe}",
+  "msg.dineIn": "Dine-in · Table {table}",
+  "msg.noTable": "No table number",
+  "msg.ref": "Ref. {ref}",
+  "msg.line": "{qty} × {name} — {price}",
+  "msg.lineNote": "   Note: {note}",
+  "msg.orderNote": "Order note: {note}",
+  "msg.total": "Total: {total}",
+  "msg.customerLang": "Customer's language: {lang}",
+  "msg.footer": "Sent from the DigiMenu menu",
+  "lang.fr": "French",
+  "lang.ar": "Arabic",
+  "lang.en": "English"
+}

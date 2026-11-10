@@ -1,0 +1,18 @@
+{
+  "action.label": "Commander par WhatsApp",
+  "action.note": "WhatsApp s'ouvre avec votre commande déjà écrite : appuyez sur Envoyer.",
+  "action.after": "Dans WhatsApp, appuyez sur Envoyer. Votre liste reste ici.",
+  "msg.title": "Nouvelle commande · {cafe}",
+  "msg.dineIn": "Sur place · Table {table}",
+  "msg.noTable": "Sans numéro de table",
+  "msg.ref": "Réf. {ref}",
+  "msg.line": "{qty} × {name} — {price}",
+  "msg.lineNote": "   Note : {note}",
+  "msg.orderNote": "Note pour la commande : {note}",
+  "msg.total": "Total : {total}",
+  "msg.customerLang": "Langue du client : {lang}",
+  "msg.footer": "Envoyé depuis la carte DigiMenu",
+  "lang.fr": "français",
+  "lang.ar": "arabe",
+  "lang.en": "anglais"
+}
