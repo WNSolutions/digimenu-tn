@@ -200,7 +200,7 @@ Priorities and dates come from the requirements ([product docs](../product/READM
 | M-12 | `languages` | Which of FR/AR/EN a café shows, and the switch | — | Sprint 1 |
 | M-13 | `call_waiter` | Call waiter or ask for the bill | M-02 | On request |
 | M-14 | `google_review` | Same Google review invitation for every customer after Served | M-02 | Go-live where the café has a link |
-| M-15 | `loyalty` | Points per staff-confirmed order, rewards set per café | `customer_records`, M-01, M-02 | v1.1 (after go-live) |
+| M-15 | `loyalty` | Stamps per staff-confirmed order or staff scan, reward set per café, card on the web and in Apple Wallet / Google Wallet ([ADR-0013](../adr/0013-loyalty-at-launch-phone-number-and-wallet-card.md)) | `customer_records`, M-01, a channel | Go-live (D-064) |
 | M-16 | `whatsapp_business` | Automated WhatsApp messages via the official Business Platform, **paid by the café** | `customer_records`, M-02 | v1.1, only where a café opts in |
 
 Youth certificates are **not** a module: see [ADR-0009](../adr/0009-certificates-outside-the-cafe-toolkit.md).
@@ -250,7 +250,7 @@ flowchart TB
       M02["M-02 send_order"]
       M03["M-03 whatsapp_handoff"]
       MXX["M-04 to M-14 - payment, preorder, events, reservations, photos, specials, tags, feedback, languages, call waiter, google review"]
-      MV11["M-15 loyalty, M-16 whatsapp_business - v1.1"]
+      MV11["M-16 whatsapp_business - v1.1"]
     end
   end
 
