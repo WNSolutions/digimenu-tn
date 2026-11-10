@@ -31,6 +31,7 @@ export const TEXTS = { fr, ar, en };
  * @property {{ label: string, valid: boolean } | null} table
  * @property {Snapshot} menu
  * @property {{ savedAt: number } | null} [offline]   set by the boot page when this is the saved copy
+ * @property {import('./extensions.js').BootModule[]} [modules]   only the modules switched on (MOD-03)
  */
 
 /**
@@ -48,6 +49,8 @@ export const TEXTS = { fr, ar, en };
  * @property {(message: string) => void} announce
  * @property {() => Date} now
  * @property {() => ReturnType<typeof import('../list.js').checkList>} check   the list checked against the menu (cached)
+ * @property {import('./extensions.js').Registry} ext   contributions of the enabled modules
+ * @property {Promise<void>} ready   resolves once the enabled modules are registered
  */
 
 /**

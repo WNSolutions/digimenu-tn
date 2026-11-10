@@ -2,7 +2,9 @@
 
 **Optional features**, one folder per module. Each café switches modules on or off by configuration only; the code is the same for every café.
 
-**Status:** no modules yet. The first two, `languages` (M-12) and `whatsapp_handoff` (M-03), arrive in Sprint 1 with the module registry and the config validator.
+**Status:** first module: [`whatsapp_handoff`](whatsapp_handoff/GUIDE.md) (M-03, experimental), loaded by the customer page's extension registry ([`core/app/extensions.js`](../core/app/extensions.js), point `list.action`). Still to come in Sprint 1: `languages` (M-12) and the config validator.
+
+A module's `client.js` exports `register(api)` and imports nothing: everything it may use comes in `api`.
 
 ## What lives here
 

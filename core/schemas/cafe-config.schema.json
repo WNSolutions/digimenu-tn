@@ -157,7 +157,7 @@
               "additionalProperties": false,
               "required": ["channel"],
               "properties": {
-                "channel": { "$ref": "#/$defs/moduleKey" }
+                "channel": { "$ref": "#/$defs/channel" }
               }
             },
             "takeaway": {
@@ -165,7 +165,7 @@
               "additionalProperties": false,
               "required": ["channel"],
               "properties": {
-                "channel": { "$ref": "#/$defs/moduleKey" },
+                "channel": { "$ref": "#/$defs/channel" },
                 "prepMinutes": {
                   "type": "integer",
                   "minimum": 0,
@@ -180,7 +180,7 @@
               "additionalProperties": false,
               "required": ["channel"],
               "properties": {
-                "channel": { "$ref": "#/$defs/moduleKey" },
+                "channel": { "$ref": "#/$defs/channel" },
                 "areaNote": {
                   "$ref": "#/$defs/localizedText",
                   "description": "Fixed note on delivery area and fee. No zone pricing."
@@ -244,6 +244,19 @@
         "ar": { "type": "string", "minLength": 1, "maxLength": 200 },
         "en": { "type": "string", "minLength": 1, "maxLength": 200 }
       }
+    },
+    "channel": {
+      "description": "The module that submits this order type, or two to offer both (D-063: WhatsApp hand-off and staff screen). The first one is the main button.",
+      "oneOf": [
+        { "$ref": "#/$defs/moduleKey" },
+        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/moduleKey" },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        }
+      ]
     },
     "moduleKey": {
       "type": "string",

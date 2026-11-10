@@ -677,6 +677,15 @@ bdi,
   font-weight: 600;
 }
 
+.dm-plain--center {
+  justify-content: center;
+  width: 100%;
+}
+
+a.dm-prominent {
+  text-decoration: none;
+}
+
 .dm-plain--danger,
 .dm-destructive {
   color: var(--dm-danger);
