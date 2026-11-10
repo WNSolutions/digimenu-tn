@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Customer menu for the demo café (#6–#10, first part): menu with category bar, sizes and sold-out items; French, Arabic (right to left) and English with French fallback; opening hours; "Ma liste" saved on the phone for 6 hours with notes, re-checked against the menu; "Montrer au serveur" ticket with its own language switch. Prices in integer millimes everywhere.
 - Static boot page: one `/api/boot` call, saved copy when offline, names-and-prices fallback if the release cannot load.
 - Menu import from the spreadsheet (CSV) with plain-language reports, including ambiguous prices such as "4500" (D-045).
+- Ordering through WhatsApp (D-063, module `whatsapp_handoff`, M-03): "Commander par WhatsApp" in Ma liste opens the customer's WhatsApp with the order written in the café's language; "Montrer au serveur" stays as a second choice; a closed café shows when orders start again. First piece of the module system: the customer page's extension registry (`list.action`), and a channel can now be one module or two.
 - `npm run dev` (local server with the demo café) and `npm run demo` (the demo café as one standalone HTML file, with a size check against the 20 KB budget).
 
 [Unreleased]: https://github.com/WNSolutions/digimenu-tn/commits/main

@@ -2,10 +2,12 @@
 
 | | |
 |---|---|
-| **Status** | Accepted |
+| **Status** | Accepted · amended 2026-11-10 by D-063 (hand-off for dine-in too) |
 | **Date** | 2026-10-21 (decisions 2026-10-14) |
-| **Source decisions** | D-023, D-028, D-030 · M-02, M-03, M-16, US-14, US-45, MOD-18, NFR-17, NFR-24 |
+| **Source decisions** | D-023, D-028, D-030, D-063 · M-02, M-03, M-16, US-14, US-45, MOD-18, NFR-17, NFR-24 |
 | **Deciders** | Ahmed (project lead) |
+
+> **Amendment (D-063, 2026-11-10).** The free WhatsApp hand-off is no longer only for takeaway: a café can use it for **dine-in** too, alone or with the staff screen. The order is still stored first (from Sprint 2), and the customer presses Send in their own WhatsApp. Everything else below stands: messages that reach staff with no tap from the customer need the paid WhatsApp Business Platform (M-16), and automating a personal WhatsApp account is never used.
 
 ## Context
 

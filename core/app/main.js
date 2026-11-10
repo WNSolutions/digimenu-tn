@@ -2,6 +2,10 @@
 /**
  * Customer page entry point (release code). The static boot page calls `/api/boot`, then
  * imports this file from the café's pinned release and calls `start(boot)`.
+ *
+ * Enabled modules (`boot.modules`) load in the background: the menu shows at once, and their
+ * contributions (for example "Commander par WhatsApp" in Ma liste) are there when needed.
+ * A bundled build can pass the modules' `register` functions in `env.modules` instead.
  */
 import { SPRITE } from '../ui/icons.js';
 import { chooseLanguage } from '../i18n.js';
@@ -10,13 +14,15 @@ import { loadList, saveList, checkList, DEFAULT_MAX_AGE_MS } from '../list.js';
 import { langParts } from './context.js';
 import { renderPage } from './page.js';
 import { h } from './dom.js';
+import { createRegistry } from './extensions.js';
 
 /** @typedef {import('./context.js').Boot} Boot */
 /** @typedef {import('./context.js').Ctx} Ctx */
 
 /**
  * @param {Boot} boot
- * @param {{ root?: HTMLElement, storage?: Storage | null, now?: () => Date }} [env]
+ * @param {{ root?: HTMLElement, storage?: Storage | null, now?: () => Date,
+ *   modules?: Record<string, import('./extensions.js').RegisterFn> }} [env]
  */
 export function start(boot, env = {}) {
   const root = env.root ?? /** @type {HTMLElement} */ (document.getElementById('app'));
@@ -62,6 +68,8 @@ export function start(boot, env = {}) {
       chooseLanguage(cafe.languages, saved, navigator.languages ?? [navigator.language]),
     ),
   });
+  ctx.ext = createRegistry();
+  ctx.ready = loadModules(boot.modules ?? [], ctx.ext, env.modules ?? {});
   let checkedFor = /** @type {unknown} */ (null);
   let checked = checkList(ctx.list, index);
   ctx.check = () => {
@@ -109,6 +117,26 @@ export function start(boot, env = {}) {
   }
   draw();
   return ctx;
+}
+
+/**
+ * Registers each enabled module. A module that fails to load is left out; the page works without it.
+ * @param {import('./extensions.js').BootModule[]} modules
+ * @param {import('./extensions.js').Registry} registry
+ * @param {Record<string, import('./extensions.js').RegisterFn>} bundled
+ */
+async function loadModules(modules, registry, bundled) {
+  await Promise.all(
+    modules.map(async (mod) => {
+      try {
+        const register =
+          bundled[mod.key] ?? (mod.entry ? (await import(mod.entry)).default : undefined);
+        if (typeof register === 'function') registry.add(mod, register);
+      } catch (err) {
+        console.error(`module ${mod.key} did not load`, err);
+      }
+    }),
+  );
 }
 
 /** localStorage, or null when the browser refuses it (private mode, blocked site data). */

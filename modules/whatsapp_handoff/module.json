@@ -1,0 +1,46 @@
+{
+  "$schema": "../../core/schemas/module.schema.json",
+  "key": "whatsapp_handoff",
+  "id": "M-03",
+  "title": {
+    "fr": "Commande par WhatsApp",
+    "ar": "الطلب عبر واتساب",
+    "en": "Order through WhatsApp"
+  },
+  "summary": {
+    "fr": "Le client envoie sa commande au WhatsApp de l'établissement : le message est déjà écrit, il appuie sur Envoyer.",
+    "ar": "يرسل الحريف طلبه إلى واتساب المحل: الرسالة جاهزة، يضغط فقط على إرسال.",
+    "en": "The customer sends the order to the café's WhatsApp: the message is written for them, they tap Send."
+  },
+  "version": "0.1.0",
+  "stability": "experimental",
+  "platformApi": 1,
+  "coreApi": "^0.1",
+  "requires": [],
+  "conflicts": [],
+  "settings": {
+    "schema": "settings.schema.json",
+    "version": 1
+  },
+  "texts": {
+    "fr": "i18n/fr.json",
+    "ar": "i18n/ar.json",
+    "en": "i18n/en.json"
+  },
+  "extends": {
+    "client": ["list.action"]
+  },
+  "data": {
+    "orderExt": [],
+    "itemExt": [],
+    "records": [],
+    "personalFields": []
+  },
+  "customerRecords": {
+    "access": "none"
+  },
+  "analyticsEvents": [],
+  "tests": "tests/",
+  "guide": "GUIDE.md",
+  "changelog": "CHANGELOG.md"
+}

@@ -48,6 +48,8 @@
   "list.unavailable": "No longer available",
   "list.priceChanged": "New price: {price}",
   "list.showOnly": "Show this list to the waiter to order.",
+  "list.orderClosed": "Closed · orders from {time}. You can show your list to the waiter.",
+  "list.orderClosedNoTime": "Closed · no orders for now. You can show your list to the waiter.",
   "list.showWaiter": "Show to the waiter",
   "waiter.title": "For the waiter",
   "waiter.table": "Table",

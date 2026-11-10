@@ -48,6 +48,8 @@
   "list.unavailable": "لم يعد متوفرًا",
   "list.priceChanged": "السعر الجديد: {price}",
   "list.showOnly": "اعرض هذه القائمة على النادل لتطلب.",
+  "list.orderClosed": "مغلق · الطلبات ابتداءً من {time}. يمكنك عرض قائمتك على النادل.",
+  "list.orderClosedNoTime": "مغلق · لا طلبات حاليًا. يمكنك عرض قائمتك على النادل.",
   "list.showWaiter": "اعرض على النادل",
   "waiter.title": "للنادل",
   "waiter.table": "طاولة",

@@ -26,7 +26,7 @@ Every café runs **the same code**. What differs between cafés is a set of swit
 | **Core component** | A core feature with a key so code, tests and logs can name it, but which **cannot be switched off**: `accounts_roles` (C-14), `customer_records` (C-15), `manager_dashboard` (C-16). |
 | **Module** | An optional feature in `modules/<key>/`, switched on or off per café by configuration only (MOD-01). |
 | **Extension point** | A named place where the core lets a module **add** something. Modules can only add; they never change the core or each other. |
-| **Channel** | A module that submits an order: `send_order` (staff screen) or `whatsapp_handoff`. Each enabled order type has exactly one channel. |
+| **Channel** | A module that submits an order: `send_order` (staff screen) or `whatsapp_handoff`. Each enabled order type has one channel, or two to offer both (D-063); the first is the main button. |
 
 ## Folder layout of a module
 
@@ -188,7 +188,7 @@ Priorities and dates come from the requirements ([product docs](../product/READM
 |---|---|---|---|---|
 | M-01 | `order_types` | Order types: dine-in, takeaway, delivery selector and fields | a channel; `customer_records` | Sprint 2 (dine-in); takeaway where chosen |
 | M-02 | `send_order` | Send order to the staff screen (**standard channel**) | M-01, `accounts_roles` | Sprint 2 |
-| M-03 | `whatsapp_handoff` | Store the order first, then open WhatsApp to the café with number and summary | `customer_records` | Sprint 1 (demo), Sprint 2 (stores order and consent) |
+| M-03 | `whatsapp_handoff` | Store the order first, then open WhatsApp to the café with number and summary; **dine-in and takeaway** (D-063) | `customer_records` | Sprint 1 (demo, built: [`modules/whatsapp_handoff/`](../../modules/whatsapp_handoff/GUIDE.md)), Sprint 2 (stores order and consent) |
 | M-04 | `payment_choice` | Cash or card at the counter, shown to staff | M-01 | Go-live where chosen |
 | M-05 | `preorder` | Items ordered N hours ahead | M-01 (takeaway), a channel | On request |
 | M-06 | `events` | Events and catering request form | a channel | On request |

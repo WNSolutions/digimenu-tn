@@ -39,3 +39,22 @@ test('release files come from core/ only, never tests or files outside it', asyn
   assert.equal((await get('/r/dev/%2e%2e/package.json')).status, 404);
   assert.equal((await handle('POST', new URL('http://localhost/api/boot'))).status, 405);
 });
+
+test('enabled modules are listed in the boot answer and served from modules/', async () => {
+  const boot = JSON.parse(String((await get('/api/boot?cafe=demo&t=5&k=7QF3K9')).body));
+  const wa = boot.modules.find((/** @type {{ key: string }} */ m) => m.key === 'whatsapp_handoff');
+  assert.equal(wa.entry, '/r/dev/m/whatsapp_handoff/client.js');
+  assert.equal(wa.texts.fr['action.label'], 'Commander par WhatsApp');
+  assert.equal(boot.release.modules, undefined, 'the module base path stays on the server');
+  assert.equal(
+    boot.modules.some((/** @type {{ key: string }} */ m) => m.key === 'photos'),
+    false,
+    'a switched-off module is not listed (MOD-03)',
+  );
+  const code = await get('/r/dev/m/whatsapp_handoff/client.js');
+  assert.equal(code.status, 200);
+  assert.match(String(code.type), /javascript/);
+  assert.equal((await get('/r/dev/m/whatsapp_handoff/tests/client.test.js')).status, 404);
+  assert.equal((await get('/r/dev/m/whatsapp_handoff/module.json')).status, 404);
+  assert.equal((await get('/r/dev/m/%2e%2e/core/money.js')).status, 404);
+});
