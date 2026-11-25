@@ -160,7 +160,11 @@ async function api(method, url, body) {
   // --now (dev only): pretend it is another time, to try ordering at night.
   if (devNow && url.pathname === '/api/orders' && method === 'POST') {
     const response = await handleCreateOrder(request, /** @type {any} */ (env), devNow);
-    return { status: response.status, type: response.headers.get('content-type') ?? undefined, body: await response.text() };
+    return {
+      status: response.status,
+      type: response.headers.get('content-type') ?? undefined,
+      body: await response.text(),
+    };
   }
   const response = await worker.fetch(
     new Request(url, {
