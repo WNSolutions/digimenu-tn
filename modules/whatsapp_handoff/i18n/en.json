@@ -14,5 +14,7 @@
   "msg.footer": "Sent from the DigiMenu menu",
   "lang.fr": "French",
   "lang.ar": "Arabic",
-  "lang.en": "English"
+  "lang.en": "English",
+  "done.open": "Open WhatsApp",
+  "done.note": "In WhatsApp, tap Send so the waiter gets your order."
 }

@@ -16,7 +16,8 @@
  *     A module never imports another module, the core's internals or the platform.
  *   - core/ never imports modules/ or platform/ (the core must work with every module off).
  *   - platform/ never imports modules/ directly (enabled modules are loaded through the
- *     release manifest, so a switched-off module costs zero bytes, MOD-03).
+ *     release manifest, so a switched-off module costs zero bytes, MOD-03). The one exception
+ *     is the two generated lists of server hooks and staff panels (tools/modules/registry.js).
  *   - Only tools/ and tests/ may read cafes/ (no café-specific code, MOD-15).
  *   These rules see static `import ... from` lines only. A full import scan (including dynamic
  *   `import()`) is planned as CI stage 3 "module contract" (docs/operations/ci.md).
@@ -157,6 +158,15 @@ export default defineConfig([
     files: ['platform/**/*.js'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [noModulesImport, noCafesImport] }],
+    },
+  },
+  {
+    // The two generated lists of module code bundled at build time (tools/modules/registry.js):
+    // server hooks and staff panels. They are the only platform files that name modules/, and
+    // the platform reaches modules only through them (module-host.js, admin.js).
+    files: ['platform/shell/src/server-modules.js', 'platform/admin/staff-modules.js'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [noCafesImport] }],
     },
   },
   {

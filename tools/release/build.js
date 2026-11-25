@@ -110,6 +110,8 @@ export function headersFile(indexHtml) {
     '  Cache-Control: public, max-age=31536000, immutable',
     '/boot.js',
     '  Cache-Control: public, max-age=300',
+    '/admin/*',
+    '  Cache-Control: no-cache',
     '',
   ].join('\n');
 }
@@ -156,6 +158,27 @@ export async function buildRelease({ version, out, keep }) {
       ),
     };
   }
+
+  // The staff app (platform/admin): same tokens, its own page, script and styles.
+  mkdirSync(path.join(out, 'admin'), { recursive: true });
+  cpSync(path.join(root, 'platform/admin/index.html'), path.join(out, 'admin/index.html'));
+  writeFileSync(
+    path.join(out, 'admin/admin.js'),
+    await bundleModule(path.join(root, 'platform/admin/admin.js')),
+  );
+  const adminCss = await build({
+    stdin: {
+      contents: '@import "../../core/ui/tokens.css";\n@import "./admin.css";\n',
+      resolveDir: path.join(root, 'platform/admin'),
+      loader: 'css',
+    },
+    bundle: true,
+    minify: true,
+    target: TARGET,
+    write: false,
+    logLevel: 'silent',
+  });
+  writeFileSync(path.join(out, 'admin/admin.css'), adminCss.outputFiles[0].text);
 
   const manifest = {
     version,

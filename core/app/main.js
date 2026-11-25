@@ -15,6 +15,7 @@ import { langParts } from './context.js';
 import { renderPage } from './page.js';
 import { h } from './dom.js';
 import { createRegistry } from './extensions.js';
+import { openModulePage } from './blocks.js';
 
 /** @typedef {import('./context.js').Boot} Boot */
 /** @typedef {import('./context.js').Ctx} Ctx */
@@ -22,7 +23,8 @@ import { createRegistry } from './extensions.js';
 /**
  * @param {Boot} boot
  * @param {{ root?: HTMLElement, storage?: Storage | null, now?: () => Date,
- *   modules?: Record<string, import('./extensions.js').RegisterFn> }} [env]
+ *   modules?: Record<string, import('./extensions.js').RegisterFn>, page?: string | null }} [env]
+ *   `page`: a module page's own link (/<café>/<page>, e.g. "carte"), opened once modules load
  */
 export function start(boot, env = {}) {
   const root = env.root ?? /** @type {HTMLElement} */ (document.getElementById('app'));
@@ -68,7 +70,7 @@ export function start(boot, env = {}) {
       chooseLanguage(cafe.languages, saved, navigator.languages ?? [navigator.language]),
     ),
   });
-  ctx.ext = createRegistry();
+  ctx.ext = createRegistry(undefined, { cafe: cafe.slug, storage });
   ctx.ready = loadModules(boot.modules ?? [], ctx.ext, env.modules ?? {});
   let checkedFor = /** @type {unknown} */ (null);
   let checked = checkList(ctx.list, index);
@@ -116,6 +118,13 @@ export function start(boot, env = {}) {
     refreshList = renderPage(root, ctx);
   }
   draw();
+  if (env.page) {
+    const wanted = env.page;
+    ctx.ready.then(() => {
+      const page = ctx.ext.page(wanted);
+      if (page) openModulePage(ctx, page);
+    });
+  }
   return ctx;
 }
 

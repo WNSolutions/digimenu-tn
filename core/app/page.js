@@ -10,6 +10,8 @@ import { isOrderable } from '../menu/snapshot.js';
 import { openItemSheet } from './item.js';
 import { openListSheet } from './list-view.js';
 import { openLanguageMenu, openInfoSheet } from './chrome.js';
+import { openModulePage } from './blocks.js';
+import { ICONS } from '../ui/icons.js';
 
 /** @typedef {import('./context.js').Ctx} Ctx */
 /** @typedef {import('../menu/snapshot.js').Item} Item */
@@ -59,11 +61,34 @@ export function renderPage(root, ctx) {
   );
   const inlineTitle = langText('span', name, ctx.lang, 'dm-inline-title');
   inlineTitle.setAttribute('aria-hidden', 'true');
+  // Module buttons (header.action) arrive once the modules are loaded.
+  const moduleBtns = h('span', { class: 'dm-topbar-modules' });
+  ctx.ready?.then(() => {
+    const actions = ctx.ext.headerActions({ lang: ctx.lang }, ICONS);
+    moduleBtns.replaceChildren(
+      ...actions.map((a) =>
+        h(
+          'button',
+          {
+            type: 'button',
+            class: a.icon ? 'dm-iconbtn' : 'dm-plain',
+            'aria-label': a.label,
+            title: a.label,
+            onclick: () => {
+              const page = ctx.ext.page(a.page);
+              if (page) openModulePage(ctx, page);
+            },
+          },
+          a.icon ? icon(a.icon) : a.label,
+        ),
+      ),
+    );
+  });
   const topbar = h(
     'div',
     { class: 'dm-topbar' },
     inlineTitle,
-    h('div', { class: 'dm-topbar-actions' }, langBtn, infoBtn),
+    h('div', { class: 'dm-topbar-actions' }, moduleBtns, langBtn, infoBtn),
   );
 
   // ---- Café header (content layer) ------------------------------------------------------------

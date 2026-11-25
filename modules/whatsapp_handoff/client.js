@@ -28,35 +28,77 @@ export function makeRef(random = (n) => crypto.getRandomValues(new Uint8Array(n)
 }
 
 /**
+ * @typedef {object} MessageInput
+ * @property {import('../../core/i18n.js').LocalizedText} cafeName
+ * @property {string | null} table        a checked table label, or null
+ * @property {string} ref                 the order number (or a phone-made reference)
+ * @property {{ qty: number, name: import('../../core/i18n.js').LocalizedText,
+ *   variantName?: import('../../core/i18n.js').LocalizedText, total: number, note?: string }[]} lines
+ * @property {string} note
+ * @property {number} total
+ * @property {Lang} customerLang
+ */
+
+/**
  * The message staff receive, in the café's language (or the one set in the settings).
+ * @param {MessageInput} m
+ * @param {{ lang: Lang, t: (key: string, vars?: Record<string, string | number>) => string,
+ *   pick: ModuleApi['pick'], price: ModuleApi['price'] }} o
+ */
+export function composeMessage(m, o) {
+  const { t, price, lang } = o;
+  /** @param {import('../../core/i18n.js').LocalizedText | undefined} text */
+  const name = (text) => (text ? o.pick(text, lang).text : '');
+  const out = [
+    t('msg.title', { cafe: name(m.cafeName) }),
+    m.table ? t('msg.dineIn', { table: m.table }) : t('msg.noTable'),
+    t('msg.ref', { ref: m.ref }),
+    '',
+  ];
+  for (const line of m.lines) {
+    const label = [name(line.name), name(line.variantName)].filter(Boolean).join(' · ');
+    out.push(t('msg.line', { qty: line.qty, name: label, price: price(line.total) }));
+    if (line.note) out.push(t('msg.lineNote', { note: line.note }));
+  }
+  out.push('');
+  if (m.note) out.push(t('msg.orderNote', { note: m.note }));
+  out.push(t('msg.total', { total: price(m.total) }));
+  if (m.customerLang !== lang)
+    out.push(t('msg.customerLang', { lang: t(`lang.${m.customerLang}`) }));
+  out.push('', t('msg.footer'));
+  return out.join('\n');
+}
+
+/**
+ * The message for a list that is not stored (no server: standalone demo).
  * @param {ListActionContext} c
  * @param {{ lang: Lang, ref: string, t: (key: string, vars?: Record<string, string | number>) => string,
  *   pick: ModuleApi['pick'], price: ModuleApi['price'] }} o
  */
 export function buildMessage(c, o) {
-  const { t, price, lang } = o;
-  /** @param {import('../../core/i18n.js').LocalizedText | undefined} text */
-  const name = (text) => o.pick(text, lang).text;
-  const lines = [
-    t('msg.title', { cafe: name(c.cafe.name) }),
-    c.table?.valid ? t('msg.dineIn', { table: c.table.label }) : t('msg.noTable'),
-    t('msg.ref', { ref: o.ref }),
-    '',
-  ];
+  const lines = [];
   for (const row of c.checked.lines) {
     if ((row.status !== 'ok' && row.status !== 'price_changed') || !row.entry) continue;
-    const label = [name(row.entry.item.name), name(row.entry.variant.name)]
-      .filter(Boolean)
-      .join(' · ');
-    lines.push(t('msg.line', { qty: row.line.qty, name: label, price: price(row.total) }));
-    if (row.line.note) lines.push(t('msg.lineNote', { note: row.line.note }));
+    lines.push({
+      qty: row.line.qty,
+      name: row.entry.item.name,
+      ...(row.entry.variant.name ? { variantName: row.entry.variant.name } : {}),
+      total: row.total,
+      ...(row.line.note ? { note: row.line.note } : {}),
+    });
   }
-  lines.push('');
-  if (c.note) lines.push(t('msg.orderNote', { note: c.note }));
-  lines.push(t('msg.total', { total: price(c.checked.total) }));
-  if (c.lang !== lang) lines.push(t('msg.customerLang', { lang: t(`lang.${c.lang}`) }));
-  lines.push('', t('msg.footer'));
-  return lines.join('\n');
+  return composeMessage(
+    {
+      cafeName: c.cafe.name,
+      table: c.table?.valid ? c.table.label : null,
+      ref: o.ref,
+      lines,
+      note: c.note,
+      total: c.checked.total,
+      customerLang: c.lang,
+    },
+    o,
+  );
 }
 
 /**
@@ -91,13 +133,35 @@ export default function register(api) {
       price: api.price,
     });
     const own = api.texts(c.lang);
+    const o = { lang, t: api.texts(lang), pick: api.pick, price: api.price };
     return {
-      kind: 'link',
+      kind: 'checkout',
+      // Without a server (standalone demo) the core opens this link directly.
       href: whatsappLink(number, text),
       label: own('action.label'),
       icon: 'message-circle',
       note: own('action.note'),
       after: own('action.after'),
+      // Once the order is stored, the message carries its number of the day (ADR-0007).
+      complete: (order) => ({
+        href: whatsappLink(
+          number,
+          composeMessage(
+            {
+              cafeName: c.cafe.name,
+              table: order.table,
+              ref: order.number,
+              lines: order.lines,
+              note: order.note,
+              total: order.total,
+              customerLang: c.lang,
+            },
+            o,
+          ),
+        ),
+        label: own('done.open'),
+        note: own('done.note'),
+      }),
     };
   });
 }

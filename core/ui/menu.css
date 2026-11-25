@@ -79,6 +79,14 @@ bdi,
 
 /* ---------- Icons ---------- */
 
+/* The icon sprite: kept out of view with a class, not a style attribute (strict CSP). */
+.dm-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
 .dm-icon {
   width: 24px;
   height: 24px;
@@ -1363,4 +1371,189 @@ a.dm-prominent {
   :root[data-dm-large-text] .dm-item:not(.dm-item--variants) {
     flex-direction: column;
   }
+}
+
+/* ---------- Checkout ---------- */
+
+.dm-input {
+  width: 100%;
+  min-height: var(--dm-target);
+  padding: 10px 12px;
+  border: 1px solid var(--dm-sep);
+  border-radius: var(--dm-radius-m);
+  background: var(--dm-bg);
+  font-size: max(16px, var(--dm-body));
+}
+
+.dm-input:focus-visible {
+  outline: 3px solid var(--dm-focus);
+  outline-offset: 0;
+}
+
+.dm-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dm-space-3);
+  margin-top: var(--dm-space-4);
+  min-height: var(--dm-target);
+  font-size: var(--dm-callout);
+  cursor: pointer;
+}
+
+.dm-check input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  accent-color: var(--dm-accent);
+}
+
+.dm-notice,
+.dm-notice-full {
+  margin: var(--dm-space-4) 0 0;
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+  line-height: var(--dm-lh-ui);
+}
+
+.dm-checkout-error {
+  margin: var(--dm-space-4) 0 0;
+  padding: var(--dm-space-3);
+  border-radius: var(--dm-radius-m);
+  background: var(--dm-fill);
+  color: var(--dm-danger);
+  font-size: var(--dm-callout);
+  font-weight: 600;
+}
+
+.dm-done {
+  display: grid;
+  justify-items: center;
+  gap: var(--dm-space-2);
+  padding: var(--dm-space-6) 0;
+  text-align: center;
+}
+
+.dm-done-title {
+  margin: 0;
+  font-size: var(--dm-title-3);
+  font-weight: 600;
+}
+
+/* ---- Module content (core/app/blocks.js): what modules describe, drawn by the core ---------- */
+
+.dm-topbar-modules {
+  display: contents;
+}
+
+.dm-checkout-info {
+  margin: var(--dm-space-4) 0 0;
+  padding: var(--dm-space-3);
+  border-radius: var(--dm-radius-m);
+  background: var(--dm-fill);
+  font-size: var(--dm-callout);
+  line-height: var(--dm-lh-ui);
+}
+
+.dm-check-note {
+  display: block;
+  margin-top: var(--dm-space-1);
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+  line-height: var(--dm-lh-ui);
+}
+
+.dm-postorder {
+  display: grid;
+  gap: var(--dm-space-3);
+  padding: var(--dm-space-4);
+  border-radius: var(--dm-radius-l);
+  background: var(--dm-bg-grouped);
+  text-align: center;
+}
+
+.dm-module-page {
+  display: grid;
+  gap: var(--dm-space-4);
+  padding-bottom: var(--dm-space-6);
+}
+
+.dm-block-title {
+  margin: 0;
+  font-size: var(--dm-title-3);
+  font-weight: 600;
+  line-height: var(--dm-lh-tight);
+}
+
+.dm-block-text {
+  margin: 0;
+  font-size: var(--dm-body);
+  line-height: var(--dm-lh-text);
+}
+
+.dm-block-text--muted {
+  color: var(--dm-ink-2);
+  font-size: var(--dm-callout);
+}
+
+.dm-block-text--success {
+  color: var(--dm-success);
+  font-weight: 600;
+}
+
+.dm-block-text--error {
+  color: var(--dm-danger);
+  font-weight: 600;
+}
+
+.dm-stamps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--dm-space-3);
+  max-width: 320px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.dm-stamp {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 2px dashed var(--dm-sep);
+  border-radius: var(--dm-radius-full);
+  color: var(--dm-on-accent);
+}
+
+.dm-stamp.is-on {
+  border: 2px solid var(--dm-accent);
+  background: var(--dm-accent);
+}
+
+.dm-codebox {
+  display: grid;
+  justify-items: center;
+  gap: var(--dm-space-1);
+  padding: var(--dm-space-4);
+  border: 1px solid var(--dm-sep);
+  border-radius: var(--dm-radius-l);
+  background: var(--dm-surface);
+}
+
+.dm-codebox-label {
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+}
+
+.dm-codebox-value {
+  font-size: var(--dm-title-1);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.dm-block-form {
+  display: grid;
+  gap: var(--dm-space-3);
 }
