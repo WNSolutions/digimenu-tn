@@ -33,7 +33,7 @@
 |---|---|---|
 | Platform and releases | `schema_meta` | Current database schema version. |
 | | `releases` | Releases known to the deployment: version, status, `platform_api`, accepted data schema range. |
-| | `cafes` | Slug, status, `pinned_release`, active configuration version, menu revision, go-live date, optional extra host names (not printed). |
+| | `cafes` | Slug, status, `pinned_release`, active configuration version, menu revision, go-live date, optional extra host names (not printed), `ordering_paused_at` (staff paused new orders, #29; migration `0005_ordering_pause.sql`). |
 | | `release_pins` | History of every pin change: from, to, who, why, configuration version. |
 | Configuration | `config_versions` | Immutable published configurations; one is active per café. Holds the café configuration body ([schema](../../core/schemas/cafe-config.schema.json)) and the validation report. |
 | | `tables` | Table label, check code, code version, active flag. Labels are never reused or renamed. |

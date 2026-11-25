@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pause orders (#29, US-17): staff, a Manager or Admin pause new orders in a rush from the orders screen (`POST /admin/api/ordering/pause`), and resume. Within a minute the menu's list says "orders are paused, show your list to the waiter" in place of Confirm, and the server refuses new orders (`409 ordering_paused`) while a retry of an order sent before the pause still gets its answer. The staff screen shows since when; every pause and resume is in the audit log. Maintainers cannot pause a café. Migration `0005_ordering_pause.sql`.
+
 - Repository foundation (WO-048): contribution guide, code of conduct, issue forms, pull request template, and product docs (roadmap, requirements index, labels, definition of done).
 - Customer menu for the demo café (#6–#10, first part): menu with category bar, sizes and sold-out items; French, Arabic (right to left) and English with French fallback; opening hours; "Ma liste" saved on the phone for 6 hours with notes, re-checked against the menu; "Montrer au serveur" ticket with its own language switch. Prices in integer millimes everywhere.
 - Static boot page: one `/api/boot` call, saved copy when offline, names-and-prices fallback if the release cannot load.

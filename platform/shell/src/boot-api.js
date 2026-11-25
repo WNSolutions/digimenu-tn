@@ -55,6 +55,7 @@ export async function handleBoot(request, env, ctx, now = new Date()) {
       release: { version: manifest.version, entry: manifest.entry, css: manifest.css },
       modules: enabledModules(cafe.config, manifest.modules),
       privacy,
+      paused: Boolean(cafe.orderingPausedAt),
     }),
   );
 }

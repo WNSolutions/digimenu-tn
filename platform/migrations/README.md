@@ -2,7 +2,7 @@
 
 Numbered **SQL migrations** for the D1 database. They change the shape of the database; they never carry real data.
 
-**Status:** [`0001_init.sql`](0001_init.sql): platform, configuration, menu and analytics tables. Orders, customers and accounts come in the next migrations.
+**Status:** [`0001_init.sql`](0001_init.sql) platform, configuration, menu and analytics tables · `0002` orders, customers, consents, privacy notice · `0003` accounts, sessions, one-time codes · `0004` loyalty cards and ledger · [`0005_ordering_pause.sql`](0005_ordering_pause.sql) pause orders (#29).
 
 ## What lives here
 

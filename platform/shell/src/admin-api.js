@@ -7,6 +7,7 @@
  *   GET  /admin/api/menu?cafe=<slug>                   the menu tree for the editor
  *   POST /admin/api/menu/variant                       { cafe, id, price?, available? }
  *   POST /admin/api/menu/item                          { cafe, id, available }
+ *   POST /admin/api/ordering/pause                     { cafe, paused } pause / resume new orders (#29)
  *   GET  /admin/api/cafe?cafe=<slug>                   name, role and the staff panels switched on
  *   POST /admin/api/m/<module>/<route>                 a module's staff call (module-host.js)
  *
@@ -15,7 +16,7 @@
  */
 import { json, problem } from './http.js';
 import { currentAccount, roleIn, sameOrigin } from './auth.js';
-import { resolveCafe, clearCaches } from './cafes.js';
+import { resolveCafe, clearCaches, forgetCafe } from './cafes.js';
 import { localDayHour, isoNow } from './clock.js';
 import { loadKeys, open } from './crypto.js';
 import { menuSource, publishChange } from './menu-publish.js';
@@ -136,7 +137,15 @@ export async function handleAdmin(request, env, route, now = new Date()) {
         rejectReason: r.reject_reason,
       });
     }
-    return json(200, { orders, serverTime: isoNow(now), role });
+    const pause = await env.DB.prepare('SELECT ordering_paused_at FROM cafes WHERE id = ?1')
+      .bind(cafe.id)
+      .first();
+    return json(200, {
+      orders,
+      serverTime: isoNow(now),
+      role,
+      paused: pause?.ordering_paused_at ? String(pause.ordering_paused_at) : null,
+    });
   }
 
   if (route === 'orders/status' && write) {
@@ -180,6 +189,32 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       );
     }
     return json(200, { id, status: next });
+  }
+
+  // Pause new orders in a rush, and resume (#29, US-17). Customers see "show your list to the
+  // waiter" within a minute (cafés are cached 30 s per Worker). Not for Maintainers.
+  if (route === 'ordering/pause' && write) {
+    if (!['staff', 'manager', 'admin'].includes(role)) return problem(403, 'forbidden');
+    const paused = input?.paused === true;
+    await env.DB.batch([
+      env.DB.prepare('UPDATE cafes SET ordering_paused_at = ?1 WHERE id = ?2').bind(
+        paused ? isoNow(now) : null,
+        cafe.id,
+      ),
+      env.DB.prepare(
+        `INSERT INTO audit_log (id, category, action, cafe_id, target, actor, actor_role, at)
+         VALUES (?1, 'ordering', ?2, ?3, ?3, ?4, ?5, ?6)`,
+      ).bind(
+        ulid(now.getTime()),
+        paused ? 'pause' : 'resume',
+        cafe.id,
+        account.id,
+        role,
+        isoNow(now),
+      ),
+    ]);
+    forgetCafe(cafe.slug);
+    return json(200, { paused: paused ? isoNow(now) : null });
   }
 
   if (route === 'cafe' && !write) {

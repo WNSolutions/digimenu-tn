@@ -15,6 +15,7 @@
  * @property {string} pinnedRelease
  * @property {number} menuRev
  * @property {CafeConfig} config
+ * @property {string | null} [orderingPausedAt]   staff paused new orders at that time (#29)
  */
 
 const TTL_MS = 30_000;
@@ -37,7 +38,7 @@ export async function resolveCafe(db, slug, now) {
   if (hit && now - hit.at < TTL_MS) return hit.value;
   const row = await db
     .prepare(
-      `SELECT c.id, c.slug, c.status, c.pinned_release, c.menu_rev, v.body
+      `SELECT c.id, c.slug, c.status, c.pinned_release, c.menu_rev, c.ordering_paused_at, v.body
          FROM cafes c
          JOIN config_versions v ON v.cafe_id = c.id AND v.version_no = c.active_config_version
         WHERE c.slug = ?1 AND c.status != 'closed'`,
@@ -53,6 +54,7 @@ export async function resolveCafe(db, slug, now) {
         pinnedRelease: String(row.pinned_release),
         menuRev: Number(row.menu_rev),
         config: JSON.parse(String(row.body)),
+        orderingPausedAt: row.ordering_paused_at ? String(row.ordering_paused_at) : null,
       }
     : null;
   cafeCache.set(slug, { at: now, value });
@@ -91,6 +93,11 @@ export function findTable(db, cafeId, label) {
 }
 
 /** For tests: forget cached cafés and snapshots. */
+/** Forget one café, after a change that must show at once in this Worker. @param {string} slug */
+export function forgetCafe(slug) {
+  cafeCache.delete(slug);
+}
+
 export function clearCaches() {
   cafeCache.clear();
   snapshotCache.clear();

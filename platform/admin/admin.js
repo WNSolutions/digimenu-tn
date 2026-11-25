@@ -73,6 +73,11 @@ const TEXT = {
       "La caméra n'est pas disponible. Autorisez-la dans le navigateur, ou tapez le numéro.",
     staffArea: 'Espace équipe',
     tabs: 'Sections',
+    pause: 'Mettre les commandes en pause',
+    pauseAsk:
+      'Les clients ne pourront plus envoyer de commande : ils montreront leur liste au serveur. Mettre en pause ?',
+    paused: 'Commandes en pause depuis {time}. Les clients montrent leur liste au serveur.',
+    resume: 'Reprendre les commandes',
   },
   ar: {
     signIn: 'تسجيل الدخول',
@@ -130,6 +135,10 @@ const TEXT = {
     scanDenied: 'الكاميرا غير متاحة. اسمح بها في المتصفح، أو اكتب الرقم.',
     staffArea: 'فضاء الفريق',
     tabs: 'الأقسام',
+    pause: 'إيقاف الطلبات مؤقتًا',
+    pauseAsk: 'لن يتمكّن الحرفاء من إرسال طلب: سيعرضون قائمتهم على النادل. هل توقف الطلبات؟',
+    paused: 'الطلبات متوقّفة منذ {time}. يعرض الحرفاء قائمتهم على النادل.',
+    resume: 'استئناف الطلبات',
   },
 };
 let lang = (navigator.language || 'fr').startsWith('ar') ? 'ar' : 'fr';
@@ -636,7 +645,9 @@ async function ordersView(body) {
       if (!state.known.has(o.id) && state.known.size) fresh = true;
     }
     const firstLoad = state.known.size === 0;
+    const bar = pauseBar(res.data.paused, res.data.role, body);
     body.replaceChildren(
+      ...(bar ? [bar] : []),
       ...(orders.length
         ? orders.map((/** @type {any} */ o) => orderCard(o, !firstLoad && !state.known.has(o.id)))
         : [h('p', { class: 'a-muted' }, t('none'))]),
@@ -646,6 +657,47 @@ async function ordersView(body) {
   }
   if (state.view === 'orders' && !document.hidden)
     state.timer = window.setTimeout(() => ordersView(body), POLL_MS);
+}
+
+/**
+ * Pause new orders in a rush, and resume (#29). Customers see "show your list to the waiter"
+ * within a minute. Maintainers do not pause a café.
+ * @param {string | null} paused   since when, or null
+ * @param {string} role
+ * @param {HTMLElement} body
+ */
+function pauseBar(paused, role, body) {
+  if (!['staff', 'manager', 'admin'].includes(role)) return null;
+  const toggle = async (/** @type {boolean} */ on) => {
+    if (on && !confirm(t('pauseAsk'))) return;
+    const res = await api('/ordering/pause', { cafe: state.cafe, paused: on });
+    if (res.status === 401) return signInView();
+    clearTimeout(state.timer);
+    ordersView(body);
+  };
+  if (!paused) {
+    return h(
+      'div',
+      { class: 'a-row' },
+      h('button', { type: 'button', class: 'a-btn', onclick: () => toggle(true) }, t('pause')),
+    );
+  }
+  const time = new Date(paused).toLocaleTimeString(lang === 'ar' ? 'ar-TN' : 'fr-TN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    numberingSystem: 'latn',
+  });
+  return h(
+    'section',
+    { class: 'a-card a-stack a-paused', role: 'status' },
+    h('strong', null, t('paused', { time })),
+    h(
+      'button',
+      { type: 'button', class: 'a-btn a-btn--main', onclick: () => toggle(false) },
+      t('resume'),
+    ),
+  );
 }
 
 /** @param {any} o @param {boolean} isNew */
