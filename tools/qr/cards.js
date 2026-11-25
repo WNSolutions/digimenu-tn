@@ -162,7 +162,7 @@ body { font-family: 'Jost', 'Helvetica Neue', Arial, sans-serif; -webkit-print-c
 .card:last-child { page-break-after: auto; break-after: auto; }
 @media screen { .card { margin: 8mm auto; box-shadow: 0 2mm 6mm rgb(0 0 0 / 30%); } }
 .frame { position: absolute; inset: 6.75mm; border: 0.18mm solid ${COLOURS.champagne}; border-radius: 0.6mm; }
-.demo { position: absolute; top: 10mm; inset-inline-start: 10.5mm; padding: 0.6mm 2mm; border: 0.25mm solid ${COLOURS.champagne}; border-radius: 4mm; color: ${COLOURS.champagne}; font-weight: 500; font-size: 2.6mm; letter-spacing: 0.3em; }
+.demo { position: absolute; top: 138.5mm; left: 50%; transform: translateX(-50%); padding: 0.6mm 2mm; border: 0.25mm solid ${COLOURS.champagne}; border-radius: 4mm; color: ${COLOURS.champagne}; font-weight: 500; font-size: 2.6mm; letter-spacing: 0.3em; }
 .brand { position: absolute; top: 13mm; inset-inline: 0; display: flex; align-items: center; justify-content: center; gap: 4mm; height: 9mm; }
 .mark { height: 9mm; width: auto; }
 .word { font-weight: 500; font-size: 5mm; letter-spacing: 0.42em; margin-inline-end: -0.42em; }
