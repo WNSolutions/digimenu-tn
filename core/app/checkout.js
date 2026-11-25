@@ -6,6 +6,7 @@
  * number, D-063). Nothing is sent later behind the customer's back: a failure says so and
  * offers "Montrer au serveur".
  */
+import { saveTracked } from './order-store.js';
 import { h, icon, bdi } from './dom.js';
 import { openSheet } from './sheet.js';
 import { openWaiter } from './list-view.js';
@@ -303,6 +304,17 @@ export function openCheckout(ctx, channel) {
 
     if (details.firstName || details.phone) saveDetails(details);
     ctx.setList(emptyList());
+    // "Ma commande": follow this order's status on the menu page (order-track.js).
+    if (typeof out.number === 'string') {
+      const tracked = {
+        key: clientKey,
+        number: out.number,
+        at: Date.now(),
+        status: typeof out.status === 'string' ? out.status : 'received',
+      };
+      saveTracked(ctx.storage ?? null, boot.cafe.slug, tracked);
+      ctx.trackOrder?.(tracked);
+    }
     const next = channel.complete?.(out);
     ctx.announce(t('checkout.saved', { number: out.number }));
     // Modules' blocks under the number (postOrder.block), from their own server answer.

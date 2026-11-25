@@ -103,12 +103,6 @@
           "items": { "type": "string", "format": "uri", "pattern": "^https://" },
           "uniqueItems": true,
           "maxItems": 6
-        },
-        "googleReviewUrl": {
-          "type": "string",
-          "format": "uri",
-          "pattern": "^https://",
-          "description": "Needed by the google_review module (M-14). Without it the validator warns and the module stays off."
         }
       }
     },

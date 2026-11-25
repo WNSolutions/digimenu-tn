@@ -12,7 +12,8 @@
  *   routes               POST /api/m/<key>/<route>: customer calls, JSON, no cookies.
  *   staff.routes         POST /admin/api/m/<key>/<route>: signed-in staff, roles checked here.
  *
- * A switched-off module has no hooks and its routes answer 404 for that café (MOD-03).
+ * A switched-off module has no hooks and its routes answer 404 for that café (MOD-03). So does
+ * a module switched on without a setting it needs (manifest `settings.needs`, module-needs.js).
  */
 import { SERVER_MODULES } from './server-modules.js';
 import { json, problem } from './http.js';
@@ -22,6 +23,8 @@ import { sha256 } from './auth.js';
 import { loadKeys, seal, open, lookupHash } from './crypto.js';
 import { normalizePhone } from '../../../core/phone.js';
 import { encodeQr } from '../../../core/qr.js';
+import { localDayHour } from './clock.js';
+import { missingNeeds } from './module-needs.js';
 
 /** @typedef {{ id: string, slug: string, status: string, config: any }} Cafe */
 
@@ -44,6 +47,13 @@ import { encodeQr } from '../../../core/qr.js';
  * @property {(message: string, err?: unknown) => void} log
  * @property {(action: string, target: string, actor: { userId: string, role: string }) => Promise<void>} audit
  *   a line in the audit log (category = the module key)
+ * @property {(event: string) => Promise<void>} count
+ *   adds one to the café's counter "<module>.<event>" for this hour (counts only, no
+ *   dimension that could point to a person). Only events the manifest lists in
+ *   `analyticsEvents`; any other throws.
+ * @property {(clientKey: string) => Promise<{ number: string, status: string, test: boolean } | null>} orderStatus
+ *   number and status of this café's order sent with that client key (the phone's own key),
+ *   and whether it is a test order; null if there is none. Never its lines, total or customer.
  */
 
 /**
@@ -66,6 +76,8 @@ import { encodeQr } from '../../../core/qr.js';
 
 /**
  * @typedef {object} ServerModule
+ * @property {string[]} [needs]    from the manifest (settings.needs), added by the registry tool
+ * @property {string[]} [events]   from the manifest (analyticsEvents), added by the registry tool
  * @property {(api: ServerApi, event: StoredOrderEvent) => Promise<unknown>} [afterStore]
  * @property {(api: ServerApi, event: StatusEvent) => Promise<void>} [statusChanged]
  * @property {Record<string, (api: ServerApi, body: any) => Promise<RouteAnswer>>} [routes]
@@ -87,17 +99,24 @@ import { encodeQr } from '../../../core/qr.js';
  * @returns {[string, ServerModule][]}
  */
 export function serverModules(config, registry = SERVER_MODULES) {
-  return Object.entries(registry).filter(([key]) => config?.modules?.[key]?.enabled === true);
+  return Object.entries(registry).filter(
+    ([key, mod]) =>
+      config?.modules?.[key]?.enabled === true &&
+      missingNeeds(config.modules[key].settings, mod.needs).length === 0,
+  );
 }
+
+const CLIENT_KEY = /^[A-Za-z0-9_-]{16,64}$/;
 
 /**
  * @param {HostEnv} env
  * @param {Cafe} cafe
  * @param {string} key
  * @param {Date} now
+ * @param {readonly string[]} [events]   the module's analytics events (manifest)
  * @returns {Promise<ServerApi>}
  */
-export async function serverApi(env, cafe, key, now) {
+export async function serverApi(env, cafe, key, now, events = []) {
   const keys = await loadKeys(env);
   return {
     key,
@@ -134,6 +153,29 @@ export async function serverApi(env, cafe, key, now) {
           isoNow(now),
         )
         .run();
+    },
+    count: async (event) => {
+      if (!events.includes(event)) throw new Error(`analytics event not declared: ${event}`);
+      if (!cafe.id) return;
+      const { day, hour } = localDayHour(now, cafe.config?.timeZone);
+      await env.DB.prepare(
+        `INSERT INTO analytics_counters (cafe_id, day, hour, metric, dim, value)
+         VALUES (?1, ?2, ?3, ?4, '', 1)
+         ON CONFLICT (cafe_id, day, hour, metric, dim) DO UPDATE SET value = value + 1`,
+      )
+        .bind(cafe.id, day, hour, `${key}.${event}`)
+        .run();
+    },
+    orderStatus: async (clientKey) => {
+      if (!cafe.id || !CLIENT_KEY.test(String(clientKey))) return null;
+      const row = await env.DB.prepare(
+        'SELECT number, status, is_test FROM orders WHERE cafe_id = ?1 AND client_key = ?2',
+      )
+        .bind(cafe.id, String(clientKey))
+        .first();
+      return row
+        ? { number: String(row.number), status: String(row.status), test: Boolean(row.is_test) }
+        : null;
     },
   };
 }
@@ -193,7 +235,7 @@ export async function runAfterStore(env, cafe, event, now, registry = SERVER_MOD
   for (const [key, mod] of serverModules(cafe.config, registry)) {
     if (!mod.afterStore) continue;
     try {
-      const answer = await mod.afterStore(await serverApi(env, cafe, key, now), {
+      const answer = await mod.afterStore(await serverApi(env, cafe, key, now, mod.events), {
         order: event.order,
         consents: event.consents,
         input: event.inputs?.[key] ?? null,
@@ -218,7 +260,7 @@ export async function runStatusChanged(env, cafe, event, now, registry = SERVER_
   for (const [key, mod] of serverModules(cafe.config, registry)) {
     if (!mod.statusChanged) continue;
     try {
-      await mod.statusChanged(await serverApi(env, cafe, key, now), event);
+      await mod.statusChanged(await serverApi(env, cafe, key, now, mod.events), event);
     } catch (err) {
       console.error(
         `module ${key}: statusChanged failed`,
@@ -257,7 +299,7 @@ export async function handleModuleRoute(
   const mod = serverModules(cafe.config, registry).find(([k]) => k === key)?.[1];
   const handler = mod?.routes && Object.hasOwn(mod.routes, route) ? mod.routes[route] : null;
   if (!handler) return problem(404, 'not_found');
-  const answer = await handler(await serverApi(env, cafe, key, now), body);
+  const answer = await handler(await serverApi(env, cafe, key, now, mod?.events), body);
   return json(answer.status, answer.body);
 }
 
@@ -288,7 +330,11 @@ export async function handleStaffModuleRoute(
   if (!staff || !handler) return problem(404, 'not_found');
   const roles = staff.roles[route] ?? ['manager', 'admin'];
   if (!roles.includes(actor.role)) return problem(403, 'forbidden');
-  const answer = await handler(await serverApi(env, cafe, key, now), body ?? {}, actor);
+  const answer = await handler(
+    await serverApi(env, cafe, key, now, mod?.events),
+    body ?? {},
+    actor,
+  );
   return json(answer.status, answer.body);
 }
 

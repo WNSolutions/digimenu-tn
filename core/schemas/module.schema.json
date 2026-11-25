@@ -106,6 +106,13 @@
         "migrate": {
           "$ref": "#/$defs/relativePath",
           "description": "Pure function file that migrates settings between versions. Required once version > 1."
+        },
+        "needs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fieldName" },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Settings the module cannot work without (e.g. google_review's reviewUrl). While one is missing or empty, the module stays off for that café (no file, no hook, no route) and the validator warns."
         }
       }
     },
@@ -143,7 +150,9 @@
               "checkout.validators",
               "checkout.channel",
               "postOrder.block",
-              "sheet.page"
+              "sheet.page",
+              "orderStatus.block",
+              "footer.link"
             ]
           }
         },

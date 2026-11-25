@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Google review invitation (#26, US-44, module `google_review`, M-14): once staff mark an order Served, **Ma commande** shows every customer the same invitation, "Vous avez aimé votre passage ? Donnez votre avis sur <café> sur Google", with a button straight to the café's Google review page; **Laisser un avis Google** is always at the bottom of the menu. Never tied to a rating, an amount or a reward. Counts only (`google_review.shown`, `google_review.tap`), kept by the server for the phone's own served order and never for test orders, shown to the Manager as an **Avis Google** card on Visites. Setting `reviewUrl` (Google addresses only).
+- **Ma commande** (#26): after sending an order, a chip under the café's name shows its number and status for 3 hours ("Commande A12 · En préparation"); tapping it opens the status, **Actualiser** with "Mis à jour à 14:32", and the modules' blocks. At most 3 automatic checks per order (4, 12 and 25 minutes, Tech Lead review A4). FR/AR/EN.
+- Release build: a part of the customer page needed only sometimes loads as its own file next to the core (`part.<name>.<hash>.js`); "Ma commande" is the first (2.5 KB gzipped, loaded after an order). The build stops if such a part would make the core load a second file at start. The core is 19.8 KB of its 20 KB budget.
+- Module system: extension points `orderStatus.block`, `footer.link` and `admin.dashboardCard` (a card on Visites); server `api.count(event)` for a module's declared analytics events and `api.orderStatus(key)`; manifest `settings.needs`: a module switched on without a setting it needs stays off everywhere (boot, hooks, routes) and the seed tool and dev server warn. `GET /admin/api/visits` also returns the modules' counts for the period (`events`).
+
 - Visits and impact numbers (#27, US-30, US-31, C-10): `GET /admin/api/visits` (Manager of the café, Maintainer, Admin) gives visits per day, per table, per language and per hour for up to 400 days; `GET /admin/api/visits/export` (Admin only) gives the real visits of every live café from its go-live day. The staff app's **Visites** tab shows totals, the share from a table, languages, days (7 or 28 days), weeks, tables and busy hours in one colour with the numbers written and a table view; Admin prepares one CSV for all cafés and one per café. Visits of a café that is not live are marked as tests and never exported. Counts only: nothing can identify a customer; counters are kept.
 
 - Pause orders (#29, US-17): staff, a Manager or Admin pause new orders in a rush from the orders screen (`POST /admin/api/ordering/pause`), and resume. Within a minute the menu's list says "orders are paused, show your list to the waiter" in place of Confirm, and the server refuses new orders (`409 ordering_paused`) while a retry of an order sent before the pause still gets its answer. The staff screen shows since when; every pause and resume is in the audit log. Maintainers cannot pause a café. Migration `0005_ordering_pause.sql`.
@@ -53,5 +58,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loyalty card QR code and staff scanning: the card shows a signed QR code (card number, 24-hour expiry, server signature; no phone number), and the staff app's Fidélité tab scans it with the phone camera. QR encoder `core/qr.js` (byte mode, error correction M, versions 1–10, checked against two decoders) shared by the server and tools; the camera reader falls back to jsQR, loaded only when needed. Only the staff app may use the camera.
 - Module system, next points: customer `header.action`, `sheet.page` (with its own link), `checkout.fields`, `postOrder.block`, drawn by the core from module descriptions; server `order.afterStore` and `order.statusChanged` (fail-open) and module routes `/api/m/<module>/…` and `/admin/api/m/<module>/…`; staff app `staff.panel` tabs. Module server and staff code is listed in two generated files (`node tools/modules/registry.js`, checked by the tests).
 - `npm run dev` (local server with the demo café) and `npm run demo` (the demo café as one standalone HTML file, with a size check against the 20 KB budget).
+
+### Changed
+
+- The café configuration's `info.googleReviewUrl` (never used) is replaced by the module's own setting, `modules.google_review.settings.reviewUrl`, so the link lives with the module that needs it (#26).
+- "Ma commande" follows an order whose WhatsApp message was marked "Pas reçue": staff can still mark it received later (#26).
+
+### Fixed
+
+- `npm run demo` builds again with café themes (the theme font is served by the release site), and measures the core exactly as a release ships it (#26).
 
 [Unreleased]: https://github.com/WNSolutions/digimenu-tn/commits/main

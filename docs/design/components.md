@@ -256,9 +256,9 @@ Checkout is **step 2 inside the list sheet** (Back on the leading side, title "C
 
 - **The moment:** when the server confirms, the list sheet content becomes the **ticket** with "Commande reçue" and the number **A12** in Display (`--dm-dur-3`; a fade with reduced motion). `feedback.md › Best practices`: "When it makes sense, confirm that a significant action or task has completed."
 - **Below the ticket:** a vertical status list, Reçue → Acceptée → Prête → Servie, each with `circle-check` when done; the current step is in Headline with "maintenant". Rejected: `triangle-alert` in `--dm-danger`, the reason, and "Montrer au serveur".
-- **Updates:** at most 3 automatic checks, then a plain button "Actualiser" (`refresh-cw`) with "Mis à jour à 14:32" (`progress-indicators.md › Mobile (iOS, iPadOS)`: a refresh title can say "when the last update occurred").
-- **After Served:** the `postOrder.block` extension point shows module blocks, such as the Google review invitation (M-14), the same for everyone.
-- **Leaving:** Close keeps the status reachable from the capsule "Commande A12 · Acceptée".
+- **Updates:** at most 3 automatic checks (4, 12 and 25 minutes after sending; one due while the page is hidden waits until it is seen), then a plain button "Actualiser" with "Mis à jour à 14:32" (`progress-indicators.md › Mobile (iOS, iPadOS)`: a refresh title can say "when the last update occurred"). Opening the sheet from the capsule also checks.
+- **After Served:** the `orderStatus.block` extension point shows module blocks, such as the Google review invitation (M-14), the same for everyone. When a check finds the order served and a module has a block for it, the sheet opens by itself once, unless another sheet is open.
+- **Leaving:** Close keeps the status reachable from the capsule "Commande A12 · Acceptée" under the café's name, for 3 hours (built in `core/app/order-track.js`, #26).
 - **Accessibility:** status changes are announced in a polite live region; the number is read as "A 12".
 - **Android:** identical.
 

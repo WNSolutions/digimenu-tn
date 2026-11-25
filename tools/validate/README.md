@@ -11,7 +11,7 @@ The **configuration validator** as a command-line tool. It is the same validator
 3. Dependencies, conflicts, one enabled channel per order type, default language enabled.
 4. Each module's settings against its own settings schema, with defaults filled in.
 5. Each module's own business rules.
-6. Warnings: missing translations, missing Google review link, tables without check codes.
+6. Warnings: missing translations, a module switched on without a setting it needs (e.g. `google_review` without its link: it stays off until the link is added), tables without check codes. Until this tool exists, the seed tool and the dev server print these warnings (`platform/shell/src/module-needs.js`).
 
 Errors stop publishing (exit code 1) and name what is wrong in plain words, e.g. "preorder needs order_types with takeaway on". Warnings are printed but do not fail.
 

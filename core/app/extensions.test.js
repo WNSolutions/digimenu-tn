@@ -178,3 +178,42 @@ test("post-order blocks get the module's own server answer; storage and calls ar
   assert.deepEqual(sent, [['/api/m/m/card', 'omit', { token: 't', cafe: 'demo' }]]);
   assert.deepEqual(await api.call('../x'), { ok: false, status: 0, data: {} });
 });
+
+test('"Ma commande" blocks and footer links: https only, a failing module is skipped', () => {
+  /** @type {string[]} */
+  const errors = [];
+  const registry = createRegistry((message) => errors.push(message));
+  assert.equal(registry.hasOrderStatusBlocks(), false);
+  registry.add({ key: 'review' }, (api) => {
+    api.contribute('orderStatus.block', (c) =>
+      c.status === 'served' ? [{ kind: 'text', text: `Merci ${c.number}` }] : null,
+    );
+    api.contribute('footer.link', () => ({ label: 'Avis', href: 'https://g.page/r/x/review' }));
+  });
+  registry.add({ key: 'bad' }, (api) => {
+    api.contribute('orderStatus.block', () => {
+      throw new Error('boom');
+    });
+    api.contribute('footer.link', () => ({ label: 'x', href: 'javascript:alert(1)' }));
+  });
+  registry.add({ key: 'empty_label' }, (api) =>
+    api.contribute('footer.link', () => ({ label: ' ', href: 'https://example.org' })),
+  );
+  assert.equal(registry.hasOrderStatusBlocks(), true);
+  /** @param {string} status */
+  const ctx = (status) => ({
+    status,
+    number: 'A12',
+    orderKey: 'k'.repeat(20),
+    cafe: { fr: 'Café' },
+    lang: /** @type {const} */ ('fr'),
+  });
+  assert.deepEqual(registry.orderStatusBlocks(ctx('accepted')), []);
+  assert.deepEqual(registry.orderStatusBlocks(ctx('served')), [
+    { key: 'review', blocks: [{ kind: 'text', text: 'Merci A12' }] },
+  ]);
+  assert.deepEqual(registry.footerLinks({ lang: 'fr' }), [
+    { label: 'Avis', href: 'https://g.page/r/x/review', key: 'review' },
+  ]);
+  assert.ok(errors.includes('module bad: orderStatus.block failed'));
+});

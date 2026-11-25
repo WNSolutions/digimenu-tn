@@ -150,6 +150,40 @@ async function bundleModule(entry) {
   return out.outputFiles[0].text;
 }
 
+/**
+ * The customer core, and the parts it loads only when needed (`import('./x.js')`, e.g.
+ * "Ma commande") as files of their own next to it. Such a part imports nothing the core also
+ * uses (it is handed the core's functions), so the core never loads a second file at start:
+ * the build stops if esbuild had to split shared code into a file the core imports.
+ * @param {string} entry
+ * @returns {Promise<{ js: string, parts: { file: string, text: string }[] }>}
+ */
+export async function bundleCore(entry) {
+  const out = await build({
+    entryPoints: { app: entry },
+    bundle: true,
+    splitting: true,
+    format: 'esm',
+    minify: true,
+    target: TARGET,
+    legalComments: 'none',
+    outdir: '/core',
+    chunkNames: 'part.[name].[hash]',
+    write: false,
+    logLevel: 'silent',
+  });
+  const main = out.outputFiles.find((f) => f.path === '/core/app.js');
+  if (!main) throw new Error('the core bundle is missing');
+  if (/(^|[;}\n])import\s*[{*"]|\bfrom\s*"\.\//.test(main.text))
+    throw new Error('the core imports another file at start: a lazy part shares code with it');
+  return {
+    js: main.text,
+    parts: out.outputFiles
+      .filter((f) => f !== main)
+      .map((f) => ({ file: path.basename(f.path), text: f.text })),
+  };
+}
+
 /** The jsQR version bundled into /admin/scan.js, for its licence line. */
 function jsqrVersion() {
   return JSON.parse(readFileSync(path.join(root, 'node_modules/jsqr/package.json'), 'utf8'))
@@ -235,14 +269,16 @@ export async function buildRelease({ version, out, keep, brand, media }) {
   cpSync(path.join(root, 'platform/shell/public/boot.js'), path.join(out, 'boot.js'));
   writeFileSync(path.join(out, '_headers'), headersFile(indexHtml));
 
-  const js = await bundleModule(path.join(root, 'core/app/main.js'));
+  const { js, parts } = await bundleCore(path.join(root, 'core/app/main.js'));
   const css = await bundleCss();
   const entry = `app.${hash(js)}.js`;
   const cssFile = `app.${hash(css)}.css`;
   writeFileSync(path.join(base, entry), js);
   writeFileSync(path.join(base, cssFile), css);
+  // Parts loaded only when needed (their names carry their own hash).
+  for (const part of parts) writeFileSync(path.join(base, part.file), part.text);
 
-  /** @type {Record<string, { entry: string, texts: Record<string, Record<string, string>> }>} */
+  /** @type {Record<string, { entry: string, texts: Record<string, Record<string, string>>, needs?: string[] }>} */
   const modules = {};
   const modulesDir = path.join(root, 'modules');
   for (const key of readdirSync(modulesDir).sort()) {
@@ -251,8 +287,12 @@ export async function buildRelease({ version, out, keep, brand, media }) {
     const code = await bundleModule(client);
     const file = `m/${key}.${hash(code)}.js`;
     writeFileSync(path.join(base, file), code);
+    const manifest = JSON.parse(readFileSync(path.join(modulesDir, key, 'module.json'), 'utf8'));
+    const needs = manifest.settings?.needs ?? [];
     modules[key] = {
       entry: `/r/${version}/${file}`,
+      // Settings without which the boot leaves the module out (module-needs.js).
+      ...(needs.length ? { needs } : {}),
       texts: Object.fromEntries(
         ['fr', 'ar', 'en'].map((lang) => [
           lang,
@@ -316,7 +356,14 @@ export async function buildRelease({ version, out, keep, brand, media }) {
         cpSync(path.join(keep, 'r', old), path.join(out, 'r', old), { recursive: true });
     }
   }
-  return { manifest, coreGz: gz(js), cssGz: gz(css), brandFiles, logos };
+  return {
+    manifest,
+    coreGz: gz(js),
+    cssGz: gz(css),
+    parts: parts.map((p) => ({ file: p.file, gz: gz(p.text) })),
+    brandFiles,
+    logos,
+  };
 }
 
 async function run() {
@@ -345,6 +392,9 @@ async function run() {
   process.stdout.write(
     `Release ${values.version} → ${values.out}\n` +
       `Core ${(result.coreGz / 1024).toFixed(1)} KB gzipped (budget 20.0 KB) · CSS ${(result.cssGz / 1024).toFixed(1)} KB · modules: ${Object.keys(result.manifest.modules).join(', ') || 'none'}\n` +
+      result.parts
+        .map((p) => `Loaded when needed: ${p.file} ${(p.gz / 1024).toFixed(1)} KB gzipped\n`)
+        .join('') +
       `Brand: ${result.brandFiles.length ? result.brandFiles.join(', ') : 'no logo files (plain wordmark)'} · café logos: ${result.logos}\n`,
   );
   if (result.coreGz > BUDGET_CORE_GZ) {
