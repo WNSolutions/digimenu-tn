@@ -46,6 +46,21 @@ export function formatPrice(millimes) {
 }
 
 /**
+ * The short form a café may choose for its menu (`menu.prices: "short"`), as many printed
+ * menus write prices: trailing zeros of the millimes dropped. `16000` → `16 DT`,
+ * `5500` → `5,5 DT`, `1250` → `1,25 DT`. Totals use the same form, so the list adds up as read.
+ * @param {number} millimes
+ * @returns {string}
+ */
+export function formatShortPrice(millimes) {
+  const full = formatPrice(millimes);
+  return full.replace(/,(\d{3})(?=\u00a0DT$)/, (_, m) => {
+    const kept = m.replace(/0+$/, '');
+    return kept ? `,${kept}` : '';
+  });
+}
+
+/**
  * Price of a quantity: `lineTotal(1350, 3)` → `4050`.
  * @param {number} unitPrice  millimes
  * @param {number} qty        whole number ≥ 0

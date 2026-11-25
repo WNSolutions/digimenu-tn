@@ -20,6 +20,9 @@ import { openModulePage } from './blocks.js';
 /** @typedef {import('./context.js').Boot} Boot */
 /** @typedef {import('./context.js').Ctx} Ctx */
 
+/** Display fonts a café theme may use: key → the family name in core/ui/menu.css. */
+const FONT_NAMES = /** @type {Record<string, string>} */ ({ mohave: 'DM Mohave' });
+
 /**
  * @param {Boot} boot
  * @param {{ root?: HTMLElement, storage?: Storage | null, now?: () => Date,
@@ -40,8 +43,19 @@ export function start(boot, env = {}) {
     document.body.prepend(holder);
   }
   for (const [prop, value] of Object.entries(cafe.accent ?? {})) {
-    if (/^--dm-cafe-[a-z-]+$/.test(prop) && /^#[0-9a-f]{6}$/i.test(value)) {
+    if (/^--dm-cafe-[a-z0-9-]+$/.test(prop) && /^#[0-9a-f]{6}$/i.test(value)) {
       document.documentElement.style.setProperty(prop, value);
+    }
+  }
+  // The café's own theme (ADR-0014): page colours, and a display font from the curated list.
+  const theme = cafe.theme;
+  if (theme && cafe.accent?.['--dm-cafe-bg']) {
+    document.documentElement.setAttribute('data-dm-theme', theme.dark ? 'dark' : 'light');
+    if (theme.font && FONT_NAMES[theme.font]) {
+      document.documentElement.style.setProperty(
+        '--dm-cafe-font',
+        `"${FONT_NAMES[theme.font]}", var(--dm-font)`,
+      );
     }
   }
   const memory = /** @type {any} */ (navigator).deviceMemory;
@@ -68,6 +82,7 @@ export function start(boot, env = {}) {
     now,
     ...langParts(
       chooseLanguage(cafe.languages, saved, navigator.languages ?? [navigator.language]),
+      cafe.prices,
     ),
   });
   ctx.ext = createRegistry(undefined, { cafe: cafe.slug, storage });
@@ -101,7 +116,7 @@ export function start(boot, env = {}) {
     }
     const anchorCat = document.querySelector('.dm-chip.is-current')?.getAttribute('data-cat');
     const y = window.scrollY;
-    Object.assign(ctx, langParts(lang));
+    Object.assign(ctx, langParts(lang, cafe.prices));
     draw();
     // Same category, same place (components §3).
     const section = anchorCat

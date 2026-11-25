@@ -78,6 +78,11 @@
           "enum": ["grey", "hide"],
           "default": "grey",
           "description": "How sold-out items appear: greyed with a text label, or hidden."
+        },
+        "prices": {
+          "enum": ["full", "short"],
+          "default": "full",
+          "description": "How prices are written: 'full' with three decimals (16,000 DT) or 'short' as many printed menus do (16 DT, 5,5 DT). Amounts are the same; only the display changes."
         }
       }
     },
@@ -139,6 +144,48 @@
           "type": "string",
           "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9_./-]+\\.(svg|png|webp)$",
           "description": "File name of the logo at the top of the café's media folder (media/<slug>/<file> in the deploy repository), for example logo.webp. Shown in a circle on the café's cover: a square image, at most 30 KB."
+        },
+        "theme": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["background"],
+          "description": "The café's own theme (ADR-0014, D-070): the menu takes the café's page colour, text colour, a second colour for thin rules, a display font for titles and a cover photo, in light and dark mode alike, like its printed menu. Every colour is checked for contrast (WCAG 2.1 AA) before publishing; buttons use buttonColor or primaryColor, adjusted to stand out on the page colour.",
+          "properties": {
+            "background": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Page colour, for example the background of the café's printed menu."
+            },
+            "surface": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Colour of cards and sheets. Absent: a shade of the page colour."
+            },
+            "text": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Main text colour. Absent: white on a dark page, near-black on a light one."
+            },
+            "line": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Colour of the thin decorative rules beside section titles (a second brand colour). Never used for text."
+            },
+            "font": {
+              "enum": ["mohave"],
+              "description": "Display font for section titles and prices, from the toolkit's curated list (SIL Open Font License, Latin letters only; Arabic stays in the system font)."
+            },
+            "cover": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9._-]*\\.(png|webp)$",
+              "description": "Cover photo at the top of the menu, a file at the top of the café's media folder: landscape, at most 120 KB, no recognisable people without their written consent."
+            },
+            "logo": {
+              "enum": ["plate", "bare"],
+              "default": "plate",
+              "description": "'plate': the logo in a circle on the cover's edge. 'bare': a transparent logo drawn large on the cover photo, standing for the café's name."
+            }
+          }
         }
       }
     },

@@ -9,7 +9,8 @@
  *   ├── brand/                     DigiMenu's brand layer for its own screens (D-068):
  *   │   ├── brand.css, fonts/      styles, Jost and Cairo (SIL OFL, from @fontsource)
  *   │   └── *.svg, *.png           the logo files, from --brand (the deploy repo's brand/)
- *   ├── media/<café>/              café logos: the demo café's, and --media (deploy repo)
+ *   ├── media/<café>/              café logos and covers: the demo café's, and --media (deploy repo)
+ *   ├── fonts/                     display fonts café themes may choose (ADR-0014, SIL OFL)
  *   ├── admin/                     the staff app
  *   └── r/<version>/
  *       ├── manifest.json          what /api/boot reads: entry, CSS, modules and their texts
@@ -60,6 +61,11 @@ export const BRAND_FONTS = [
   ...[300, 400, 500].map(
     (w) => `node_modules/@fontsource/cairo/files/cairo-arabic-${w}-normal.woff2`,
   ),
+];
+/** Display fonts café themes may choose (ADR-0014), copied to /fonts/ (core/ui/menu.css). */
+export const THEME_FONT_FILES = [
+  'node_modules/@fontsource/mohave/files/mohave-latin-600-italic.woff2',
+  'node_modules/@fontsource/mohave/files/mohave-latin-500-normal.woff2',
 ];
 const FILE_NAME = /^[a-z0-9][a-z0-9._-]*\.(svg|png|webp)$/;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$/;
@@ -160,6 +166,7 @@ async function bundleCss() {
     bundle: true,
     minify: true,
     target: TARGET,
+    external: ['/fonts/*'],
     write: false,
     logLevel: 'silent',
   });
@@ -201,6 +208,8 @@ export function headersFile(indexHtml) {
     '  Cache-Control: public, max-age=86400',
     '/media/*',
     '  Cache-Control: public, max-age=3600',
+    '/fonts/*',
+    '  Cache-Control: public, max-age=2592000',
     '/admin/*',
     '  Cache-Control: no-cache',
     // The staff app may use the camera, for scanning loyalty cards; customer pages may not.
@@ -282,6 +291,14 @@ export async function buildRelease({ version, out, keep, brand, media }) {
   });
   writeFileSync(path.join(out, 'admin/admin.css'), adminCss.outputFiles[0].text);
   const brandFiles = await buildBrand(out, brand);
+  mkdirSync(path.join(out, 'fonts'), { recursive: true });
+  for (const font of THEME_FONT_FILES) {
+    cpSync(path.join(root, font), path.join(out, 'fonts', path.basename(font)));
+  }
+  cpSync(
+    path.join(root, 'node_modules/@fontsource/mohave/LICENSE'),
+    path.join(out, 'fonts/OFL-mohave.txt'),
+  );
   const logos = buildMedia(out, media);
 
   const manifest = {

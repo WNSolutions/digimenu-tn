@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { importMenuCsv, parseCsv, formatReport } from '../import/menu-csv.js';
 import { buildSnapshot } from '../../core/menu/snapshot.js';
-import { accentTokens } from '../../core/ui/accent.js';
+import { accentTokens, themeTokens } from '../../core/ui/accent.js';
 import { bootBody, tableStatus } from '../../platform/shell/src/boot-body.js';
 
 /** @typedef {import('../../core/app/context.js').Boot} Boot */
@@ -49,6 +49,7 @@ export function loadDemo(dir = DEFAULT_DIR) {
   const imported = importMenuCsv(menuCsv, { languages: info.languages.enabled });
   const { snapshot, problems } = buildSnapshot(imported.source, 1);
   const accent = accentTokens(info.branding);
+  const theme = themeTokens(/** @type {any} */ (info.branding));
 
   /** @type {Map<string, string>} label → check code */
   const tables = new Map();
@@ -82,10 +83,11 @@ export function loadDemo(dir = DEFAULT_DIR) {
     errors: [
       ...problems,
       ...accent.errors,
+      ...theme.errors,
       ...imported.skipped.map((p) => `menu.csv row ${p.row}: ${p.message}`),
     ],
     report: formatReport(imported),
-    warnings: accent.warnings,
+    warnings: [...accent.warnings, ...theme.warnings],
   };
 }
 

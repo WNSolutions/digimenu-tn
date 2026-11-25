@@ -19,6 +19,7 @@ Short records of the important technical decisions in DigiMenu TN: the context, 
 | [0011](0011-design-language-hig-inspired.md) | Design based on Apple's Human Interface Guidelines, applied as is for an iPhone-first audience; no Apple assets | Accepted | D-039, D-040, D-044 |
 | [0012](0012-optional-button-colour.md) | Buttons use the café's colour darkened automatically, or an optional separate button colour | Accepted | D-049 |
 | [0013](0013-loyalty-at-launch-phone-number-and-wallet-card.md) | Loyalty ships at launch: customers are their phone number, and carry a card in Apple Wallet or Google Wallet | Accepted · stamps or points, Apple Wallet funding open | D-064 |
+| [0014](0014-cafe-themes.md) | A café's menu can wear the café's own theme: page and text colours, rules, a curated display font, a cover photo, all contrast-checked | Accepted | D-070 |
 
 **Source decisions** are IDs in the project's internal decision log, kept by the project lead. Each ADR restates what matters, so you do not need the log to understand it. Requirement IDs such as `MOD-14` or `US-36` refer to the [product requirements](../product/README.md).
 

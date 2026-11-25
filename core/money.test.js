@@ -1,7 +1,27 @@
 // @ts-check
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { formatPrice, lineTotal, sum, parsePrice, assertMillimes, MAX_PRICE } from './money.js';
+import {
+  formatPrice,
+  formatShortPrice,
+  lineTotal,
+  sum,
+  parsePrice,
+  assertMillimes,
+  MAX_PRICE,
+} from './money.js';
+
+test('formatShortPrice writes prices as printed menus do, without trailing zeros', () => {
+  assert.equal(formatShortPrice(16000), '16\u00a0DT');
+  assert.equal(formatShortPrice(5500), '5,5\u00a0DT');
+  assert.equal(formatShortPrice(5900), '5,9\u00a0DT');
+  assert.equal(formatShortPrice(1250), '1,25\u00a0DT');
+  assert.equal(formatShortPrice(1001), '1,001\u00a0DT');
+  assert.equal(formatShortPrice(450000), '450\u00a0DT');
+  assert.equal(formatShortPrice(1250000), '1\u202f250\u00a0DT');
+  assert.equal(formatShortPrice(0), '0\u00a0DT');
+  assert.throws(() => formatShortPrice(1.5));
+});
 
 const THIN = '\u202f';
 const NBSP = '\u00a0';

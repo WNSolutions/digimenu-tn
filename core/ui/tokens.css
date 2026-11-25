@@ -114,6 +114,46 @@
   }
 }
 
+/* A café's own theme (ADR-0014): its page colours replace the neutral ones in light AND dark
+ * mode, as its printed menu does. Every value is computed and checked by core/ui/accent.js. */
+:root[data-dm-theme] {
+  --dm-bg: var(--dm-cafe-bg);
+  --dm-bg-grouped: var(--dm-cafe-bg);
+  --dm-surface: var(--dm-cafe-surface);
+  --dm-fill: var(--dm-cafe-fill);
+  --dm-sep: var(--dm-cafe-sep);
+  --dm-border: var(--dm-cafe-border);
+  --dm-ink: var(--dm-cafe-ink);
+  --dm-ink-2: var(--dm-cafe-ink-2);
+  --dm-success: var(--dm-cafe-success);
+  --dm-on-success: var(--dm-cafe-on-status);
+  --dm-warning: var(--dm-cafe-warning);
+  --dm-danger: var(--dm-cafe-danger);
+  --dm-on-danger: var(--dm-cafe-on-status);
+  --dm-focus: var(--dm-cafe-focus);
+  --dm-accent: var(--dm-cafe-t-accent);
+  --dm-on-accent: var(--dm-cafe-t-on-accent);
+  --dm-accent-text: var(--dm-cafe-t-accent-text);
+  --dm-glass: var(--dm-cafe-bg);
+  --dm-title-font: var(--dm-cafe-font, var(--dm-font));
+}
+
+@supports (color: color-mix(in srgb, red, blue)) {
+  :root[data-dm-theme] {
+    --dm-glass: color-mix(in srgb, var(--dm-cafe-bg) 86%, transparent);
+  }
+}
+
+:root[data-dm-theme='dark'] {
+  color-scheme: dark;
+  --dm-scrim: rgb(0 0 0 / 0.55);
+  --dm-shadow: rgb(0 0 0 / 0.5);
+}
+
+:root[data-dm-theme='light'] {
+  color-scheme: light;
+}
+
 @media (prefers-contrast: more) {
   :root {
     --dm-ink-2: #3d3d3d;

@@ -34,7 +34,7 @@ import worker from '../../platform/shell/src/index.js';
 import { handleCreateOrder } from '../../platform/shell/src/orders-api.js';
 import { accountSql } from '../accounts/account.js';
 import { build } from 'esbuild';
-import { BRAND_FONTS } from '../release/build.js';
+import { BRAND_FONTS, THEME_FONT_FILES } from '../release/build.js';
 
 /** @type {Date | null} */
 let devNow = null;
@@ -129,6 +129,10 @@ export async function handle(method, url, body, headers = {}) {
     // The demo café's logo is in the public repository; real cafés' come from --media.
     if (rest.startsWith('demo/')) return inside(path.join(root, 'cafes/demo/media'), rest.slice(5));
     return extra.media ? inside(extra.media, rest) : { status: 404 };
+  }
+  if (p.startsWith('/fonts/')) {
+    const font = THEME_FONT_FILES.find((f) => path.basename(f) === p.slice('/fonts/'.length));
+    return font ? file(path.join(root, font)) : { status: 404 };
   }
   if (p === '/brand/brand.css') return file(path.join(root, 'platform/brand/brand.css'));
   if (p.startsWith('/brand/fonts/')) {

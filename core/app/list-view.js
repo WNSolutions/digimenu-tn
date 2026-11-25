@@ -369,7 +369,7 @@ export function openWaiter(ctx) {
 
   /** @param {import('../i18n.js').Lang} lang */
   function show(lang) {
-    const p = langParts(lang);
+    const p = langParts(lang, ctx.boot.cafe.prices);
     segs.forEach((b) => b.setAttribute('aria-checked', String(b.getAttribute('lang') === lang)));
     const checked = checkList(ctx.list, index);
     const lines = checked.lines.filter((c) => c.status === 'ok' || c.status === 'price_changed');

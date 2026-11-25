@@ -3,7 +3,7 @@
  * Builds the `/api/boot` answer (format 1, core/app/context.js `Boot`) from a café's active
  * configuration. Pure: the Worker and the local dev server both use it, so they cannot drift.
  */
-import { accentTokens } from '../../../core/ui/accent.js';
+import { accentTokens, themeTokens, THEME_FONTS } from '../../../core/ui/accent.js';
 
 /** @typedef {import('../../../core/app/context.js').Boot} Boot */
 /** @typedef {import('../../../core/app/extensions.js').BootModule} BootModule */
@@ -14,14 +14,20 @@ import { accentTokens } from '../../../core/ui/accent.js';
  * @property {string} slug
  * @property {import('../../../core/i18n.js').LocalizedText} names
  * @property {{ enabled: import('../../../core/i18n.js').Lang[], default: import('../../../core/i18n.js').Lang }} languages
- * @property {{ unavailable?: 'grey' | 'hide' }} [menu]
+ * @property {{ unavailable?: 'grey' | 'hide', prices?: 'full' | 'short' }} [menu]
  * @property {{ address?: import('../../../core/i18n.js').LocalizedText }} [info]
  * @property {import('../../../core/hours.js').Hours} [hours]
  * @property {string} [timeZone]
- * @property {{ primaryColor: string, buttonColor?: string, logo?: string }} branding
+ * @property {{ primaryColor: string, buttonColor?: string, logo?: string, theme?: CafeTheme }} branding
  * @property {{ maxQtyPerLine?: number, listMaxAgeHours?: number }} [ordering]
  * @property {Record<string, { enabled: boolean, settings?: Record<string, unknown> }>} [modules]
  * @property {string} [status]
+ */
+
+/**
+ * A café's own theme (ADR-0014): see `branding.theme` in cafe-config.schema.json.
+ * @typedef {{ background: string, surface?: string, text?: string, line?: string,
+ *   font?: string, cover?: string, logo?: 'plate' | 'bare' }} CafeTheme
  */
 
 /**
@@ -91,8 +97,35 @@ const LOGO_FILE = /^[a-z0-9][a-z0-9._-]*\.(svg|png|webp)$/;
  * @returns {string | null}
  */
 export function logoUrl(config) {
-  const file = config.branding?.logo;
+  return mediaUrl(config, config.branding?.logo);
+}
+
+/**
+ * @param {CafeConfig} config
+ * @param {string | undefined} file
+ */
+function mediaUrl(config, file) {
   return file && LOGO_FILE.test(file) ? `/media/${config.slug}/${file}` : null;
+}
+
+/**
+ * The theme as the page needs it: colours go with the accent tokens; this says whether the
+ * page is dark, which display font, the cover photo and how the logo is drawn.
+ * @param {CafeConfig} config
+ * @param {boolean} dark
+ */
+export function themeInfo(config, dark) {
+  const theme = config.branding?.theme;
+  if (!theme) return null;
+  const cover = mediaUrl(config, theme.cover);
+  return {
+    dark,
+    ...(theme.font && /** @type {readonly string[]} */ (THEME_FONTS).includes(theme.font)
+      ? { font: theme.font }
+      : {}),
+    ...(cover ? { cover } : {}),
+    logo: /** @type {'bare' | 'plate'} */ (theme.logo === 'bare' ? 'bare' : 'plate'),
+  };
 }
 
 /**
@@ -107,6 +140,8 @@ export function logoUrl(config) {
  */
 export function bootBody({ config, table, menu, release, modules, privacy = null }) {
   const logo = logoUrl(config);
+  const theme = themeTokens(config.branding);
+  const themed = theme.errors.length === 0 ? themeInfo(config, theme.dark) : null;
   return {
     v: 1,
     release,
@@ -123,7 +158,9 @@ export function bootBody({ config, table, menu, release, modules, privacy = null
       ...(config.ordering?.listMaxAgeHours
         ? { listMaxAgeHours: config.ordering.listMaxAgeHours }
         : {}),
-      accent: accentTokens(config.branding).tokens,
+      accent: { ...accentTokens(config.branding).tokens, ...(themed ? theme.tokens : {}) },
+      ...(themed ? { theme: themed } : {}),
+      ...(config.menu?.prices === 'short' ? { prices: 'short' } : {}),
     },
     table,
     menu,
