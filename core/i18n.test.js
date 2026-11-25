@@ -14,8 +14,11 @@ import {
 } from './i18n.js';
 
 /** @param {string} lang @returns {Record<string, string>} */
-const load = (lang) =>
-  JSON.parse(readFileSync(new URL(`./i18n/${lang}.json`, import.meta.url), 'utf8'));
+const load = (lang) => ({
+  ...JSON.parse(readFileSync(new URL(`./i18n/${lang}.json`, import.meta.url), 'utf8')),
+  // "Ma commande" keeps its texts in its own files, loaded with it (core/app/order-track.js).
+  ...JSON.parse(readFileSync(new URL(`./i18n/order/${lang}.json`, import.meta.url), 'utf8')),
+});
 const texts = Object.fromEntries(LANGS.map((l) => [l, load(l)]));
 
 test('French, Arabic and English have exactly the same text keys', () => {

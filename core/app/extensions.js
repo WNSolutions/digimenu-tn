@@ -16,6 +16,8 @@
  *   sheet.page       a sheet the core draws from blocks; may have its own link (/<café>/<path>)
  *   checkout.fields  a consent choice or an information line in checkout, and data to send
  *   postOrder.block  blocks under the order number once the order is stored
+ *   orderStatus.block blocks on "Ma commande" for the status staff last set (#26)
+ *   footer.link      one link in the menu's footer, e.g. "Laisser un avis Google" (#26)
  */
 import { translator, pick } from '../i18n.js';
 import { formatPrice } from '../money.js';
@@ -29,6 +31,8 @@ export const CLIENT_POINTS = /** @type {const} */ ([
   'sheet.page',
   'checkout.fields',
   'postOrder.block',
+  'orderStatus.block',
+  'footer.link',
 ]);
 /** @typedef {typeof CLIENT_POINTS[number]} ClientPoint */
 
@@ -83,7 +87,10 @@ export const CLIENT_POINTS = /** @type {const} */ ([
  *       run: (values: Record<string, string>) => Promise<Block[]> }
  *   | { kind: 'button', label: string, look?: 'prominent' | 'plain' | 'danger', confirm?: string,
  *       run: () => Promise<Block[] | null> }
- *   | { kind: 'page', label: string, page: string }} Block
+ *   | { kind: 'page', label: string, page: string }
+ *   | { kind: 'link', label: string, href: string, look?: 'prominent' | 'plain',
+ *       tapped?: () => void }} Block
+ * A `link` opens an https page in a new tab; `tapped` is told (to count taps, never to block).
  *   A `page` block opens one of the module's own sheet pages. A `qr` block is a QR code the
  *   server encoded: square rows of "1" (dark) and "0" (light), 21 to 57 modules.
  */
@@ -125,6 +132,16 @@ export const CLIENT_POINTS = /** @type {const} */ ([
  */
 
 /**
+ * What an `orderStatus.block` contribution receives: the customer's order as staff last set it.
+ * The same for every customer: no amount, no lines, no rating, no identity (#26, US-44).
+ * `orderKey` is this phone's own key for the order: a module's server route can check the
+ * order's status with it (`api.orderStatus`); it is never shown.
+ * @typedef {{ status: string, number: string, orderKey: string, cafe: LocalizedText, lang: Lang }} OrderStatusContext
+ */
+
+/** A link in the footer (https only). @typedef {{ label: string, href: string }} FooterLink */
+
+/**
  * The module's own small store on this phone, under `dm:<café>:<module>:`.
  * @typedef {object} ModuleStorage
  * @property {(name: string) => string | null} get
@@ -157,6 +174,8 @@ export const CLIENT_POINTS = /** @type {const} */ ([
  *   (point: 'sheet.page', page: SheetPage): void,
  *   (point: 'checkout.fields', fn: (c: CheckoutContext) => CheckoutContribution | null): void,
  *   (point: 'postOrder.block', fn: (c: PostOrderContext) => Block[] | null): void,
+ *   (point: 'orderStatus.block', fn: (c: OrderStatusContext) => Block[] | null): void,
+ *   (point: 'footer.link', fn: (c: { lang: Lang }) => FooterLink | null): void,
  * }} contribute
  */
 
@@ -198,6 +217,10 @@ export function createRegistry(report = (message, err) => console.error(message,
   const checkoutFields = [];
   /** @type {{ key: string, fn: (c: PostOrderContext) => Block[] | null }[]} */
   const postOrder = [];
+  /** @type {{ key: string, fn: (c: OrderStatusContext) => Block[] | null }[]} */
+  const orderStatus = [];
+  /** @type {{ key: string, fn: (c: { lang: Lang }) => FooterLink | null }[]} */
+  const footerLinks = [];
 
   /** @param {string} key */
   function storageFor(key) {
@@ -286,6 +309,8 @@ export function createRegistry(report = (message, err) => console.error(message,
             'header.action': headerActions,
             'checkout.fields': checkoutFields,
             'postOrder.block': postOrder,
+            'orderStatus.block': orderStatus,
+            'footer.link': footerLinks,
           };
           const list = /** @type {any} */ (lists)[point];
           if (!list) throw new Error(`unknown extension point: ${point}`);
@@ -401,9 +426,60 @@ export function createRegistry(report = (message, err) => console.error(message,
       return out;
     },
 
+    /**
+     * Blocks for the order's current status, in module order.
+     * @param {OrderStatusContext} context
+     * @returns {{ key: string, blocks: Block[] }[]}
+     */
+    orderStatusBlocks(context) {
+      const out = [];
+      for (const { key, fn } of orderStatus) {
+        try {
+          const blocks = fn(context);
+          if (Array.isArray(blocks) && blocks.length) out.push({ key, blocks });
+        } catch (err) {
+          report(`module ${key}: orderStatus.block failed`, err);
+        }
+      }
+      return out;
+    },
+
+    /** Whether a module adds anything to "Ma commande" (asks no module, runs nothing). */
+    hasOrderStatusBlocks() {
+      return orderStatus.length > 0;
+    },
+
+    /**
+     * Footer links: https only, with a text label.
+     * @param {{ lang: Lang }} context
+     * @returns {(FooterLink & { key: string })[]}
+     */
+    footerLinks(context) {
+      const out = [];
+      for (const { key, fn } of footerLinks) {
+        try {
+          const link = fn(context);
+          if (
+            link &&
+            typeof link.label === 'string' &&
+            link.label.trim() &&
+            typeof link.href === 'string' &&
+            SAFE_URL.test(link.href)
+          )
+            out.push({ label: link.label, href: link.href, key });
+        } catch (err) {
+          report(`module ${key}: footer.link failed`, err);
+        }
+      }
+      return out;
+    },
+
     report,
   };
 }
+
+/** An https address with no spaces: the only kind of link a module may give. */
+export const SAFE_URL = /^https:\/\/[^\s]+$/;
 
 /** @typedef {ReturnType<typeof createRegistry>} Registry */
 

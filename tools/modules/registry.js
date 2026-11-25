@@ -41,6 +41,17 @@ function keysWith(/** @type {string} */ file) {
     .sort();
 }
 
+/**
+ * What the server takes from a module's manifest.
+ * @param {string} key
+ * @returns {{ needs: string[], events: string[] }}
+ */
+export function manifestFacts(key) {
+  const file = path.join(root, 'modules', key, 'module.json');
+  const m = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+  return { needs: m.settings?.needs ?? [], events: m.analyticsEvents ?? [] };
+}
+
 /** @param {typeof TARGETS[number]} target */
 export function render(target) {
   const keys = keysWith(target.file);
@@ -59,9 +70,17 @@ export function render(target) {
         );
     }
   }
-  const entries = keys.map((k) =>
-    staff ? `${k}: { ...${k}, texts: { fr: ${k}_fr, ar: ${k}_ar } }` : k,
-  );
+  const entries = keys.map((k) => {
+    if (staff) return `${k}: { ...${k}, texts: { fr: ${k}_fr, ar: ${k}_ar } }`;
+    // The server needs two facts from the manifest: settings the module cannot work without,
+    // and the analytics events it may count (counts only).
+    const { needs, events } = manifestFacts(k);
+    const extra = [
+      needs.length ? `needs: ${JSON.stringify(needs)}` : '',
+      events.length ? `events: ${JSON.stringify(events)}` : '',
+    ].filter(Boolean);
+    return extra.length ? `${k}: { ...${k}, ${extra.join(', ')} }` : k;
+  });
   lines.push(
     '',
     `/** @type {Record<string, ${target.type}>} */`,

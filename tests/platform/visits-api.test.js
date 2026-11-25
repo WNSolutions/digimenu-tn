@@ -195,6 +195,7 @@ test('Manager, Maintainer and Admin see the visits; Staff do not; a demo café s
   assert.deepEqual(Object.keys(v).sort(), [
     'cafe',
     'days',
+    'events',
     'from',
     'goLive',
     'hours',

@@ -1,7 +1,7 @@
 // @ts-check
 import assert from 'node:assert/strict';
 import { test, before } from 'node:test';
-import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -128,6 +128,9 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   const manifest = JSON.parse(readFileSync(path.join(site, 'r/0.1.0/manifest.json'), 'utf8'));
   assert.ok(existsSync(path.join(site, manifest.entry)));
   assert.ok(existsSync(path.join(site, manifest.css)));
+  // What a module cannot work without travels with it, so the boot can leave it out.
+  assert.deepEqual(manifest.modules.google_review.needs, ['reviewUrl']);
+  assert.equal(manifest.modules.loyalty.needs, undefined);
   const headers = readFileSync(path.join(site, '_headers'), 'utf8');
   assert.match(headers, /script-src 'self';/);
   assert.match(headers, /style-src 'self' 'sha256-[A-Za-z0-9+/=]+'/);
@@ -135,6 +138,14 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   // The CSP blocks style attributes: release code must not write any.
   const core = readFileSync(path.join(site, manifest.entry), 'utf8');
   assert.doesNotMatch(core, /style=/);
+  // "Ma commande" is a file of its own, loaded only after an order; the core imports nothing
+  // at start.
+  const parts = readdirSync(path.join(site, 'r/0.1.0')).filter((f) => f.startsWith('part.'));
+  assert.equal(parts.length, 1);
+  assert.match(parts[0], /^part\.order-track\.[A-Z0-9]+\.js$/);
+  assert.ok(core.includes(`import("./${parts[0]}")`));
+  assert.doesNotMatch(core, /(^|[;}])import\s*[{*"]/);
+  assert.doesNotMatch(readFileSync(path.join(site, 'r/0.1.0', parts[0]), 'utf8'), /style=|^import/);
   // Customer pages may not use the camera; the staff app may (scanning loyalty cards).
   assert.match(headers, /\/\*\n(.*\n)*? {2}Permissions-Policy: camera=\(\)/);
   assert.match(

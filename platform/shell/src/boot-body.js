@@ -3,6 +3,7 @@
  * Builds the `/api/boot` answer (format 1, core/app/context.js `Boot`) from a café's active
  * configuration. Pure: the Worker and the local dev server both use it, so they cannot drift.
  */
+import { missingNeeds } from './module-needs.js';
 import { accentTokens, themeTokens, THEME_FONTS } from '../../../core/ui/accent.js';
 
 /** @typedef {import('../../../core/app/context.js').Boot} Boot */
@@ -70,14 +71,18 @@ export function tableStatus(row, code) {
 }
 
 /**
- * Only enabled modules whose customer code is in the release (MOD-03: off means zero bytes).
+ * Only enabled modules whose customer code is in the release (MOD-03: off means zero bytes),
+ * and that have every setting they need (`needs`, module-needs.js).
  * @param {CafeConfig} config
- * @param {Record<string, { entry?: string, texts?: BootModule['texts'] }>} available
+ * @param {Record<string, { entry?: string, texts?: BootModule['texts'], needs?: string[] }>} available
  * @returns {BootModule[]}
  */
 export function enabledModules(config, available) {
   return Object.entries(config.modules ?? {})
-    .filter(([key, m]) => m.enabled && available[key])
+    .filter(
+      ([key, m]) =>
+        m.enabled && available[key] && missingNeeds(m.settings, available[key].needs).length === 0,
+    )
     .map(([key, m]) => ({
       key,
       ...(available[key].entry ? { entry: available[key].entry } : {}),

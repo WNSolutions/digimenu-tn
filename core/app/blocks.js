@@ -5,6 +5,7 @@
  * Text goes in with textContent, never as HTML. A block that fails is skipped.
  */
 import { h, icon, bdi } from './dom.js';
+import { SAFE_URL } from './extensions.js';
 import { openSheet } from './sheet.js';
 
 /** @typedef {import('./context.js').Ctx} Ctx */
@@ -123,6 +124,27 @@ function renderBlock(ctx, b, o) {
         text(b.label),
       );
       return button;
+    }
+    case 'link': {
+      // An outside page (e.g. the café's Google review page), in a new tab, https only.
+      if (typeof b.href !== 'string' || !SAFE_URL.test(b.href)) return null;
+      return h(
+        'a',
+        {
+          class: b.look === 'prominent' ? 'dm-prominent' : 'dm-plain dm-plain--center',
+          href: b.href,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          onclick: () => {
+            try {
+              b.tapped?.();
+            } catch {
+              /* counting never blocks the link */
+            }
+          },
+        },
+        text(b.label),
+      );
     }
     case 'form': {
       const inputs = (Array.isArray(b.fields) ? b.fields : []).map((f) => {

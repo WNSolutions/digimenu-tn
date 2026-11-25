@@ -85,6 +85,7 @@ export function start(boot, env = {}) {
       cafe.prices,
     ),
   });
+  ctx.storage = storage;
   ctx.ext = createRegistry(undefined, { cafe: cafe.slug, storage });
   ctx.ready = loadModules(boot.modules ?? [], ctx.ext, env.modules ?? {});
   let checkedFor = /** @type {unknown} */ (null);

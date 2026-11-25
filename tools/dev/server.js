@@ -325,6 +325,7 @@ function run() {
       process.exitCode = 1;
       return;
     }
+    for (const w of cafe.warnings) process.stderr.write(`${cafe.info.slug}: warning: ${w}\n`);
   }
   const demo = loadDemo();
   if (demo.errors.length) {

@@ -1,0 +1,23 @@
+{
+  "order.title": "طلبي",
+  "order.chip": "الطلب {number}",
+  "order.now": "الطلب {number}: {status}",
+  "order.s.received": "وصل",
+  "order.s.handoff": "أُرسل",
+  "order.s.accepted": "قيد التحضير",
+  "order.s.ready": "جاهز",
+  "order.s.served": "قُدّم",
+  "order.s.rejected": "مرفوض",
+  "order.s.unconfirmed": "لم يصل",
+  "order.s.cancelled": "أُلغي",
+  "order.help.received": "وصل طلبك إلى المقهى وسيؤكّده.",
+  "order.help.handoff": "أُرسل عبر واتساب. سيؤكّده المقهى.",
+  "order.help.accepted": "المقهى يحضّر طلبك.",
+  "order.help.ready": "طلبك جاهز.",
+  "order.help.served": "بالهناء والشفاء!",
+  "order.help.rejected": "لم يتمكّن المقهى من قبول هذا الطلب. اسأل النادل.",
+  "order.help.unconfirmed": "لم تصل الرسالة إلى المقهى. اعرض قائمتك على النادل.",
+  "order.help.cancelled": "أُلغي هذا الطلب.",
+  "order.refresh": "تحديث",
+  "order.checked": "آخر تحديث {time}"
+}

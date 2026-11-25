@@ -1,0 +1,48 @@
+{
+  "$schema": "../../core/schemas/module.schema.json",
+  "key": "google_review",
+  "id": "M-14",
+  "title": {
+    "fr": "Avis Google",
+    "ar": "تقييم Google",
+    "en": "Google review"
+  },
+  "summary": {
+    "fr": "La même invitation à laisser un avis Google pour chaque client, une fois la commande servie, et un lien toujours présent en bas du menu.",
+    "ar": "نفس الدعوة لترك تقييم على Google لكل حريف بعد تقديم الطلب، ورابط دائم أسفل القائمة.",
+    "en": "The same Google review invitation for every customer once the order is served, and a link always there at the bottom of the menu."
+  },
+  "version": "0.1.0",
+  "stability": "experimental",
+  "platformApi": 1,
+  "coreApi": "^0.1",
+  "requires": [],
+  "conflicts": [],
+  "settings": {
+    "schema": "settings.schema.json",
+    "version": 1,
+    "needs": ["reviewUrl"]
+  },
+  "texts": {
+    "fr": "i18n/fr.json",
+    "ar": "i18n/ar.json",
+    "en": "i18n/en.json"
+  },
+  "extends": {
+    "client": ["orderStatus.block", "footer.link"],
+    "staff": ["admin.dashboardCard"]
+  },
+  "data": {
+    "orderExt": [],
+    "itemExt": [],
+    "records": [],
+    "personalFields": []
+  },
+  "customerRecords": {
+    "access": "none"
+  },
+  "analyticsEvents": ["shown", "tap"],
+  "tests": "tests/",
+  "guide": "GUIDE.md",
+  "changelog": "CHANGELOG.md"
+}

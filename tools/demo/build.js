@@ -16,6 +16,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { build } from 'esbuild';
+import { bundleCore as releaseCore } from '../release/build.js';
 import { loadDemo, demoBoot } from './boot.js';
 
 const HELP = `Usage: node tools/demo/build.js [--table 5] [--out dist/demo]
@@ -28,19 +29,9 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const BUDGET_CORE_GZ = 20 * 1024;
 const TARGET = ['es2022', 'chrome100', 'safari15.4', 'firefox110'];
 
-/** The customer core alone, as a release ships it (measured against the budget). */
+/** The customer core alone, exactly as a release ships it (measured against the budget). */
 async function bundleCore() {
-  const out = await build({
-    entryPoints: [path.join(root, 'core/app/main.js')],
-    bundle: true,
-    format: 'esm',
-    minify: true,
-    target: TARGET,
-    legalComments: 'none',
-    write: false,
-    logLevel: 'silent',
-  });
-  return out.outputFiles[0].text;
+  return (await releaseCore(path.join(root, 'core/app/main.js'))).js;
 }
 
 /**
@@ -81,6 +72,8 @@ async function bundleCss() {
     bundle: true,
     minify: true,
     target: TARGET,
+    // A café theme's font is served by the release site (/fonts/); the demo café has none.
+    external: ['/fonts/*'],
     write: false,
     logLevel: 'silent',
   });

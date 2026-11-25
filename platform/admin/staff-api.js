@@ -29,8 +29,20 @@
  */
 
 /**
+ * A card on "Visites" (`admin.dashboardCard`): a title, a few numbers and one line. The staff
+ * app draws it; a module only gives the words and the numbers.
+ * @typedef {object} DashboardCard
+ * @property {string} title
+ * @property {{ label: string, value: string }[]} tiles   at most 4
+ * @property {string} [note]
+ */
+
+/**
  * @typedef {object} StaffModule
  * @property {(api: StaffApi) => StaffPanel | null} [panel]
+ * @property {(api: StaffApi, counts: Record<string, number>) => DashboardCard | null} [dashboard]
+ *   the module's card on "Visites", from its own counters for the period (`api.count` on the
+ *   server, counts only)
  * @property {{ fr: Record<string, string>, ar: Record<string, string> }} texts
  */
 

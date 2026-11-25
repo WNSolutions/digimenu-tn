@@ -52,7 +52,10 @@
     "payment_choice": { "enabled": true, "settings": { "methods": ["cash", "card"] } },
     "dietary_tags": { "enabled": true },
     "photos": { "enabled": false },
-    "google_review": { "enabled": false },
+    "google_review": {
+      "enabled": true,
+      "settings": { "reviewUrl": "https://www.google.com/maps" }
+    },
     "loyalty": {
       "enabled": true,
       "settings": {

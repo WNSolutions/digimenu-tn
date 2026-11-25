@@ -6,13 +6,14 @@
  *
  * It re-reads the files on every call, so an edit to `menu.csv` shows on the next page load.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { importMenuCsv, parseCsv, formatReport } from '../import/menu-csv.js';
 import { buildSnapshot } from '../../core/menu/snapshot.js';
 import { accentTokens, themeTokens } from '../../core/ui/accent.js';
 import { bootBody, tableStatus } from '../../platform/shell/src/boot-body.js';
+import { missingNeeds, needsWarnings } from '../../platform/shell/src/module-needs.js';
 
 /** @typedef {import('../../core/app/context.js').Boot} Boot */
 /** @typedef {import('../../core/i18n.js').Lang} Lang */
@@ -59,9 +60,16 @@ export function loadDemo(dir = DEFAULT_DIR) {
     if (label?.trim()) tables.set(label.trim(), (code ?? '').trim().toUpperCase());
   }
 
-  /** Enabled modules that have customer code, with their texts (MOD-03: only these load). */
+  /** Each module's needed settings (module.json `settings.needs`). */
+  const needs = moduleNeeds();
+  /** Enabled modules that have customer code and what they need, with their texts (MOD-03). */
   const modules = Object.entries(info.modules ?? {})
-    .filter(([key, m]) => m.enabled && existsSync(path.join(MODULES_DIR, key, 'client.js')))
+    .filter(
+      ([key, m]) =>
+        m.enabled &&
+        existsSync(path.join(MODULES_DIR, key, 'client.js')) &&
+        missingNeeds(m.settings, needs[key]).length === 0,
+    )
     .map(([key, m]) => ({
       key,
       settings: m.settings ?? {},
@@ -87,8 +95,20 @@ export function loadDemo(dir = DEFAULT_DIR) {
       ...imported.skipped.map((p) => `menu.csv row ${p.row}: ${p.message}`),
     ],
     report: formatReport(imported),
-    warnings: [...accent.warnings, ...theme.warnings],
+    warnings: [...accent.warnings, ...theme.warnings, ...needsWarnings(info, needs)],
   };
+}
+
+/** @returns {Record<string, string[]>} module key → settings it cannot work without */
+export function moduleNeeds() {
+  /** @type {Record<string, string[]>} */
+  const out = {};
+  for (const key of readdirSync(MODULES_DIR)) {
+    const file = path.join(MODULES_DIR, key, 'module.json');
+    if (!existsSync(file)) continue;
+    out[key] = JSON.parse(readFileSync(file, 'utf8')).settings?.needs ?? [];
+  }
+  return out;
 }
 
 /**

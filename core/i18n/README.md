@@ -2,6 +2,8 @@
 
 **Interface texts of the core**, one file per language: `fr.json`, `ar.json`, `en.json`. Texts live outside the code, so adding or correcting a language never touches code (MOD-17).
 
+A part of the page that loads on its own keeps its texts in its own folder, loaded with it: `order/` holds the texts of **Ma commande** (`core/app/order-track.js`), which loads only once the phone has sent an order.
+
 **Status:** In progress — [`fr.json`](fr.json), [`ar.json`](ar.json) and [`en.json`](en.json) hold the customer page texts (Sprint 1). The Arabic texts still need a review by a native speaker.
 
 ## What lives here
@@ -11,7 +13,7 @@
 
 ## Rules
 
-- **The three files have exactly the same keys.** CI fails otherwise. French is the fallback when a text is missing.
+- **The three files have exactly the same keys** (and so do the three files of each folder). CI fails otherwise. French is the fallback when a text is missing.
 - Plain text only: no HTML in strings. Placeholders use `{name}` style.
 - Prices use Western digits in every language ("4,500 DT"); phone numbers stay left-to-right inside Arabic text.
 - Write for customers on a phone: short, friendly, no jargon. Arabic texts are reviewed by a native speaker before a release.

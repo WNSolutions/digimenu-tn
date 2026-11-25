@@ -6,7 +6,8 @@
  *
  *   GET /admin/api/visits?cafe=<slug>&from=YYYY-MM-DD&to=YYYY-MM-DD
  *       Manager (own café), Maintainer (assigned cafés), Admin: per day, per table, per
- *       language and per hour.
+ *       language and per hour; and the modules' own counts for the period (`events`, e.g.
+ *       google_review shown / tap), for their cards on the same screen.
  *   GET /admin/api/visits/export?from=YYYY-MM-DD&to=YYYY-MM-DD
  *       Admin only: real visits of every live café, one row per café and day, for the grant's
  *       impact report (the staff app turns it into one CSV per café and one for all).
@@ -165,9 +166,28 @@ export async function handleVisits(request, env, route, now = new Date()) {
     dim: String(r.dim),
     value: Number(r.value),
   }));
+  // Modules' counters are named "<module>.<event>" (module-host.js `count`).
+  const counted = (
+    await env.DB.prepare(
+      `SELECT metric, SUM(value) AS value FROM analytics_counters
+        WHERE cafe_id = ?1 AND metric LIKE '%.%' AND day BETWEEN ?2 AND ?3
+          ${goLive ? 'AND day >= ?4' : ''}
+        GROUP BY metric`,
+    )
+      .bind(...(goLive ? [cafe.id, span.from, span.to, goLive] : [cafe.id, span.from, span.to]))
+      .all()
+  ).results;
+  /** @type {Record<string, Record<string, number>>} */
+  const events = {};
+  for (const r of counted) {
+    const [key, event] = String(r.metric).split('.');
+    if (!key || !event) continue;
+    (events[key] ??= {})[event] = Number(r.value);
+  }
   return json(200, {
     ...span,
     cafe: { slug: cafe.slug, name: cafe.config.names ?? null },
+    events,
     // Before go-live every visit is a test (the team, the owner, the youth trying it).
     test: !live,
     goLive,

@@ -1734,3 +1734,69 @@ a.dm-prominent {
   margin-inline: auto;
   border-radius: var(--dm-radius-m);
 }
+
+/* ---------- "Ma commande": the last order and its status (#26) ---------- */
+
+.dm-orderslot:empty {
+  display: none;
+}
+
+.dm-orderslot {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--dm-space-3);
+}
+
+.dm-orderchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dm-space-2);
+  min-height: 44px;
+  padding: 0 var(--dm-space-4);
+  border: 1px solid var(--dm-border);
+  border-radius: 999px;
+  background: var(--dm-surface);
+  color: var(--dm-ink);
+  font-size: var(--dm-callout);
+  cursor: pointer;
+}
+
+.dm-orderchip strong {
+  color: var(--dm-accent-text);
+}
+
+.dm-orderchip--served,
+.dm-orderchip--ready {
+  border-color: var(--dm-accent);
+}
+
+.dm-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--dm-space-2) var(--dm-space-4);
+  margin-top: var(--dm-space-6);
+}
+
+.dm-footer-links:empty {
+  display: none;
+}
+
+.dm-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--dm-accent-text);
+  font-weight: 600;
+}
+
+.dm-order-refresh {
+  margin-top: var(--dm-space-4);
+  text-align: center;
+}
+
+.dm-order-checked {
+  margin: var(--dm-space-1) 0 0;
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+}

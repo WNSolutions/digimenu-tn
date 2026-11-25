@@ -10,8 +10,16 @@ import { isOrderable } from '../menu/snapshot.js';
 import { openItemSheet } from './item.js';
 import { openListSheet } from './list-view.js';
 import { openLanguageMenu, openInfoSheet } from './chrome.js';
-import { openModulePage } from './blocks.js';
+import { openModulePage, renderBlocks } from './blocks.js';
+import { openSheet } from './sheet.js';
+import { translator } from '../i18n.js';
 import { ICONS } from '../ui/icons.js';
+import { loadTracked, saveTracked, nextCheck, FINAL, KNOWN, KEEP_MS } from './order-store.js';
+
+/** The order being followed on this page (one at a time). @type {{ stop: () => void } | null} */
+let followed = null;
+/** The order the page last asked to follow: a slow load of order-track.js must not follow an older one. */
+let wanted = /** @type {unknown} */ (null);
 
 /** @typedef {import('./context.js').Ctx} Ctx */
 /** @typedef {import('../menu/snapshot.js').Item} Item */
@@ -152,6 +160,8 @@ export function renderPage(root, ctx) {
         decoding: 'async',
       })
     : null;
+  // "Ma commande": the phone's last order and its status, once sent (order-track.js).
+  const orderSlot = h('div', { class: 'dm-orderslot' });
   const header = h(
     'header',
     { class: cafe.logo ? 'dm-header dm-header--logo' : 'dm-header' },
@@ -159,6 +169,7 @@ export function renderPage(root, ctx) {
     langText('h1', name, ctx.lang, bare ? 'dm-title dm-sr' : 'dm-title'),
     address ? langText('p', address, ctx.lang, 'dm-subtitle') : null,
     statusParts.length ? h('p', { class: 'dm-statusline' }, statusParts) : null,
+    orderSlot,
   );
 
   // ---- Menu -----------------------------------------------------------------------------------
@@ -242,6 +253,18 @@ export function renderPage(root, ctx) {
       )
     : null;
 
+  // Modules' footer links (footer.link), once the modules are loaded.
+  const footerLinks = h('div', { class: 'dm-footer-links' });
+  ctx.ready?.then(() =>
+    footerLinks.replaceChildren(
+      ...ctx.ext
+        .footerLinks({ lang: ctx.lang })
+        .map((l) =>
+          h('a', { href: l.href, target: '_blank', rel: 'noopener noreferrer' }, l.label),
+        ),
+    ),
+  );
+
   const capsule = h('button', {
     type: 'button',
     class: 'dm-capsule',
@@ -253,6 +276,7 @@ export function renderPage(root, ctx) {
     { id: 'menu', class: 'dm-main' },
     banner,
     sections,
+    footerLinks,
     h('p', { class: 'dm-footer' }, t('footer.by')),
   );
 
@@ -265,6 +289,32 @@ export function renderPage(root, ctx) {
     main,
     h('div', { class: 'dm-capsule-wrap' }, capsule),
   );
+
+  // ---- Behaviour: the order this phone sent last, followed until served ------------------------
+  // "Ma commande" loads only once there is an order to follow (its own file, outside the core's
+  // budget); it gets the core's functions rather than importing them. A redraw (language
+  // change) moves the follower into the new page; it never checks twice.
+  ctx.trackOrder = (t) => {
+    followed?.stop();
+    followed = null;
+    wanted = t;
+    import('./order-track.js')
+      .then((m) => {
+        if (wanted !== t) return;
+        followed = m.followOrder(ctx, orderSlot, t, {
+          h,
+          bdi,
+          openSheet,
+          renderBlocks,
+          formatClock,
+          translator,
+          store: { saveTracked, nextCheck, FINAL, KNOWN, KEEP_MS },
+        });
+      })
+      .catch((err) => console.error('order-track did not load', err));
+  };
+  const last = loadTracked(ctx.storage ?? null, cafe.slug, Date.now());
+  if (last) ctx.trackOrder(last);
 
   // ---- Behaviour: inline title, scroll spy ----------------------------------------------------
   const topEl = /** @type {HTMLElement} */ (root.querySelector('.dm-top'));

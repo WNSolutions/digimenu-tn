@@ -1,0 +1,23 @@
+{
+  "order.title": "My order",
+  "order.chip": "Order {number}",
+  "order.now": "Order {number}: {status}",
+  "order.s.received": "Received",
+  "order.s.handoff": "Sent",
+  "order.s.accepted": "Being prepared",
+  "order.s.ready": "Ready",
+  "order.s.served": "Served",
+  "order.s.rejected": "Declined",
+  "order.s.unconfirmed": "Not received",
+  "order.s.cancelled": "Cancelled",
+  "order.help.received": "The café has your order and will confirm it.",
+  "order.help.handoff": "Sent by WhatsApp. The café will confirm it.",
+  "order.help.accepted": "The café is preparing your order.",
+  "order.help.ready": "Your order is ready.",
+  "order.help.served": "Enjoy!",
+  "order.help.rejected": "The café could not take this order. Please ask the waiter.",
+  "order.help.unconfirmed": "The café did not get this message. Show your list to the waiter.",
+  "order.help.cancelled": "This order was cancelled.",
+  "order.refresh": "Refresh",
+  "order.checked": "Updated at {time}"
+}

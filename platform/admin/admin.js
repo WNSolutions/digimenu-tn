@@ -413,8 +413,10 @@ function setupView() {
 /**
  * @type {{ me: any, cafe: string, view: string, timer: number, known: Set<string>,
  *   audio: AudioContext | null, panels: { key: string, label: string, render: (root: HTMLElement) => void }[],
+ *   cards: import('./visits.js').ModuleCard[],
  *   admin: boolean, cafes: { slug: string, name: any, role: string }[] }}
- *   view: 'orders', 'menu', 'team', 'account', 'customers' or 'm:<module>'
+ *   view: 'orders', 'menu', 'team', 'account', 'customers' or 'm:<module>';
+ *   cards: the switched-on modules' cards on "Visites"
  */
 const state = {
   me: null,
@@ -424,35 +426,57 @@ const state = {
   known: new Set(),
   audio: null,
   panels: [],
+  cards: [],
   admin: false,
   cafes: [],
 };
 
-/** The staff panels of the modules this café switched on. */
+/**
+ * What a module's staff code receives for the café on screen.
+ * @param {string} key
+ * @param {import('./staff-api.js').StaffModule} mod
+ * @param {string} role
+ * @returns {import('./staff-api.js').StaffApi}
+ */
+function staffApi(key, mod, role) {
+  return {
+    key,
+    lang: /** @type {'fr' | 'ar'} */ (lang),
+    t: staffTexts(mod.texts[/** @type {'fr' | 'ar'} */ (lang)] ?? {}, mod.texts.fr),
+    h,
+    call: (route, body = {}) => api(`/m/${key}/${route}`, { ...body, cafe: state.cafe }),
+    role,
+    price: formatPrice,
+    scan: () =>
+      scanQr(h, {
+        title: t('scanTitle'),
+        hint: t('scanHint'),
+        cancel: t('scanCancel'),
+        denied: t('scanDenied'),
+      }),
+  };
+}
+
+/** The staff panels and "Visites" cards of the modules this café switched on. */
 async function loadPanels() {
+  state.cards = [];
   const res = await api(`/cafe?cafe=${encodeURIComponent(state.cafe)}`);
   if (res.status !== 200) return [];
   const panels = [];
   for (const key of res.data.modules ?? []) {
     const mod = Object.hasOwn(STAFF_MODULES, key) ? STAFF_MODULES[key] : null;
-    if (!mod?.panel) continue;
-    try {
-      const panel = mod.panel({
+    if (!mod) continue;
+    const modApi = staffApi(key, mod, res.data.role);
+    if (mod.dashboard) {
+      const dashboard = mod.dashboard;
+      state.cards.push({
         key,
-        lang: /** @type {'fr' | 'ar'} */ (lang),
-        t: staffTexts(mod.texts[/** @type {'fr' | 'ar'} */ (lang)] ?? {}, mod.texts.fr),
-        h,
-        call: (route, body = {}) => api(`/m/${key}/${route}`, { ...body, cafe: state.cafe }),
-        role: res.data.role,
-        price: formatPrice,
-        scan: () =>
-          scanQr(h, {
-            title: t('scanTitle'),
-            hint: t('scanHint'),
-            cancel: t('scanCancel'),
-            denied: t('scanDenied'),
-          }),
+        card: (/** @type {Record<string, number>} */ counts) => dashboard(modApi, counts),
       });
+    }
+    if (!mod.panel) continue;
+    try {
+      const panel = mod.panel(modApi);
       if (panel) panels.push({ key, ...panel });
     } catch (err) {
       console.error(`module ${key}: staff panel failed`, err);
@@ -635,7 +659,7 @@ function render() {
   else if (state.view === 'menu') menuView(body);
   else if (state.view === 'account') accountView(body, teamDeps);
   else if (state.view === 'visits' && ['manager', 'maintainer', 'admin'].includes(cafeRole())) {
-    visitsView(body, { ...teamDeps, admin: state.admin });
+    visitsView(body, { ...teamDeps, admin: state.admin, cards: state.cards });
   } else if (state.view === 'team' && ['manager', 'admin'].includes(cafeRole())) {
     teamView(body, teamDeps);
   } else if (state.view === 'customers' && state.admin) {

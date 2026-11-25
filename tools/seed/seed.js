@@ -18,6 +18,8 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { importMenuCsv, parseCsv } from '../import/menu-csv.js';
 import { buildSnapshot, SNAPSHOT_SCHEMA } from '../../core/menu/snapshot.js';
+import { needsWarnings } from '../../platform/shell/src/module-needs.js';
+import { moduleNeeds } from '../demo/boot.js';
 
 const HELP = `Usage: node tools/seed/seed.js --cafe <folder> --release <x.y.z> [--replace] [--notice <file.json>] [--out file.sql]
 
@@ -221,6 +223,17 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
   return lines.join('\n') + '\n';
 }
 
+/**
+ * What a maintainer should know before seeding, without stopping it (e.g. "google_review is
+ * switched on but has no settings.reviewUrl: it stays off until it is filled in").
+ * @param {string} dir
+ * @returns {string[]}
+ */
+export function seedWarnings(dir) {
+  const info = JSON.parse(readFileSync(path.join(dir, 'info.json'), 'utf8'));
+  return needsWarnings(info, moduleNeeds());
+}
+
 function run() {
   const { values } = parseArgs({
     options: {
@@ -240,6 +253,7 @@ function run() {
   const text =
     (values.notice ? noticeSql(path.resolve(values.notice)) : '') +
     seedSql({ dir: path.resolve(values.cafe), release: values.release, replace: values.replace });
+  for (const w of seedWarnings(path.resolve(values.cafe))) process.stderr.write(`warning: ${w}\n`);
   if (values.out) writeFileSync(values.out, text);
   else process.stdout.write(text);
 }

@@ -62,13 +62,13 @@ The folder name **is** the module key. A module's code may import only the publi
 | `stability` | no | `experimental`, `stable` or `deprecated`. |
 | `platformApi`, `coreApi` | yes | Platform generation and core API range the module needs; the deploy refuses a mismatch. |
 | `requires`, `requiresAnyOf`, `conflicts` | no | Dependencies checked before publishing, e.g. `preorder` requires `order_types` with takeaway on. |
-| `settings` | if any settings | Path of the settings schema, settings version, optional migration file. Defaults must be safe. |
+| `settings` | if any settings | Path of the settings schema, settings version, optional migration file, and `needs`: settings the module cannot work without (e.g. `google_review`'s `reviewUrl`). Defaults must be safe. |
 | `texts` | yes | Paths of the FR, AR and EN text files (MOD-17). |
 | `extends` | yes | Extension points used, grouped by file: `client`, `staff`, `server`, `shared`. |
 | `data` | yes | What the module stores: `orderExt`, `itemExt`, `records`, and `personalFields` (first name, phone, address, free text). Empty lists mean nothing. |
 | `customerRecords` | yes | `none`, `read` or `readWrite`, with a plain-language purpose when not `none` (MOD-04). |
 | `externalService` | only for outside services | Provider, whether it is paid, `paidBy: "cafe"`, `failMode: "open"`, and the settings field that holds the daily cap (MOD-18). |
-| `analyticsEvents` | no | Allow-listed event names; counts only. |
+| `analyticsEvents` | no | Allow-listed event names; counts only. The server's `api.count(event)` refuses any other. |
 | `tests`, `guide`, `changelog` | yes | Paths of the tests folder, `GUIDE.md` and `CHANGELOG.md`. |
 
 ## Extension points
@@ -77,11 +77,12 @@ The core owns the URL scheme, pricing arithmetic, list storage, order lifecycle,
 
 The full list is **named and reserved now** so names stay stable, but each point is **built with the first module that needs it** (Tech Lead review). "Go-live" marks the points needed by the modules planned for the 5 pilot cafés. A new point is added only in a core MINOR release, documented here, with a test fixture.
 
-**Built so far:** `list.action` (M-03), and with `loyalty` (M-15): `header.action`, `sheet.page`, `checkout.fields`, `postOrder.block`, `staff.panel`, `order.afterStore`, `order.statusChanged`, `customer.records`. How they work today:
+**Built so far:** `list.action` (M-03); with `loyalty` (M-15): `header.action`, `sheet.page`, `checkout.fields`, `postOrder.block`, `staff.panel`, `order.afterStore`, `order.statusChanged`, `customer.records`; with `google_review` (M-14): `orderStatus.block`, `footer.link`, `admin.dashboardCard`, `analytics.events`. How they work today:
 
 - **Customer** (`core/app/extensions.js`, drawn by `core/app/blocks.js`): a contribution returns a description (text, stamps, a code, a form, a button, a link to the module's own sheet page, a QR code the server encoded); the core draws it with its own styles and never inserts module HTML. A `sheet.page` may claim a link of its own, `/<café>/<path>` (lowercase letters). A `checkout.fields` consent names a purpose; the box shows the **privacy notice's** text for it, unticked, and appears only if the notice has one. Each module gets `api.storage` (keys under `dm:<café>:<module>:`) and `api.call(route, body)` (POST `/api/m/<module>/<route>`, no cookies).
-- **Server** (`platform/shell/src/module-host.js`): `afterStore` runs after the order is stored **and again on a retried order** (it must answer the same way twice); its answer reaches the phone in `order.modules.<module>`. `statusChanged` runs once per real status change. Both are fail-open. A module's `routes` and `staff.routes` (with a role list per route; managers only when none is given) answer 404 for a café that switched the module off. A module's server code receives everything in `api` (café, settings, database, ids, hashing, customer-data keys, audit log) and imports nothing.
-- **Staff app** (`platform/admin/staff-api.js`): `panel(api)` returns a tab label and a `render(root)`; `api.scan()` reads a QR code with the camera; staff texts live in `i18n/staff.fr.json` and `staff.ar.json` so they never reach the customer page.
+- **Server** (`platform/shell/src/module-host.js`): `afterStore` runs after the order is stored **and again on a retried order** (it must answer the same way twice); its answer reaches the phone in `order.modules.<module>`. `statusChanged` runs once per real status change. Both are fail-open. A module's `routes` and `staff.routes` (with a role list per route; managers only when none is given) answer 404 for a café that switched the module off. A module's server code receives everything in `api` (café, settings, database, ids, hashing, customer-data keys, audit log, `count(event)` for its declared analytics events, `orderStatus(key)` for the number and status of the phone's own order) and imports nothing.
+- **"Ma commande"** (`core/app/order-track.js`): after an order is stored, the page shows a chip with its number and status under the café's name and follows it for 3 hours: at most 3 automatic checks (4, 12 and 25 minutes, A4), then the customer refreshes (opening Ma commande, or **Actualiser**). `orderStatus.block` gets the status, the number and the phone's own key for the order (never lines, amounts or the customer) and returns blocks for the sheet; once the order is served, the sheet opens by itself once if a module has something to show and no other sheet is open. `footer.link` adds one https link at the bottom of the menu.
+- **Staff app** (`platform/admin/staff-api.js`): `panel(api)` returns a tab label and a `render(root)`; `dashboard(api, counts)` returns a card for **Visites** (a title, up to four numbers, one line) from the module's own counters for the period; `api.scan()` reads a QR code with the camera; staff texts live in `i18n/staff.fr.json` and `staff.ar.json` so they never reach the customer page.
 - **Bundling:** module server and staff code is listed in two generated files, `platform/shell/src/server-modules.js` and `platform/admin/staff-modules.js`, written by `node tools/modules/registry.js` and checked by the tests. They are the only platform files that import `modules/`; removing a module folder and running the tool again leaves everything else working.
 
 | # | Point | Side | A module may add | First needed by | Built for |
@@ -89,7 +90,7 @@ The full list is **named and reserved now** so names stay stable, but each point
 | 1 | `menu.itemBadge` | customer | label on an item or variant (icon + text, never colour only) | M-10, M-05, M-09 | Go-live |
 | 2 | `menu.itemMedia` | customer | lazy thumbnail slot | M-08 | Go-live |
 | 3 | `menu.itemDetail` | customer | block in the item detail sheet | M-08, M-10 | Go-live |
-| 4 | `menu.section` | customer | section before or after the categories | M-14 (footer link), M-09, M-06 | Go-live |
+| 4 | `menu.section` | customer | section before or after the categories | M-09, M-06 | Later |
 | 5 | `menu.filter` | customer | filter chips on the category bar | M-10 | Later |
 | 6 | `header.action` | customer | header button opening a module sheet or link | M-12, M-03, M-06, M-07 | Go-live |
 | 7 | `table.action` | customer | button that needs a known table | M-13 | Later |
@@ -98,7 +99,7 @@ The full list is **named and reserved now** so names stay stable, but each point
 | 10 | `checkout.fields` | customer | fields shown under conditions (type, table, hours) | M-01, M-04, M-05 | Go-live |
 | 11 | `checkout.validators` | customer | client checks that mirror server rules | M-01, M-05 | Go-live |
 | 12 | `checkout.channel` | customer | submit channel provider (one per order type) | M-02, M-03 | Go-live |
-| 13 | `postOrder.block` | customer | block on the confirmation and status screen | M-02, M-14, M-11, M-15 | Go-live |
+| 13 | `postOrder.block` | customer | block on the confirmation screen, from the module's own server answer | M-02, M-11, M-15 | Go-live |
 | 14 | `sheet.page` | customer | full-screen form opened by an action | M-06, M-07, M-11 | Later |
 | 15 | `pricing.rules` | shared | **declarative** price rule applied by core pricing on phone and server alike | M-09 | Later |
 | 16 | `staff.orderCardBlock` | staff | information on an order card | M-01, M-04, M-05, M-15 | Go-live |
@@ -106,7 +107,7 @@ The full list is **named and reserved now** so names stay stable, but each point
 | 18 | `staff.requestType` | staff + server | new inbox entry type (schema, validation, card) | M-06, M-07, M-13 | Later |
 | 19 | `admin.settings` | admin | settings form generated from the settings schema (no code) | all | Go-live |
 | 20 | `admin.itemFields` | admin | extra per-item fields stored in `items.ext.<key>` | M-08, M-10, M-05 | Go-live |
-| 21 | `admin.dashboardCard` | admin | declarative chart over the module's own events | M-06, M-11, M-15 | Later |
+| 21 | `admin.dashboardCard` | admin | a card on **Visites**: a title, up to four numbers and one line, from the module's own counters (`staff.js` `dashboard`) | M-14, M-06, M-11, M-15 | Go-live |
 | 22 | `order.validate` | server | accept or refuse with a message key (**fail-closed**) | M-01, M-04, M-05 | Go-live |
 | 23 | `order.enrich` | server | derived fields in `order.ext.<key>` | M-05 | Later |
 | 24 | `order.afterStore` | server | side effects after commit (async, **fail-open**, isolated) | M-11, M-16 | Later |
@@ -115,6 +116,8 @@ The full list is **named and reserved now** so names stay stable, but each point
 | 27 | `i18n.texts` | shared | FR/AR/EN texts in the module's namespace (manifest field `texts`) | all | Go-live |
 | 28 | `schedule.daily` | server | upkeep of the module's own records | M-06, M-07, M-11 | Later |
 | 29 | `customer.records` | server | what the module keeps about a customer: its part of an export, and erasing it on a deletion request (runs whether the module is on or off; erasure fails closed) | M-15 | Go-live |
+| 30 | `orderStatus.block` | customer | blocks in **Ma commande** for the status staff last set (status, number, the phone's own order key) — **new since v0.1** | M-14 | Go-live |
+| 31 | `footer.link` | customer | one https link at the bottom of the menu — **new since v0.1** | M-14 | Go-live |
 
 The optional WhatsApp Business module (M-16) also needs an inbound webhook route outside `/api/*`. It will be designed with that module in v1.1, not as a general extension point.
 
@@ -173,7 +176,7 @@ One validator package runs in four places: the admin app (instant feedback), the
 3. Dependencies hold: `requires`, `requiresAnyOf`, `conflicts`. Every enabled order type names a channel that is enabled and provides `checkout.channel`. The default language is enabled. Messages name the missing piece, e.g. "preorder needs order_types with takeaway on".
 4. Each module's settings match its settings schema; defaults are filled in.
 5. Module `validateConfig` functions check business rules (e.g. "card" only if the café has a terminal).
-6. Warnings: missing translations, no Google review link while `google_review` is on, dine-in on but tables without check codes.
+6. Warnings: missing translations, a module switched on without a setting it `needs` (e.g. no Google review link while `google_review` is on: the module stays off until it is filled in, everywhere: boot, hooks, routes), dine-in on but tables without check codes.
 
 Errors block publishing and **the last valid configuration stays live** (MOD-05). Warnings are shown but allowed. Each publish writes a new immutable configuration version (who, when, diff, report).
 
@@ -207,7 +210,7 @@ Priorities and dates come from the requirements ([product docs](../product/READM
 | M-11 | `feedback` | Private 1–5 rating and comment | M-02 for the after-order prompt | On request |
 | M-12 | `languages` | Which of FR/AR/EN a café shows, and the switch | — | Sprint 1 |
 | M-13 | `call_waiter` | Call waiter or ask for the bill | M-02 | On request |
-| M-14 | `google_review` | Same Google review invitation for every customer after Served | M-02 | Go-live where the café has a link |
+| M-14 | `google_review` | Same Google review invitation for every customer after Served, and a footer link (built: [`modules/google_review/`](../../modules/google_review/GUIDE.md)) | M-02 | Go-live where the café has a link |
 | M-15 | `loyalty` | Stamps per staff-confirmed order or staff scan, reward set per café, card on the web and in Apple Wallet / Google Wallet ([ADR-0013](../adr/0013-loyalty-at-launch-phone-number-and-wallet-card.md)) | `customer_records`, M-01, a channel | Go-live (D-064) |
 | M-16 | `whatsapp_business` | Automated WhatsApp messages via the official Business Platform, **paid by the café** | `customer_records`, M-02 | v1.1, only where a café opts in |
 

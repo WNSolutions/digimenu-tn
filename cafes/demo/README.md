@@ -21,7 +21,7 @@ A **fictional** café (FR "Café Démo Jasmin", AR "مقهى ياسمين الت
 
 ## Rules
 
-- Everything here is **invented**. No real names, addresses, phone numbers or brands. The WhatsApp hand-off uses a dummy number that cannot reach anyone.
+- Everything here is **invented**. No real names, addresses, phone numbers or brands. The WhatsApp hand-off uses a dummy number that cannot reach anyone, and the Google review link (`google_review`) opens Google Maps itself, since the café has no Google page.
 - Demo check codes are public, so the demo café never matters for security tests of real cafés.
 - Orders at the demo café are **test orders**: they never create customer records and are excluded from analytics.
 - Keep [`info.json`](info.json) valid against [`cafe-config.schema.json`](../../core/schemas/cafe-config.schema.json).

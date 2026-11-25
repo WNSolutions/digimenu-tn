@@ -90,6 +90,13 @@ export const VISITS_TEXT = {
  * @property {string} cafe
  * @property {boolean} admin
  * @property {() => void} signedOut
+ * @property {ModuleCard[]} [cards]   the switched-on modules' cards (`admin.dashboardCard`)
+ */
+
+/**
+ * @typedef {object} ModuleCard
+ * @property {string} key
+ * @property {(counts: Record<string, number>) => import('./staff-api.js').DashboardCard | null} card
  */
 
 /** The elements that exist, for replaceChildren. @param {(HTMLElement | null)[]} list */
@@ -221,6 +228,46 @@ export function visitsView(body, d) {
     );
   };
 
+  /**
+   * The modules' cards, from their own counters for the period. A card that fails is left out.
+   * @param {Record<string, Record<string, number>>} events
+   * @returns {HTMLElement[]}
+   */
+  function moduleCards(events) {
+    const out = [];
+    for (const { key, card } of d.cards ?? []) {
+      try {
+        const c = card(events[key] ?? {});
+        if (!c) continue;
+        out.push(
+          h(
+            'section',
+            { class: 'a-card a-stack' },
+            h('h2', { class: 'a-title' }, c.title),
+            h(
+              'div',
+              { class: 'a-tiles' },
+              ...c.tiles
+                .slice(0, 4)
+                .map((x) =>
+                  h(
+                    'div',
+                    { class: 'a-tile' },
+                    h('span', { class: 'a-tile-label' }, x.label),
+                    h('strong', { class: 'a-tile-value' }, x.value),
+                  ),
+                ),
+            ),
+            c.note ? h('p', { class: 'a-muted' }, c.note) : null,
+          ),
+        );
+      } catch (err) {
+        console.error(`module ${key}: card failed`, err);
+      }
+    }
+    return out;
+  }
+
   async function load() {
     const to = new Date();
     const from = new Date(to.getTime() - (span - 1) * 86_400_000);
@@ -264,7 +311,11 @@ export function visitsView(body, d) {
         : null,
     ];
     if (!total) {
-      content.replaceChildren(...present(notes), h('p', { class: 'a-muted' }, t('none')));
+      content.replaceChildren(
+        ...present(notes),
+        h('p', { class: 'a-muted' }, t('none')),
+        ...moduleCards(v.events ?? {}),
+      );
       return;
     }
     const tiles = h(
@@ -389,7 +440,18 @@ export function visitsView(body, d) {
         ),
       ),
     );
-    content.replaceChildren(...present([...notes, tiles, daily, weekly, tables, hours, table]));
+    content.replaceChildren(
+      ...present([
+        ...notes,
+        tiles,
+        ...moduleCards(v.events ?? {}),
+        daily,
+        weekly,
+        tables,
+        hours,
+        table,
+      ]),
+    );
   }
 
   const choose = h(

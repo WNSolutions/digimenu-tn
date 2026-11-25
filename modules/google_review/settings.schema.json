@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WNSolutions/digimenu-tn/modules/google_review/settings.schema.json",
+  "title": "google_review settings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reviewUrl": {
+      "type": "string",
+      "maxLength": 300,
+      "pattern": "^https://(g\\.page|search\\.google\\.com|(www\\.|maps\\.)?google\\.(com|tn)|maps\\.app\\.goo\\.gl)/[^\\s]*$",
+      "description": "The café's own Google review link, from its Google Business Profile (\"Demander des avis\" → copy the link, e.g. https://g.page/r/…/review). Without it the module stays off and the validator warns. Never a page of ours or a form in between: the link goes straight to Google."
+    }
+  }
+}
