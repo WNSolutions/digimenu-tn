@@ -15,6 +15,30 @@ import { clearNotice } from '../../platform/shell/src/privacy.js';
 import { seedSql, noticeSql } from '../../tools/seed/seed.js';
 import { accountSql } from '../../tools/accounts/account.js';
 import { createD1 } from '../support/d1.js';
+import jsQRModule from 'jsqr';
+import { readCardQr, cardQr } from '../../modules/loyalty/server.js';
+import { serverApi } from '../../platform/shell/src/module-host.js';
+
+/** @type {(data: Uint8ClampedArray, width: number, height: number) => { data: string } | null} */
+const jsQR = /** @type {any} */ (jsQRModule).default ?? jsQRModule;
+
+/** What a camera reads from the QR rows the card page draws. @param {string[]} rows */
+function readQr(rows) {
+  const scale = 4;
+  const n = (rows.length + 8) * scale;
+  const rgba = new Uint8ClampedArray(n * n * 4).fill(255);
+  rows.forEach((row, y) => {
+    [...row].forEach((c, x) => {
+      if (c !== '1') return;
+      for (let dy = 0; dy < scale; dy++)
+        for (let dx = 0; dx < scale; dx++) {
+          const i = (((y + 4) * scale + dy) * n + (x + 4) * scale + dx) * 4;
+          rgba[i] = rgba[i + 1] = rgba[i + 2] = 0;
+        }
+    });
+  });
+  return jsQR(rgba, n, n)?.data ?? null;
+}
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const ORIGIN = 'https://preview.example';
@@ -313,4 +337,47 @@ test('switched off: no card, no answer in the order, and the routes answer 404',
   assert.equal((await s.staff('find', { number: 'AAAAAA' })).status, 404);
   const cafe = await s.call('/admin/api/cafe?cafe=demo');
   assert.equal(cafe.data.modules.includes('loyalty'), false);
+});
+
+test('the card carries a signed QR code (never the phone or the secret); staff scan it', async () => {
+  const s = await setup();
+  const joined = await s.order({ consents: { orderUpdates: true, loyalty: true } });
+  const { number, token, qr } = joined.data.modules.loyalty;
+  assert.ok(qr, 'the card comes with its QR code');
+  assert.ok(Date.parse(qr.until) > OPEN.getTime() + 23 * 3_600_000, 'valid about a day');
+  const text = readQr(qr.rows);
+  assert.match(String(text), new RegExp(`^DMC1\\.${number}\\.[0-9A-Z]+\\.[A-Za-z0-9_-]{16}$`));
+  assert.doesNotMatch(String(text), /22333444|\+216/, 'no phone number in the QR code');
+  assert.doesNotMatch(String(text), new RegExp(token), 'no card secret in the QR code');
+  const page = await s.customer('card', { token });
+  const fresh = String(readQr(page.data.qr.rows));
+  assert.ok(fresh.startsWith(`DMC1.${number}.`), 'the card page shows a fresh code for the card');
+
+  const scanned = await s.staff('find', { qr: fresh });
+  assert.equal(scanned.status, 200);
+  assert.equal(scanned.data.number, number);
+  const forged = fresh.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'));
+  assert.deepEqual((await s.staff('find', { qr: forged })).data, { error: 'bad_qr' });
+  assert.deepEqual((await s.staff('find', { qr: 'https://example.org' })).data, {
+    error: 'bad_qr',
+  });
+  assert.equal((await s.staff('stamp', { qr: forged })).status, 404, 'a forged code finds nothing');
+  const audit = await s.DB.prepare(
+    "SELECT action FROM audit_log WHERE category = 'loyalty' AND action = 'find_by_qr'",
+  ).all();
+  assert.equal(audit.results.length, 1);
+});
+
+test('a card QR code expires after 24 hours and only works in its own café', async () => {
+  const s = await setup();
+  const cafe = { id: 'cafe-demo', slug: 'demo', status: 'demo', config: {} };
+  const at = new Date('2026-12-01T10:00:00Z');
+  const api = await serverApi(s.env, cafe, 'loyalty', at);
+  const { qr } = /** @type {any} */ (await cardQr(api, 'K7PX3A'));
+  const text = String(readQr(qr.rows));
+  assert.deepEqual(await readCardQr(api, text), { number: 'K7PX3A' });
+  const later = await serverApi(s.env, cafe, 'loyalty', new Date('2026-12-02T11:00:00Z'));
+  assert.deepEqual(await readCardQr(later, text), { error: 'qr_expired' });
+  const other = await serverApi(s.env, { ...cafe, id: 'cafe-other' }, 'loyalty', at);
+  assert.deepEqual(await readCardQr(other, text), { error: 'bad_qr' });
 });

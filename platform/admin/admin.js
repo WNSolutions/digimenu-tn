@@ -8,6 +8,7 @@
 import { parsePrice, formatPrice } from '../../core/money.js';
 import { STAFF_MODULES } from './staff-modules.js';
 import { staffTexts } from './staff-api.js';
+import { scanQr } from './scanner.js';
 
 const API = '/admin/api';
 const POLL_MS = 10_000;
@@ -63,6 +64,11 @@ const TEXT = {
     offline: 'Connexion perdue. Nouvel essai…',
     noAccess: "Ce compte n'a accès à aucun café.",
     error: 'Une erreur est survenue. Réessayez.',
+    scanTitle: 'Scanner un QR code',
+    scanHint: 'Placez le QR code dans le cadre.',
+    scanCancel: 'Annuler',
+    scanDenied:
+      "La caméra n'est pas disponible. Autorisez-la dans le navigateur, ou tapez le numéro.",
   },
   ar: {
     signIn: 'تسجيل الدخول',
@@ -113,6 +119,10 @@ const TEXT = {
     offline: 'انقطع الاتصال. إعادة المحاولة…',
     noAccess: 'هذا الحساب لا يصل إلى أي مقهى.',
     error: 'حدث خطأ. أعد المحاولة.',
+    scanTitle: 'مسح رمز QR',
+    scanHint: 'ضع رمز QR داخل الإطار.',
+    scanCancel: 'إلغاء',
+    scanDenied: 'الكاميرا غير متاحة. اسمح بها في المتصفح، أو اكتب الرقم.',
   },
 };
 let lang = (navigator.language || 'fr').startsWith('ar') ? 'ar' : 'fr';
@@ -387,6 +397,13 @@ async function loadPanels() {
         call: (route, body = {}) => api(`/m/${key}/${route}`, { ...body, cafe: state.cafe }),
         role: res.data.role,
         price: formatPrice,
+        scan: () =>
+          scanQr(h, {
+            title: t('scanTitle'),
+            hint: t('scanHint'),
+            cancel: t('scanCancel'),
+            denied: t('scanDenied'),
+          }),
       });
       if (panel) panels.push({ key, ...panel });
     } catch (err) {

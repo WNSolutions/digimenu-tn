@@ -80,6 +80,8 @@ function renderBlock(ctx, b, o) {
           'dm-codebox-value',
         ),
       );
+    case 'qr':
+      return qrSvg(b.rows, text(b.label));
     case 'page':
       return h(
         'button',
@@ -170,6 +172,43 @@ function renderBlock(ctx, b, o) {
     default:
       return null;
   }
+}
+
+const SVG = 'http://www.w3.org/2000/svg';
+
+/**
+ * A QR code as an SVG drawing: dark on white with its quiet zone, whatever the page's theme,
+ * so phone cameras and scanners read it. Rows that are not a square of 0s and 1s draw nothing.
+ * @param {unknown} rows
+ * @param {string} label
+ */
+function qrSvg(rows, label) {
+  if (!Array.isArray(rows)) return null;
+  const size = rows.length;
+  if (size < 21 || size > 57 || !rows.every((r) => typeof r === 'string' && r.length === size))
+    return null;
+  if (!rows.every((r) => /^[01]+$/.test(r))) return null;
+  let d = '';
+  rows.forEach((row, y) => {
+    for (const m of row.matchAll(/1+/g))
+      d += `M${(m.index ?? 0) + 4} ${y + 4}h${m[0].length}v1h-${m[0].length}z`;
+  });
+  const n = size + 8;
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${n} ${n}`);
+  svg.setAttribute('class', 'dm-qr');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', label);
+  svg.setAttribute('shape-rendering', 'crispEdges');
+  const back = document.createElementNS(SVG, 'rect');
+  back.setAttribute('width', String(n));
+  back.setAttribute('height', String(n));
+  back.setAttribute('fill', '#fff');
+  const path = document.createElementNS(SVG, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', '#000');
+  svg.append(back, path);
+  return svg;
 }
 
 /**

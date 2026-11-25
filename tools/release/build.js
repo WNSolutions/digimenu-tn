@@ -63,6 +63,12 @@ async function bundleModule(entry) {
   return out.outputFiles[0].text;
 }
 
+/** The jsQR version bundled into /admin/scan.js, for its licence line. */
+function jsqrVersion() {
+  return JSON.parse(readFileSync(path.join(root, 'node_modules/jsqr/package.json'), 'utf8'))
+    .version;
+}
+
 async function bundleCss() {
   const out = await build({
     stdin: {
@@ -112,6 +118,9 @@ export function headersFile(indexHtml) {
     '  Cache-Control: public, max-age=300',
     '/admin/*',
     '  Cache-Control: no-cache',
+    // The staff app may use the camera, for scanning loyalty cards; customer pages may not.
+    '  ! Permissions-Policy',
+    '  Permissions-Policy: camera=(self), microphone=(), geolocation=()',
     '',
   ].join('\n');
 }
@@ -165,6 +174,12 @@ export async function buildRelease({ version, out, keep }) {
   writeFileSync(
     path.join(out, 'admin/admin.js'),
     await bundleModule(path.join(root, 'platform/admin/admin.js')),
+  );
+  // The QR reader for phones without one built in, loaded only when staff scan (jsQR).
+  writeFileSync(
+    path.join(out, 'admin/scan.js'),
+    `/*! jsQR ${jsqrVersion()} | Apache License 2.0 | https://github.com/cozmo/jsQR */\n` +
+      (await bundleModule(path.join(root, 'platform/admin/scan.js'))),
   );
   const adminCss = await build({
     stdin: {

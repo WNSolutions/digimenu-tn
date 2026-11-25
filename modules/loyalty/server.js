@@ -124,7 +124,64 @@ async function freeNumber(api) {
  * @param {any} card
  */
 async function customerView(api, card) {
-  return { number: String(card.number), ...(await balance(api, String(card.id))) };
+  return {
+    number: String(card.number),
+    ...(await balance(api, String(card.id))),
+    ...(await cardQr(api, String(card.number))),
+  };
+}
+
+const QR_PREFIX = 'DMC1';
+const QR_HOURS = 24;
+
+/** @param {ServerApi} api @param {string} number @param {string} exp */
+async function qrSignature(api, number, exp) {
+  if (!api.crypto) return null;
+  return (await api.crypto.lookup(`loyalty-qr|${api.cafe.id}|${number}|${exp}`)).slice(0, 16);
+}
+
+/**
+ * The QR code on the card (ADR-0013 §5): the card number, an expiry and a signature from the
+ * server's key, never the phone number or the card's secret. Valid 24 hours; the card page
+ * gets a fresh one each time it opens online.
+ * @param {ServerApi} api
+ * @param {string} number
+ */
+export async function cardQr(api, number) {
+  const hours = Math.floor(api.now.getTime() / 3_600_000) + QR_HOURS;
+  const exp = hours.toString(36).toUpperCase();
+  const sig = await qrSignature(api, number, exp);
+  if (!sig) return {};
+  const text = `${QR_PREFIX}.${number}.${exp}.${sig}`;
+  return { qr: { rows: api.qr(text), until: new Date(hours * 3_600_000).toISOString() } };
+}
+
+/**
+ * Checks a scanned card QR code. Returns the card number, or why it is refused.
+ * @param {ServerApi} api
+ * @param {unknown} text
+ * @returns {Promise<{ number: string } | { error: 'bad_qr' | 'qr_expired' }>}
+ */
+export async function readCardQr(api, text) {
+  const parts = String(text ?? '')
+    .trim()
+    .split('.');
+  if (parts.length !== 4 || parts[0] !== QR_PREFIX) return { error: 'bad_qr' };
+  const [, number, exp, sig] = parts;
+  if (!new RegExp(`^[${ALPHABET}]{${NUMBER_LENGTH}}$`).test(number) || !/^[0-9A-Z]{1,8}$/.test(exp))
+    return { error: 'bad_qr' };
+  const want = await qrSignature(api, number, exp);
+  if (!want || !sameText(want, sig)) return { error: 'bad_qr' };
+  if (parseInt(exp, 36) * 3_600_000 < api.now.getTime()) return { error: 'qr_expired' };
+  return { number };
+}
+
+/** Compares two strings in time that does not depend on where they differ. */
+function sameText(/** @type {string} */ a, /** @type {string} */ b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 /**
@@ -353,6 +410,11 @@ async function staffView(api, card) {
  * @param {any} body
  */
 async function staffCard(api, body) {
+  if (body.qr) {
+    const read = await readCardQr(api, body.qr);
+    if ('error' in read) return null;
+    return findCard(api, "lc.number = ?2 AND lc.status = 'active'", [read.number]);
+  }
   if (body.phone) {
     const phone = api.normalizePhone(String(body.phone));
     if (!phone || !api.crypto) return null;
@@ -383,10 +445,15 @@ export const staff = {
       /** @type {any} */ body,
       /** @type {{ userId: string, role: string }} */ actor,
     ) {
+      if (body.qr) {
+        const read = await readCardQr(api, body.qr);
+        if ('error' in read) return answer(422, { error: read.error });
+      }
       const card = await staffCard(api, body);
       if (!card) return answer(404, { error: 'unknown_card' });
       // Opening a card shows a customer's first name: every opening is in the audit log.
-      await api.audit(body.phone ? 'find_by_phone' : 'find', String(card.id), actor);
+      const how = body.qr ? 'find_by_qr' : body.phone ? 'find_by_phone' : 'find';
+      await api.audit(how, String(card.id), actor);
       return answer(200, await staffView(api, card));
     },
 

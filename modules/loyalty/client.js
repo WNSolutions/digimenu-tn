@@ -28,17 +28,25 @@ const LAST = 'last';
  * @property {number} rewards
  * @property {number} toNext
  * @property {import('../../core/i18n.js').LocalizedText} reward
+ * @property {{ rows: string[], until: string }} [qr]   signed by the server, valid until `until`
  */
 
 /**
  * The card as blocks.
  * @param {CardView} card
  * @param {{ t: (key: string, vars?: Record<string, string | number>) => string,
- *   reward: string }} o
+ *   reward: string, now?: Date }} o
  * @returns {Block[]}
  */
 export function cardBlocks(card, o) {
   const { t } = o;
+  // A QR code past its time (a card saved while offline) is left out: staff type the number.
+  const qr =
+    card.qr &&
+    Array.isArray(card.qr.rows) &&
+    Date.parse(card.qr.until) > (o.now ?? new Date()).getTime()
+      ? card.qr
+      : null;
   const needed = card.stampsNeeded;
   const full = card.rewards > 0;
   /** @type {Block[]} */
@@ -60,8 +68,9 @@ export function cardBlocks(card, o) {
               : t('ready', { reward: o.reward }),
         }
       : { kind: 'text', text: t('toNext', { n: card.toNext }) },
+    ...(qr ? [/** @type {Block} */ ({ kind: 'qr', rows: qr.rows, label: t('qr.label') })] : []),
     { kind: 'code', label: t('number'), value: card.number },
-    { kind: 'text', tone: 'muted', text: t('show') },
+    { kind: 'text', tone: 'muted', text: t(qr ? 'showQr' : 'show') },
   ];
   return blocks;
 }

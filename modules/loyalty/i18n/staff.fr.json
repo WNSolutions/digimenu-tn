@@ -2,7 +2,7 @@
   "tab": "Fidélité",
   "find.label": "Numéro de carte ou téléphone du client",
   "find.btn": "Chercher",
-  "find.help": "Le client montre sa carte (Fidélité, en haut du menu) ou donne son numéro de téléphone.",
+  "find.help": "Scannez le QR code de la carte du client (Fidélité, en haut du menu), ou tapez le numéro de carte ou son téléphone.",
   "unknown": "Aucune carte active pour ce numéro.",
   "who": "{name} · téléphone se terminant par {last3}",
   "whoNoName": "Téléphone se terminant par {last3}",
@@ -25,5 +25,8 @@
   "transfer.confirm": "C'est vérifié : donner un code",
   "transfer.code": "Code à entrer sur le nouveau téléphone : {code}",
   "transfer.how": "Sur le nouveau téléphone : ouvrir le menu, Fidélité, puis entrer ce code. Valable 15 minutes. L'ancien téléphone ne verra plus la carte.",
-  "error": "Une erreur est survenue. Réessayez."
+  "error": "Une erreur est survenue. Réessayez.",
+  "scan": "Scanner la carte",
+  "badQr": "Ce QR code n'est pas une carte de fidélité de ce café.",
+  "qrExpired": "QR code expiré : le client rouvre sa carte (avec internet), ou tapez le numéro."
 }

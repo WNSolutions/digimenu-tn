@@ -2,8 +2,8 @@
 /**
  * loyalty (M-15), staff side: the "Fidélité" tab (ADR-0013 §3, §5, §7).
  *
- * Staff find a card by its number (shown on the customer's card) or by the customer's phone
- * number, then: add a stamp for a purchase paid at the counter (one every 10 minutes, with
+ * Staff scan the card's QR code with the phone's camera, or type its number or the customer's
+ * phone number, then: add a stamp for a purchase paid at the counter (one every 10 minutes, with
  * "Annuler" right after), use a reward (two taps), or give a one-time code that opens the card
  * on a new phone (after checking the customer has the number).
  *
@@ -59,6 +59,9 @@ export function panel(api) {
           if (res.data.card) show(res.data.card);
         } else if (res.data?.error === 'no_reward') {
           say(t('noReward'), 'error');
+        } else if (res.data?.error === 'bad_qr' || res.data?.error === 'qr_expired') {
+          say(t(res.data.error === 'bad_qr' ? 'badQr' : 'qrExpired'), 'error');
+          result.replaceChildren();
         } else {
           say(t('error'), 'error');
         }
@@ -66,6 +69,8 @@ export function panel(api) {
 
       /** @param {any} card */
       function show(card) {
+        // Once found (typed or scanned), the next taps name the card by its number.
+        query = { number: card.number };
         const reward = card.reward?.[api.lang] || card.reward?.fr || '';
         const actions = h('div', { class: 'a-row' });
         const stamp = h(
@@ -195,7 +200,22 @@ export function panel(api) {
           'div',
           { class: 'a-row' },
           input,
-          h('button', { type: 'submit', class: 'a-btn a-btn--main' }, t('find.btn')),
+          h('button', { type: 'submit', class: 'a-btn' }, t('find.btn')),
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'a-btn a-btn--main',
+              onclick: async () => {
+                const text = await api.scan();
+                if (!text) return;
+                query = { qr: text };
+                say('');
+                act('find');
+              },
+            },
+            t('scan'),
+          ),
         ),
         h('p', { class: 'a-muted' }, t('find.help')),
       );

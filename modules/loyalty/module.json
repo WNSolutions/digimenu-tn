@@ -12,7 +12,7 @@
     "ar": "ينضم الحريف إلى برنامج الوفاء عند الطلب: طابع عن كل طلب يؤكده العاملون، ومكافأة عند اكتمال البطاقة.",
     "en": "Customers join when they order: one stamp per order staff confirm, and a reward when the card is full."
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "stability": "experimental",
   "platformApi": 1,
   "coreApi": "^0.1",

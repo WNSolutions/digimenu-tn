@@ -171,3 +171,24 @@ test('the staff search tells a phone number from a card number', () => {
   assert.equal(looksLikePhone('K7P X3A'), false);
   assert.equal(looksLikePhone('347967'), false);
 });
+
+test('the card shows its QR code until it expires, then only the number', () => {
+  const card = {
+    number: 'K7PX3A',
+    stamps: 1,
+    stampsNeeded: 10,
+    rewards: 0,
+    toNext: 9,
+    reward: { fr: 'x' },
+    qr: { rows: ['1'.repeat(21)], until: '2026-11-26T10:00:00.000Z' },
+  };
+  const before = cardBlocks(card, { t: t('fr'), reward: 'x', now: new Date('2026-11-26T09:00Z') });
+  assert.deepEqual(before[3], { kind: 'qr', rows: card.qr.rows, label: texts.fr['qr.label'] });
+  assert.deepEqual(before.at(-1), { kind: 'text', tone: 'muted', text: texts.fr.showQr });
+  const after = cardBlocks(card, { t: t('fr'), reward: 'x', now: new Date('2026-11-26T11:00Z') });
+  assert.equal(
+    after.some((b) => b.kind === 'qr'),
+    false,
+  );
+  assert.equal(after[3].kind, 'code');
+});

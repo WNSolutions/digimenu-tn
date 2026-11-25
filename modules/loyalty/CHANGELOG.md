@@ -1,5 +1,10 @@
 # Changelog — loyalty
 
+## 0.2.0 — unreleased
+
+- QR code on the card: card number, expiry (24 hours) and the server's signature; never the phone number or the card's secret. A card saved while offline drops an expired code and keeps the number.
+- Staff "Scanner la carte" in the Fidélité tab (phone camera); wrong-café and expired codes are refused with a clear message.
+
 ## 0.1.0 — unreleased
 
 - Joining at checkout (unticked, the notice's own text) makes a card; its secret goes to that phone only, also when the order is retried.
