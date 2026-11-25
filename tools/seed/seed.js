@@ -237,11 +237,9 @@ function run() {
     if (!values.help) process.exitCode = 1;
     return;
   }
-  const text = seedSql({
-    dir: path.resolve(values.cafe),
-    release: values.release,
-    replace: values.replace,
-  });
+  const text =
+    (values.notice ? noticeSql(path.resolve(values.notice)) : '') +
+    seedSql({ dir: path.resolve(values.cafe), release: values.release, replace: values.replace });
   if (values.out) writeFileSync(values.out, text);
   else process.stdout.write(text);
 }
