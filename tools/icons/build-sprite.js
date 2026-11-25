@@ -71,7 +71,7 @@ export const ICONS = /** @type {const} */ (${JSON.stringify(CUSTOMER_ICONS)});
 
 /** The sprite: one <symbol id="i-<name>"> per icon, drawn with <use href="#i-<name>">. */
 export const SPRITE =
-  ${JSON.stringify(`<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none">${sprite}</svg>`)};
+  ${JSON.stringify(`<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="dm-sprite" focusable="false">${sprite}</svg>`)};
 `;
   const target = fileURLToPath(new URL('../../core/ui/icons.js', import.meta.url));
   writeFileSync(target, out);

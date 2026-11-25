@@ -127,6 +127,9 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   assert.match(headers, /script-src 'self';/);
   assert.match(headers, /style-src 'self' 'sha256-[A-Za-z0-9+/=]+'/);
   assert.match(headers, /\/r\/\*\n {2}Cache-Control: public, max-age=31536000, immutable/);
+  // The CSP blocks style attributes: release code must not write any.
+  const core = readFileSync(path.join(site, manifest.entry), 'utf8');
+  assert.doesNotMatch(core, /style=/);
 });
 
 test('seeding again with --replace refreshes the menu and keeps the café row and its counters', async () => {
