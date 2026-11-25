@@ -19,19 +19,22 @@ Symbols: `(+)` add button, `(−)` remove one, `(x)` Close, `(<)` Back, `(i)` in
 
 ## 1. Customer menu, left to right (French)
 
-**Intent:** a customer at table 5 sees where they are, finds a category and adds items with one thumb, and the café's colour is spent only on the list capsule.
+**Intent:** a customer at table 5 sees where they are, finds a category and adds items with one thumb. The café's colour is spent on the cover at the top and on the actions (list capsule, + buttons); the rest of the page stays plain.
+
+**Cover (D-068, 25 Nov 2026).** The page opens on a band in the café's colour that runs behind the top bar and the status bar, with the café's logo in a circle set on its lower edge (96 px, a 3 px ring of page colour), then the café's name, address and status, centred. The top bar's buttons are drawn in the colour that reads on the café's colour until the menu scrolls under them; the browser's own bar (`theme-color`) follows. A café without a logo gets the band and its name. DigiMenu itself appears only in the footer line.
 
 At rest (top of the page), and after scrolling: the café name moves into the top bar, which turns to glass (solid on low-end Android and with reduced transparency or increased contrast).
 
 ```text
 ┌────────────────────────────────────────────┐
-│ · · · · · · · status bar (safe area) · · · │
-│                            [FR ▾]   (i)    │   top bar, clear at rest
-│ ┌────┐                                     │
-│ │logo│ Café Démo                           │   Large Title 34/700
-│ │    │ Jasmin                              │
-│ └────┘                                     │
-│ Ouvert · ferme à 23:00   ·   Table 5       │   Callout, ink-2
+│▓▓▓▓▓▓▓▓▓▓▓ status bar (safe area) ▓▓▓▓▓▓▓▓▓│   cover, café colour
+│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[FR ▾]▓▓▓(i)▓▓▓▓│   top bar, clear at rest
+│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓╭──────╮▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
+│                │ logo │                    │   logo 96 px on the cover's edge
+│                ╰──────╯                    │
+│             Café Démo Jasmin               │   Large Title 34/700, centred
+│      Adresse fictive — café de démo        │   Callout, ink-2
+│   Ouvert · ferme à 23:00   ·   Table 5     │   Callout, ink-2
 │ ╭───────╮                                  │
 │ │ Cafés │  Thés   Jus   Viennoiseries  Pe  │   category bar, monochrome
 │ ╰───────╯                                  │

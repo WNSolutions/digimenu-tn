@@ -12,6 +12,13 @@
  *   /r/dev/app.css               core/ui/tokens.css + core/ui/menu.css
  *   /r/dev/m/<module>/<file>.js  customer code of an enabled module (modules/<module>/)
  *   /r/dev/<path>                files of core/ as they are (no bundling in dev)
+ *   /media/<café>/<file>         a café's logo, from --media (as the deploy repo's media/ folder)
+ *   /brand/brand.css, /brand/fonts/*   DigiMenu's brand layer (platform/brand, @fontsource)
+ *   /brand/<file>                the DigiMenu logo files, from --brand (the deploy repo's brand/)
+ *
+ * A real café can be looked at before it goes live, without its files ever entering this
+ * repository: `--cafe <folder>` seeds it from the private deploy repo's onboarding folder
+ * (info.json, menu.csv, tables.csv), and `--media <folder>` serves that repo's media/.
  *
  * Local only: it listens on 127.0.0.1 unless --host is given.
  */
@@ -27,6 +34,7 @@ import worker from '../../platform/shell/src/index.js';
 import { handleCreateOrder } from '../../platform/shell/src/orders-api.js';
 import { accountSql } from '../accounts/account.js';
 import { build } from 'esbuild';
+import { BRAND_FONTS } from '../release/build.js';
 
 /** @type {Date | null} */
 let devNow = null;
@@ -37,10 +45,27 @@ import { clearCaches } from '../../platform/shell/src/cafes.js';
 import { clearManifests } from '../../platform/shell/src/releases.js';
 
 const HELP = `Usage: node tools/dev/server.js [--port 8787] [--host 127.0.0.1] [--now 2026-11-25T11:30:00+01:00]
+       [--cafe <onboarding folder>]... [--media <media folder>] [--brand <brand folder>]
 
 Serves the customer page of the demo café on your computer.
 Open http://localhost:8787/demo/t/5?k=7QF3K9 (table 5), or /demo for the menu without a table.
+
+  --cafe <folder>   also serve a café from its onboarding folder (info.json, menu.csv,
+                    tables.csv), for example ../digimenu-deploy-monastir/cafes/<slug>/onboarding.
+                    Repeat for several cafés. Open http://localhost:8787/<slug>.
+  --media <folder>  serve café logos from this folder (<folder>/<slug>/<file>), for example
+                    ../digimenu-deploy-monastir/media
+  --brand <folder>  serve the DigiMenu logo files from this folder, for example
+                    ../digimenu-deploy-monastir/brand (without it, the home page and the staff
+                    sign-in show the name in plain text)
 `;
+
+/** Cafés seeded on top of the demo (--cafe), and the media folder (--media). */
+const extra = {
+  cafes: /** @type {string[]} */ ([]),
+  media: /** @type {string | null} */ (null),
+  brand: /** @type {string | null} */ (null),
+};
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const CORE = path.join(root, 'core');
@@ -60,6 +85,9 @@ const TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
 };
 
 /**
@@ -77,6 +105,7 @@ export async function handle(method, url, body, headers = {}) {
   if (p === '/admin/admin.css') {
     const css = await Promise.all([
       readFile(path.join(CORE, 'ui/tokens.css'), 'utf8'),
+      readFile(path.join(root, 'platform/brand/brand.css'), 'utf8'),
       readFile(path.join(root, 'platform/admin/admin.css'), 'utf8'),
     ]);
     return { status: 200, type: TYPES['.css'], body: css.join('\n') };
@@ -93,8 +122,25 @@ export async function handle(method, url, body, headers = {}) {
   }
   if (method !== 'GET' && method !== 'HEAD') return { status: 405 };
 
-  if (p === '/') return { status: 302, location: '/demo/t/5?k=7QF3K9' };
+  if (p === '/') return file(path.join(PUBLIC, 'index.html'));
   if (p === '/boot.js') return file(path.join(PUBLIC, 'boot.js'));
+  if (p.startsWith('/media/')) {
+    const rest = decodeURIComponent(p.slice('/media/'.length));
+    // The demo café's logo is in the public repository; real cafés' come from --media.
+    if (rest.startsWith('demo/')) return inside(path.join(root, 'cafes/demo/media'), rest.slice(5));
+    return extra.media ? inside(extra.media, rest) : { status: 404 };
+  }
+  if (p === '/brand/brand.css') return file(path.join(root, 'platform/brand/brand.css'));
+  if (p.startsWith('/brand/fonts/')) {
+    const name = p.slice('/brand/fonts/'.length);
+    const font = BRAND_FONTS.find((f) => path.basename(f) === name);
+    return font ? file(path.join(root, font)) : { status: 404 };
+  }
+  if (p.startsWith('/brand/')) {
+    return extra.brand
+      ? inside(extra.brand, decodeURIComponent(p.slice('/brand/'.length)))
+      : { status: 404 };
+  }
   if (p === '/r/dev/app.css') {
     const css = await Promise.all([
       readFile(path.join(CORE, 'ui/tokens.css'), 'utf8'),
@@ -137,6 +183,7 @@ function localWorker() {
     const key = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64');
     // The demo café must exist before accounts point at it; boots re-seed it with --replace.
     DB.exec(seedSql({ dir: path.join(root, 'cafes/demo'), release: 'dev' }));
+    for (const dir of extra.cafes) DB.exec(seedSql({ dir, release: 'dev' }));
     // Local only: a demo manager with a fixed setup code (printed at start).
     DB.exec(
       accountSql({
@@ -203,6 +250,7 @@ async function api(method, url, body, headers = {}) {
   const { DB, env } = localWorker();
   if (url.pathname === '/api/boot') {
     DB.exec(seedSql({ dir: path.join(root, 'cafes/demo'), release: 'dev', replace: true }));
+    for (const dir of extra.cafes) DB.exec(seedSql({ dir, release: 'dev', replace: true }));
     clearCaches();
     clearManifests();
   }
@@ -225,6 +273,17 @@ async function api(method, url, body, headers = {}) {
   };
 }
 
+/**
+ * A file inside `base`, never outside it.
+ * @param {string} base
+ * @param {string} rest
+ */
+function inside(base, rest) {
+  const dir = path.resolve(base);
+  const target = path.normalize(path.join(dir, rest));
+  return target.startsWith(dir + path.sep) ? file(target) : { status: 404 };
+}
+
 /** @param {string} target */
 async function file(target) {
   try {
@@ -241,6 +300,9 @@ function run() {
       port: { type: 'string', default: '8787' },
       host: { type: 'string', default: '127.0.0.1' },
       now: { type: 'string' },
+      cafe: { type: 'string', multiple: true, default: [] },
+      media: { type: 'string' },
+      brand: { type: 'string' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -249,6 +311,17 @@ function run() {
     return;
   }
   if (values.now) devNow = new Date(values.now);
+  extra.cafes = (values.cafe ?? []).map((dir) => path.resolve(dir));
+  extra.media = values.media ? path.resolve(values.media) : null;
+  extra.brand = values.brand ? path.resolve(values.brand) : null;
+  for (const dir of extra.cafes) {
+    const cafe = loadDemo(dir);
+    if (cafe.errors.length) {
+      process.stderr.write(`${dir} has problems:\n  ${cafe.errors.join('\n  ')}\n`);
+      process.exitCode = 1;
+      return;
+    }
+  }
   const demo = loadDemo();
   if (demo.errors.length) {
     process.stderr.write(`The demo café has problems:\n  ${demo.errors.join('\n  ')}\n`);
@@ -287,7 +360,10 @@ function run() {
   server.listen(Number(values.port), values.host, () => {
     process.stdout.write(
       `Demo café: http://localhost:${values.port}/demo/t/5?k=7QF3K9\n` +
-        `Staff app: http://localhost:${values.port}/admin/ (first sign-in: demo-manager, code ${DEV_CODE}; or demo-admin, code ${DEV_ADMIN_CODE})\n`,
+        `Staff app: http://localhost:${values.port}/admin/ (first sign-in: demo-manager, code ${DEV_CODE}; or demo-admin, code ${DEV_ADMIN_CODE})\n` +
+        extra.cafes
+          .map((dir) => `Also: http://localhost:${values.port}/${loadDemo(dir).info.slug}\n`)
+          .join(''),
     );
   });
 }

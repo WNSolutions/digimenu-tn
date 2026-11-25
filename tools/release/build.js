@@ -6,6 +6,11 @@
  *   dist/public/
  *   ├── index.html, boot.js        the static boot page (same file for every café and table)
  *   ├── _headers                   security headers and caching for the asset layer
+ *   ├── brand/                     DigiMenu's brand layer for its own screens (D-068):
+ *   │   ├── brand.css, fonts/      styles, Jost and Cairo (SIL OFL, from @fontsource)
+ *   │   └── *.svg, *.png           the logo files, from --brand (the deploy repo's brand/)
+ *   ├── media/<café>/              café logos: the demo café's, and --media (deploy repo)
+ *   ├── admin/                     the staff app
  *   └── r/<version>/
  *       ├── manifest.json          what /api/boot reads: entry, CSS, modules and their texts
  *       ├── app.<hash>.js          the customer core (≤ 20 KB gzipped, checked here)
@@ -13,9 +18,12 @@
  *       └── m/<module>.<hash>.js   one file per module with customer code
  *
  *   node tools/release/build.js --version 0.1.0 [--out dist/public] [--keep <dir>]
+ *                               [--brand <dir>] [--media <dir>]
  *
  * `--keep` copies earlier releases' `r/<version>/` folders into the output, so a window of up
- * to 3 releases can be deployed together. The tool never deploys.
+ * to 3 releases can be deployed together. `--brand` and `--media` take the private deploy
+ * repo's `brand/` and `media/` folders: the DigiMenu logo files and real cafés' logos are not in
+ * this public repository (D-022), and are not covered by its MIT licence. The tool never deploys.
  */
 import {
   cpSync,
@@ -34,14 +42,87 @@ import { gzipSync } from 'node:zlib';
 import { build } from 'esbuild';
 
 const HELP = `Usage: node tools/release/build.js --version <x.y.z> [--out dist/public] [--keep <dir>]
+       [--brand <dir>] [--media <dir>]
 
 Builds the release <version> and the static boot page into --out.
+  --brand <dir>   the DigiMenu logo files (*.svg, *.png), copied to /brand/
+  --media <dir>   café logos, one folder per café slug, copied to /media/<slug>/
 `;
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const TARGET = ['es2022', 'chrome100', 'safari15.4', 'firefox110'];
 const BUDGET_CORE_GZ = 20 * 1024;
 export const PLATFORM_API = 1;
+
+/** The brand fonts the build copies to /brand/fonts/ (platform/brand/brand.css names them). */
+export const BRAND_FONTS = [
+  ...[300, 400, 500].map((w) => `node_modules/@fontsource/jost/files/jost-latin-${w}-normal.woff2`),
+  ...[300, 400, 500].map(
+    (w) => `node_modules/@fontsource/cairo/files/cairo-arabic-${w}-normal.woff2`,
+  ),
+];
+const FILE_NAME = /^[a-z0-9][a-z0-9._-]*\.(svg|png|webp)$/;
+const SLUG = /^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$/;
+
+/**
+ * Copies the image files of one folder (no sub-folders, plain lowercase names only).
+ * @param {string} from
+ * @param {string} to
+ * @returns {string[]} the files copied
+ */
+function copyImages(from, to) {
+  if (!existsSync(from)) return [];
+  const files = readdirSync(from).filter((f) => FILE_NAME.test(f));
+  if (files.length) mkdirSync(to, { recursive: true });
+  for (const f of files) cpSync(path.join(from, f), path.join(to, f));
+  return files;
+}
+
+/**
+ * The brand layer: styles, fonts with their licences, and the logo files when given.
+ * @param {string} out
+ * @param {string | undefined} brand
+ */
+async function buildBrand(out, brand) {
+  const dir = path.join(out, 'brand');
+  mkdirSync(path.join(dir, 'fonts'), { recursive: true });
+  const css = await build({
+    entryPoints: [path.join(root, 'platform/brand/brand.css')],
+    bundle: true,
+    minify: true,
+    target: TARGET,
+    external: ['/brand/*'],
+    write: false,
+    logLevel: 'silent',
+  });
+  writeFileSync(path.join(dir, 'brand.css'), css.outputFiles[0].text);
+  for (const font of BRAND_FONTS) {
+    cpSync(path.join(root, font), path.join(dir, 'fonts', path.basename(font)));
+  }
+  for (const family of ['jost', 'cairo']) {
+    cpSync(
+      path.join(root, `node_modules/@fontsource/${family}/LICENSE`),
+      path.join(dir, 'fonts', `OFL-${family}.txt`),
+    );
+  }
+  return brand ? copyImages(brand, dir) : [];
+}
+
+/**
+ * Café logos: the demo café's (public), then each café folder of --media.
+ * @param {string} out
+ * @param {string | undefined} media
+ */
+function buildMedia(out, media) {
+  const copied = copyImages(path.join(root, 'cafes/demo/media'), path.join(out, 'media/demo'));
+  if (!media) return copied.length;
+  let count = copied.length;
+  for (const slug of readdirSync(media)) {
+    if (!SLUG.test(slug) || slug === 'demo') continue;
+    count += copyImages(path.join(media, slug), path.join(out, 'media', slug)).length;
+  }
+  return count;
+}
 
 /** @param {string | Uint8Array} content */
 const hash = (content) => createHash('sha256').update(content).digest('hex').slice(0, 10);
@@ -116,6 +197,10 @@ export function headersFile(indexHtml) {
     '  Cache-Control: public, max-age=31536000, immutable',
     '/boot.js',
     '  Cache-Control: public, max-age=300',
+    '/brand/*',
+    '  Cache-Control: public, max-age=86400',
+    '/media/*',
+    '  Cache-Control: public, max-age=3600',
     '/admin/*',
     '  Cache-Control: no-cache',
     // The staff app may use the camera, for scanning loyalty cards; customer pages may not.
@@ -126,9 +211,9 @@ export function headersFile(indexHtml) {
 }
 
 /**
- * @param {{ version: string, out: string, keep?: string }} options
+ * @param {{ version: string, out: string, keep?: string, brand?: string, media?: string }} options
  */
-export async function buildRelease({ version, out, keep }) {
+export async function buildRelease({ version, out, keep, brand, media }) {
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$/.test(version)) {
     throw new Error(`"${version}" is not a version number like 0.1.0`);
   }
@@ -183,17 +268,21 @@ export async function buildRelease({ version, out, keep }) {
   );
   const adminCss = await build({
     stdin: {
-      contents: '@import "../../core/ui/tokens.css";\n@import "./admin.css";\n',
+      contents:
+        '@import "../../core/ui/tokens.css";\n@import "../brand/brand.css";\n@import "./admin.css";\n',
       resolveDir: path.join(root, 'platform/admin'),
       loader: 'css',
     },
     bundle: true,
     minify: true,
     target: TARGET,
+    external: ['/brand/*'],
     write: false,
     logLevel: 'silent',
   });
   writeFileSync(path.join(out, 'admin/admin.css'), adminCss.outputFiles[0].text);
+  const brandFiles = await buildBrand(out, brand);
+  const logos = buildMedia(out, media);
 
   const manifest = {
     version,
@@ -210,7 +299,7 @@ export async function buildRelease({ version, out, keep }) {
         cpSync(path.join(keep, 'r', old), path.join(out, 'r', old), { recursive: true });
     }
   }
-  return { manifest, coreGz: gz(js), cssGz: gz(css) };
+  return { manifest, coreGz: gz(js), cssGz: gz(css), brandFiles, logos };
 }
 
 async function run() {
@@ -219,6 +308,8 @@ async function run() {
       version: { type: 'string' },
       out: { type: 'string', default: 'dist/public' },
       keep: { type: 'string' },
+      brand: { type: 'string' },
+      media: { type: 'string' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -231,10 +322,13 @@ async function run() {
     version: values.version,
     out: path.resolve(values.out),
     keep: values.keep,
+    brand: values.brand ? path.resolve(values.brand) : undefined,
+    media: values.media ? path.resolve(values.media) : undefined,
   });
   process.stdout.write(
     `Release ${values.version} → ${values.out}\n` +
-      `Core ${(result.coreGz / 1024).toFixed(1)} KB gzipped (budget 20.0 KB) · CSS ${(result.cssGz / 1024).toFixed(1)} KB · modules: ${Object.keys(result.manifest.modules).join(', ') || 'none'}\n`,
+      `Core ${(result.coreGz / 1024).toFixed(1)} KB gzipped (budget 20.0 KB) · CSS ${(result.cssGz / 1024).toFixed(1)} KB · modules: ${Object.keys(result.manifest.modules).join(', ') || 'none'}\n` +
+      `Brand: ${result.brandFiles.length ? result.brandFiles.join(', ') : 'no logo files (plain wordmark)'} · café logos: ${result.logos}\n`,
   );
   if (result.coreGz > BUDGET_CORE_GZ) {
     process.stderr.write('The customer core is over budget.\n');

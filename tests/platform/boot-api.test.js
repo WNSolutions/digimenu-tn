@@ -68,6 +68,11 @@ test('boot answers with the café, a valid table, the pinned release and the men
   assert.equal(boot.menu.rev, 1);
   assert.ok(boot.menu.categories.length >= 6);
   assert.equal(boot.cafe.accent['--dm-cafe-accent'], '#1F6F5C');
+  assert.equal(
+    boot.cafe.logo,
+    '/media/demo/logo.svg',
+    'the logo is a static file, not a Worker call',
+  );
   const wa = boot.modules.find((/** @type {any} */ m) => m.key === 'whatsapp_handoff');
   assert.match(wa.entry, /^\/r\/0\.1\.0\/m\/whatsapp_handoff\.[0-9a-f]{10}\.js$/);
   assert.equal(wa.texts.fr['action.label'], 'Commander par WhatsApp');

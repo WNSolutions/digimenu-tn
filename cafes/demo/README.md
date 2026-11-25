@@ -11,7 +11,7 @@ A **fictional** café (FR "Café Démo Jasmin", AR "مقهى ياسمين الت
 | [`info.json`](info.json) | Names in FR/AR/EN, opening hours, three languages, dine-in through the staff screen, takeaway through WhatsApp hand-off, a few modules switched on and some off | Ready (draft v0) |
 | [`menu.csv`](menu.csv) | 24 items (29 prices) in 6 categories (coffees, teas, juices, pastries, breakfast, snacks) with size variants, two items sold out, and a few **missing translations on purpose**. Columns: see [`tools/import/`](../../tools/import/README.md) | Ready |
 | [`tables.csv`](tables.csv) | Tables `1` to `10` and `T1`, `T2` (terrace), each with a public demo check code | Ready |
-| `media/` | Logo and item pictures made for the demo, under a free licence | Planned (with the `photos` module) |
+| [`media/`](media/logo.svg) | `logo.svg`: an invented logo (a jasmine flower), drawn for the demo and covered by the toolkit's MIT licence. Item pictures come with the `photos` module | Logo ready; pictures planned |
 
 ## What it is used for
 

@@ -25,7 +25,8 @@ const TEXT = {
     failed: 'Le menu ne se charge pas. Vérifiez votre connexion.',
     retry: 'Réessayer',
     simple: 'Affichage simplifié : noms et prix seulement.',
-    landing: "La carte de votre café, d'un scan.",
+    landing: "La carte, d'un scan.",
+    kinds: 'Cafés · Restaurants · Hôtels',
     demo: 'Voir le café de démonstration',
   },
   ar: {
@@ -34,7 +35,8 @@ const TEXT = {
     failed: 'تعذّر تحميل القائمة. تحقّق من اتصالك.',
     retry: 'أعد المحاولة',
     simple: 'عرض مبسّط: الأسماء والأسعار فقط.',
-    landing: 'قائمة مقهاك، بمسحة واحدة.',
+    landing: 'القائمة، بمسحة واحدة.',
+    kinds: 'مقاهٍ · مطاعم · نُزُل',
     demo: 'شاهد المقهى التجريبي',
   },
   en: {
@@ -43,7 +45,8 @@ const TEXT = {
     failed: 'The menu does not load. Check your connection.',
     retry: 'Try again',
     simple: 'Simple view: names and prices only.',
-    landing: 'Your café menu, in one scan.',
+    landing: 'The menu, in one scan.',
+    kinds: 'Cafés · Restaurants · Hotels',
     demo: 'See the demo café',
   },
 };
@@ -193,17 +196,88 @@ function el(tag, className, text) {
 /** The café in the link does not exist (or no longer does): retrying will not help. */
 class UnknownCafe extends Error {}
 
+/** Each language named in itself, for the home page's language links. */
+const LANGUAGE_NAMES = { fr: 'Français', ar: 'العربية', en: 'English' };
+
 /**
- * The root address: what DigiMenu is, and the demo café.
+ * The root address: DigiMenu's own home page, in the DigiMenu brand (D-068): the logo, the
+ * tagline and the demo café, on emerald with the champagne frame. The brand's styles, fonts and
+ * logo are DigiMenu's, so they load here only, never on a café's menu.
  * @param {HTMLElement} root
  * @param {Lang} lang
  */
-function showLanding(root, lang) {
-  const wrap = el('main', 'dm-boot');
-  const link = el('a', '', TEXT[lang].demo);
-  link.setAttribute('href', '/demo');
-  wrap.append(el('h1', '', 'DigiMenu'), el('p', '', TEXT[lang].landing), link);
-  root.replaceChildren(wrap);
+async function showLanding(root, lang) {
+  await loadCss('/brand/brand.css').catch(() => {});
+  document.title = 'DigiMenu';
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.setAttribute('content', '#004532');
+  }
+  for (const [rel, href] of [
+    ['icon', '/brand/favicon.svg'],
+    ['apple-touch-icon', '/brand/apple-touch-icon-180.png'],
+  ]) {
+    if (document.querySelector(`link[rel="${rel}"]`)) continue;
+    const icon = document.createElement('link');
+    icon.rel = rel;
+    icon.href = href;
+    document.head.appendChild(icon);
+  }
+  renderLanding(root, lang);
+}
+
+/**
+ * @param {HTMLElement} root
+ * @param {Lang} lang
+ */
+function renderLanding(root, lang) {
+  const text = TEXT[lang];
+  const heading = el('h1', 'b-heading');
+  const logo = /** @type {HTMLImageElement} */ (el('img', 'b-logo'));
+  logo.alt = 'DigiMenu by Why Not Solutions';
+  logo.width = 200;
+  logo.height = 148;
+  // A build without the brand files (an open-source fork) shows the name in plain text.
+  logo.addEventListener(
+    'error',
+    () => heading.replaceChildren(el('span', 'b-wordmark', 'DigiMenu')),
+    {
+      once: true,
+    },
+  );
+  logo.src = '/brand/digimenu-logo-reversed.svg';
+  heading.append(logo);
+
+  const demo = /** @type {HTMLAnchorElement} */ (el('a', 'b-button', text.demo));
+  demo.href = '/demo';
+
+  const langs = el('ul', 'b-langs');
+  for (const code of /** @type {Lang[]} */ (['fr', 'ar', 'en'])) {
+    const button = el('button', 'b-lang', LANGUAGE_NAMES[code]);
+    button.setAttribute('type', 'button');
+    button.setAttribute('lang', code);
+    if (code === lang) button.setAttribute('aria-current', 'true');
+    button.addEventListener('click', () => {
+      document.documentElement.lang = code;
+      document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
+      renderLanding(root, code);
+    });
+    const item = el('li', '');
+    item.append(button);
+    langs.append(item);
+  }
+
+  const stage = el('div', 'b-stage');
+  stage.append(
+    heading,
+    el('p', 'b-tagline', text.landing),
+    el('hr', 'b-rule'),
+    el('p', 'b-caps', text.kinds),
+    demo,
+    langs,
+  );
+  const main = el('main', 'b-screen');
+  main.append(stage);
+  root.replaceChildren(main);
 }
 
 /** @param {string} url */

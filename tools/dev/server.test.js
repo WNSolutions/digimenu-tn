@@ -11,7 +11,24 @@ test('table links and café pages get the static boot page', async () => {
     assert.equal(res.status, 200, path);
     assert.match(String(res.body), /<script type="module" src="\/boot.js">/);
   }
-  assert.equal((await get('/')).location, '/demo/t/5?k=7QF3K9');
+  // The root address is the landing page, as on Cloudflare (the same boot page shows it).
+  const home = await get('/');
+  assert.equal(home.status, 200);
+  assert.match(String(home.body), /<script type="module" src="\/boot.js">/);
+});
+
+test('café logos and the brand layer are served, never files outside their folders', async () => {
+  const demoLogo = await get('/media/demo/logo.svg');
+  assert.equal(demoLogo.status, 200, 'the demo café logo is in the public repository');
+  assert.equal(demoLogo.type, 'image/svg+xml');
+  assert.equal((await get('/media/jobi/logo.webp')).status, 404, 'no --media: no real café');
+  assert.equal((await get('/media/demo/..%2F..%2Finfo.json')).status, 404);
+  assert.equal((await get('/brand/brand.css')).status, 200);
+  const font = await get('/brand/fonts/jost-latin-400-normal.woff2');
+  assert.equal(font.status, 200);
+  assert.equal(font.type, 'font/woff2');
+  assert.equal((await get('/brand/fonts/../../package.json')).status, 404);
+  assert.equal((await get('/brand/digimenu-logo-reversed.svg')).status, 404, 'no --brand');
 });
 
 test('/api/boot answers for the demo café and checks the table code', async () => {

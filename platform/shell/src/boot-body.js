@@ -18,7 +18,7 @@ import { accentTokens } from '../../../core/ui/accent.js';
  * @property {{ address?: import('../../../core/i18n.js').LocalizedText }} [info]
  * @property {import('../../../core/hours.js').Hours} [hours]
  * @property {string} [timeZone]
- * @property {{ primaryColor: string, buttonColor?: string }} branding
+ * @property {{ primaryColor: string, buttonColor?: string, logo?: string }} branding
  * @property {{ maxQtyPerLine?: number, listMaxAgeHours?: number }} [ordering]
  * @property {Record<string, { enabled: boolean, settings?: Record<string, unknown> }>} [modules]
  * @property {string} [status]
@@ -80,6 +80,21 @@ export function enabledModules(config, available) {
     }));
 }
 
+/** A plain file name at the top of the café's media folder: the release build publishes those
+ * files only (tools/release/build.js), so anything else would be a broken image. */
+const LOGO_FILE = /^[a-z0-9][a-z0-9._-]*\.(svg|png|webp)$/;
+
+/**
+ * Where the café's logo is served: the deployment's media folder is published with the static
+ * site (`/media/<café>/<file>`), so a logo never costs a Worker request.
+ * @param {CafeConfig} config
+ * @returns {string | null}
+ */
+export function logoUrl(config) {
+  const file = config.branding?.logo;
+  return file && LOGO_FILE.test(file) ? `/media/${config.slug}/${file}` : null;
+}
+
 /**
  * @param {object} input
  * @param {CafeConfig} input.config
@@ -91,12 +106,14 @@ export function enabledModules(config, available) {
  * @returns {Boot & { release: { version: string, entry: string, css: string } }}
  */
 export function bootBody({ config, table, menu, release, modules, privacy = null }) {
+  const logo = logoUrl(config);
   return {
     v: 1,
     release,
     cafe: {
       slug: config.slug,
       name: config.names,
+      ...(logo ? { logo } : {}),
       languages: config.languages,
       ...(config.hours ? { hours: config.hours } : {}),
       timeZone: config.timeZone ?? 'Africa/Tunis',

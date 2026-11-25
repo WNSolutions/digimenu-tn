@@ -32,7 +32,8 @@
     "sun": [["08:00", "23:00"]]
   },
   "branding": {
-    "primaryColor": "#1F6F5C"
+    "primaryColor": "#1F6F5C",
+    "logo": "logo.svg"
   },
   "ordering": {
     "types": {

@@ -71,6 +71,8 @@ const TEXT = {
     scanCancel: 'Annuler',
     scanDenied:
       "La caméra n'est pas disponible. Autorisez-la dans le navigateur, ou tapez le numéro.",
+    staffArea: 'Espace équipe',
+    tabs: 'Sections',
   },
   ar: {
     signIn: 'تسجيل الدخول',
@@ -126,6 +128,8 @@ const TEXT = {
     scanHint: 'ضع رمز QR داخل الإطار.',
     scanCancel: 'إلغاء',
     scanDenied: 'الكاميرا غير متاحة. اسمح بها في المتصفح، أو اكتب الرقم.',
+    staffArea: 'فضاء الفريق',
+    tabs: 'الأقسام',
   },
 };
 let lang = (navigator.language || 'fr').startsWith('ar') ? 'ar' : 'fr';
@@ -199,12 +203,14 @@ async function stretch(
   return b64(new Uint8Array(bits));
 }
 
-function langSwitch() {
+/** @param {string} [className] */
+function langSwitch(className = 'a-btn a-btn--link') {
   return h(
     'button',
     {
       type: 'button',
-      class: 'a-btn a-btn--link',
+      class: className,
+      lang: lang === 'fr' ? 'ar' : 'fr',
       onclick: () => {
         try {
           localStorage.setItem('dm:admin:lang', lang === 'fr' ? 'ar' : 'fr');
@@ -215,6 +221,38 @@ function langSwitch() {
       },
     },
     lang === 'fr' ? 'عربي' : 'Français',
+  );
+}
+
+/**
+ * Sign-in and first-time screens wear the DigiMenu brand (D-068): emerald with the champagne
+ * frame, the logo, and the form on an ivory card (platform/brand/brand.css).
+ * @param {HTMLElement} card
+ */
+function brandScreen(card) {
+  const heading = h('div', { class: 'b-heading' });
+  heading.append(
+    h('img', {
+      class: 'b-logo b-logo--small',
+      src: '/brand/digimenu-logo-reversed.svg',
+      alt: 'DigiMenu by Why Not Solutions',
+      width: 150,
+      height: 111,
+      // A build without the brand files shows the name in plain text.
+      onerror: () => heading.replaceChildren(h('span', { class: 'b-wordmark' }, 'DigiMenu')),
+    }),
+  );
+  return h(
+    'main',
+    { class: 'b-screen' },
+    h(
+      'div',
+      { class: 'b-stage' },
+      heading,
+      h('p', { class: 'b-caps' }, t('staffArea')),
+      card,
+      langSwitch('b-lang'),
+    ),
   );
 }
 
@@ -240,8 +278,8 @@ function signInView() {
   );
   const form = h(
     'form',
-    { class: 'a-card a-stack' },
-    h('h1', { class: 'a-title' }, t('signIn')),
+    { class: 'b-card a-stack' },
+    h('h1', { class: 'b-card-title' }, t('signIn')),
     h('label', { class: 'a-label', for: 'u' }, t('username'), username),
     h('label', { class: 'a-label', for: 'p' }, t('password'), password),
     h('label', { class: 'a-check', for: 'r' }, remember, t('remember')),
@@ -277,14 +315,7 @@ function signInView() {
     button.disabled = false;
     button.textContent = t('signInBtn');
   });
-  app.replaceChildren(
-    h(
-      'main',
-      { class: 'a-wrap a-stack' },
-      h('div', { class: 'a-row a-spread' }, h('strong', null, 'DigiMenu'), langSwitch()),
-      form,
-    ),
-  );
+  app.replaceChildren(brandScreen(form));
 }
 
 function setupView() {
@@ -324,8 +355,8 @@ function setupView() {
   );
   const form = h(
     'form',
-    { class: 'a-card a-stack' },
-    h('h1', { class: 'a-title' }, t('firstTime')),
+    { class: 'b-card a-stack' },
+    h('h1', { class: 'b-card-title' }, t('firstTime')),
     h('label', { class: 'a-label', for: 'su' }, t('username'), username),
     h('label', { class: 'a-label', for: 'sc' }, t('code'), code),
     h('label', { class: 'a-label', for: 'sp' }, t('newPassword'), pw),
@@ -365,7 +396,7 @@ function setupView() {
     msg.textContent = t(key);
     msg.hidden = false;
   }
-  app.replaceChildren(h('main', { class: 'a-wrap a-stack' }, form));
+  app.replaceChildren(brandScreen(form));
 }
 
 /**
@@ -471,40 +502,53 @@ function topBar() {
     'button',
     {
       type: 'button',
-      class: 'a-btn',
+      class: 'a-topbtn',
+      'aria-pressed': String(Boolean(state.audio)),
       onclick: () => {
         state.audio = state.audio ?? new AudioContext();
         beep();
         sound.textContent = t('soundOn');
+        sound.setAttribute('aria-pressed', 'true');
       },
     },
     state.audio ? t('soundOn') : t('sound'),
   );
+  const current = state.cafes.find((c) => c.slug === state.cafe);
+  const mark = h('span', { class: 'a-mark' });
+  mark.append(
+    h('img', {
+      src: '/brand/digimenu-mark-reversed.svg',
+      alt: 'DigiMenu',
+      width: 32,
+      height: 32,
+      onerror: () => mark.remove(),
+    }),
+  );
+  // The staff app's frame wears the DigiMenu brand (D-068); the work area below stays plain.
   return h(
     'header',
     { class: 'a-top' },
     h(
       'div',
-      { class: 'a-wrap a-row a-spread' },
+      { class: 'a-wrap a-bar' },
       h(
         'div',
-        { class: 'a-tabs', role: 'group' },
-        tab('orders', t('orders')),
-        tab('menu', t('menu')),
-        ...state.panels.map((p) => tab(`m:${p.key}`, p.label)),
-        state.admin ? tab('customers', CUSTOMER_TEXT[lang].tab) : null,
+        { class: 'a-brand' },
+        mark,
+        state.cafes.length > 1
+          ? cafeSwitch()
+          : h('span', { class: 'a-cafe' }, pick(current?.name) || state.cafe),
       ),
       h(
         'div',
-        { class: 'a-row' },
-        state.cafes.length > 1 ? cafeSwitch() : null,
+        { class: 'a-actions' },
         sound,
-        langSwitch(),
+        langSwitch('a-toplink'),
         h(
           'button',
           {
             type: 'button',
-            class: 'a-btn a-btn--link',
+            class: 'a-toplink',
             onclick: async () => {
               await api('/auth/sign-out', {});
               signInView();
@@ -513,6 +557,14 @@ function topBar() {
           t('signOut'),
         ),
       ),
+    ),
+    h(
+      'nav',
+      { class: 'a-wrap a-tabs', 'aria-label': t('tabs') },
+      tab('orders', t('orders')),
+      tab('menu', t('menu')),
+      ...state.panels.map((p) => tab(`m:${p.key}`, p.label)),
+      state.admin ? tab('customers', CUSTOMER_TEXT[lang].tab) : null,
     ),
   );
 }

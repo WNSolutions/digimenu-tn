@@ -7,6 +7,7 @@
 ## What it does
 
 - **Build a release:** bundles the core and each module as separate content-hashed files under `/r/<version>/`, plus the server hooks; writes the release manifest (file list, module versions, CSS and texts per module); computes the artifact checksum attached to the GitHub Release.
+- **Brand and logos** (D-068): copies DigiMenu's brand layer to `/brand/` (styles from [`platform/brand/`](../../platform/brand/README.md), Jost and Cairo from `@fontsource` with their licences) and café logos to `/media/<café>/`, published as static files so they never cost a Worker request. The DigiMenu logo files (`--brand`) and real cafés' logos (`--media`) come from the private deploy repository; only image files with plain lowercase names at the top of each folder are copied. Production deploys pass both; preview passes `--brand` only, so no real café's logo is on the preview address.
 - **Check a window** (`releases.json` in the private deploy repository) against [`release-window.schema.json`](../../core/schemas/release-window.schema.json):
   - at most 3 releases, one per role (`previous`, `stable`, `candidate`);
   - every release has the deployment's `platformApi` and accepts the current database schema;

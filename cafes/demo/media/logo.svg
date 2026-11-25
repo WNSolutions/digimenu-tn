@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Café Démo Jasmin (fictional logo)">
+  <rect width="192" height="192" fill="#1F6F5C"/>
+  <g transform="translate(96 82)" fill="#FFFFFF">
+    <ellipse cx="0" cy="-24" rx="13" ry="24"/>
+    <ellipse cx="0" cy="-24" rx="13" ry="24" transform="rotate(72)"/>
+    <ellipse cx="0" cy="-24" rx="13" ry="24" transform="rotate(144)"/>
+    <ellipse cx="0" cy="-24" rx="13" ry="24" transform="rotate(216)"/>
+    <ellipse cx="0" cy="-24" rx="13" ry="24" transform="rotate(288)"/>
+    <circle r="9" fill="#F2C94C"/>
+  </g>
+  <text x="96" y="160" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="600" letter-spacing="5" fill="#FFFFFF">JASMIN</text>
+</svg>
