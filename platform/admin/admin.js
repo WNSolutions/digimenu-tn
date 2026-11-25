@@ -9,6 +9,7 @@ import { parsePrice, formatPrice } from '../../core/money.js';
 import { STAFF_MODULES } from './staff-modules.js';
 import { staffTexts } from './staff-api.js';
 import { scanQr } from './scanner.js';
+import { customersView, CUSTOMER_TEXT } from './customers.js';
 
 const API = '/admin/api';
 const POLL_MS = 10_000;
@@ -63,6 +64,7 @@ const TEXT = {
     priceBad: 'Prix non valable.',
     offline: 'Connexion perdue. Nouvel essai…',
     noAccess: "Ce compte n'a accès à aucun café.",
+    cafe: 'Café',
     error: 'Une erreur est survenue. Réessayez.',
     scanTitle: 'Scanner un QR code',
     scanHint: 'Placez le QR code dans le cadre.',
@@ -118,6 +120,7 @@ const TEXT = {
     priceBad: 'سعر غير صالح.',
     offline: 'انقطع الاتصال. إعادة المحاولة…',
     noAccess: 'هذا الحساب لا يصل إلى أي مقهى.',
+    cafe: 'المقهى',
     error: 'حدث خطأ. أعد المحاولة.',
     scanTitle: 'مسح رمز QR',
     scanHint: 'ضع رمز QR داخل الإطار.',
@@ -367,7 +370,8 @@ function setupView() {
 
 /**
  * @type {{ me: any, cafe: string, view: string, timer: number, known: Set<string>,
- *   audio: AudioContext | null, panels: { key: string, label: string, render: (root: HTMLElement) => void }[] }}
+ *   audio: AudioContext | null, panels: { key: string, label: string, render: (root: HTMLElement) => void }[],
+ *   admin: boolean, cafes: { slug: string, name: any, role: string }[] }}
  *   view: 'orders', 'menu' or 'm:<module>'
  */
 const state = {
@@ -378,6 +382,8 @@ const state = {
   known: new Set(),
   audio: null,
   panels: [],
+  admin: false,
+  cafes: [],
 };
 
 /** The staff panels of the modules this café switched on. */
@@ -417,11 +423,14 @@ async function start() {
   const me = await api('/auth/me');
   if (me.status !== 200) return signInView();
   state.me = me.data;
-  const cafes = me.data.roles
-    .filter((/** @type {any} */ r) => r.cafeId)
-    .map((/** @type {any} */ r) => r.cafeId.replace(/^cafe-/, ''));
+  // The cafés this account works in; Admin sees every café and the Clients tab.
+  const list = await api('/cafes');
+  state.cafes = list.status === 200 ? list.data.cafes : [];
+  state.admin = list.status === 200 && list.data.admin === true;
   const fromUrl = new URLSearchParams(location.search).get('cafe');
-  state.cafe = fromUrl ?? cafes[0] ?? '';
+  state.cafe = state.cafes.some((c) => c.slug === fromUrl)
+    ? /** @type {string} */ (fromUrl)
+    : (state.cafes[0]?.slug ?? '');
   if (!state.cafe) {
     app.replaceChildren(
       h('main', { class: 'a-wrap' }, h('p', { class: 'a-error' }, t('noAccess'))),
@@ -483,10 +492,12 @@ function topBar() {
         tab('orders', t('orders')),
         tab('menu', t('menu')),
         ...state.panels.map((p) => tab(`m:${p.key}`, p.label)),
+        state.admin ? tab('customers', CUSTOMER_TEXT[lang].tab) : null,
       ),
       h(
         'div',
         { class: 'a-row' },
+        state.cafes.length > 1 ? cafeSwitch() : null,
         sound,
         langSwitch(),
         h(
@@ -506,13 +517,47 @@ function topBar() {
   );
 }
 
+/** For people who work in more than one café (and Admin): which café is on screen. */
+function cafeSwitch() {
+  const select = /** @type {HTMLSelectElement} */ (
+    h(
+      'select',
+      {
+        class: 'a-input a-input--cafe',
+        'aria-label': t('cafe'),
+        onchange: async () => {
+          state.cafe = select.value;
+          state.known = new Set();
+          state.panels = await loadPanels();
+          if (state.view.startsWith('m:') && !state.panels.some((p) => `m:${p.key}` === state.view))
+            state.view = 'orders';
+          render();
+        },
+      },
+      ...state.cafes.map((c) =>
+        h('option', { value: c.slug, selected: c.slug === state.cafe }, pick(c.name) || c.slug),
+      ),
+    )
+  );
+  return select;
+}
+
 function render() {
   clearTimeout(state.timer);
   const body = h('main', { class: 'a-wrap a-stack' });
   app.replaceChildren(topBar(), body);
   if (state.view === 'orders') ordersView(body);
   else if (state.view === 'menu') menuView(body);
-  else {
+  else if (state.view === 'customers' && state.admin) {
+    customersView(body, {
+      h,
+      lang: /** @type {'fr' | 'ar'} */ (lang),
+      api,
+      cafes: state.cafes,
+      price: formatPrice,
+      signedOut: signInView,
+    });
+  } else {
     const panel = state.panels.find((p) => `m:${p.key}` === state.view);
     try {
       panel?.render(body);

@@ -77,7 +77,7 @@ The core owns the URL scheme, pricing arithmetic, list storage, order lifecycle,
 
 The full list is **named and reserved now** so names stay stable, but each point is **built with the first module that needs it** (Tech Lead review). "Go-live" marks the points needed by the modules planned for the 5 pilot cafés. A new point is added only in a core MINOR release, documented here, with a test fixture.
 
-**Built so far:** `list.action` (M-03), and with `loyalty` (M-15): `header.action`, `sheet.page`, `checkout.fields`, `postOrder.block`, `staff.panel`, `order.afterStore`, `order.statusChanged`. How they work today:
+**Built so far:** `list.action` (M-03), and with `loyalty` (M-15): `header.action`, `sheet.page`, `checkout.fields`, `postOrder.block`, `staff.panel`, `order.afterStore`, `order.statusChanged`, `customer.records`. How they work today:
 
 - **Customer** (`core/app/extensions.js`, drawn by `core/app/blocks.js`): a contribution returns a description (text, stamps, a code, a form, a button, a link to the module's own sheet page, a QR code the server encoded); the core draws it with its own styles and never inserts module HTML. A `sheet.page` may claim a link of its own, `/<café>/<path>` (lowercase letters). A `checkout.fields` consent names a purpose; the box shows the **privacy notice's** text for it, unticked, and appears only if the notice has one. Each module gets `api.storage` (keys under `dm:<café>:<module>:`) and `api.call(route, body)` (POST `/api/m/<module>/<route>`, no cookies).
 - **Server** (`platform/shell/src/module-host.js`): `afterStore` runs after the order is stored **and again on a retried order** (it must answer the same way twice); its answer reaches the phone in `order.modules.<module>`. `statusChanged` runs once per real status change. Both are fail-open. A module's `routes` and `staff.routes` (with a role list per route; managers only when none is given) answer 404 for a café that switched the module off. A module's server code receives everything in `api` (café, settings, database, ids, hashing, customer-data keys, audit log) and imports nothing.
@@ -114,6 +114,7 @@ The full list is **named and reserved now** so names stay stable, but each point
 | 26 | `analytics.events` | shared | allow-listed event names (manifest field `analyticsEvents`) | all | Go-live |
 | 27 | `i18n.texts` | shared | FR/AR/EN texts in the module's namespace (manifest field `texts`) | all | Go-live |
 | 28 | `schedule.daily` | server | upkeep of the module's own records | M-06, M-07, M-11 | Later |
+| 29 | `customer.records` | server | what the module keeps about a customer: its part of an export, and erasing it on a deletion request (runs whether the module is on or off; erasure fails closed) | M-15 | Go-live |
 
 The optional WhatsApp Business module (M-16) also needs an inbound webhook route outside `/api/*`. It will be designed with that module in v1.1, not as a general extension point.
 

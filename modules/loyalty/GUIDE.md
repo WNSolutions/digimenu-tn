@@ -54,6 +54,7 @@ See stamps, the reward, the QR code and the card number; open the card on a new 
 - `loyalty_cards`: one card per customer and café (card number, hash of the card's secret, sealed copy of it for a retried order, status, transfer code hash). No phone number.
 - `loyalty_ledger`: every earn, reward used and reversal, with the order or the staff member, and the time.
 - Reads the central customer record (ADR-0010) for the first name and last three digits shown to staff. Every card opened by staff, and every stamp, undo, reward and new-phone code, is in the audit log.
+- A customer's export includes their cards and stamps; deleting the customer record (Admin, Clients tab) erases them.
 - Switching the module off hides everything; cards and stamps stay for when it is switched on again.
 
 ## Files

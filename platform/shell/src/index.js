@@ -7,7 +7,8 @@ import { json, problem } from './http.js';
 import { handleBoot } from './boot-api.js';
 import { handleCreateOrder, handleOrderStatus } from './orders-api.js';
 import { handleAuth } from './auth.js';
-import { handleAdmin } from './admin-api.js';
+import { handleAdmin, handleCafeList } from './admin-api.js';
+import { handleCustomers } from './customers-api.js';
 import { handleModuleRoute } from './module-host.js';
 import { resolveCafe } from './cafes.js';
 
@@ -55,6 +56,10 @@ export default {
         const route = url.pathname.slice('/admin/api/'.length);
         if (route.startsWith('auth/'))
           return await handleAuth(request, env, route.slice('auth/'.length));
+        if (route === 'cafes' && request.method === 'GET')
+          return await handleCafeList(request, env);
+        if (route === 'customers' || route.startsWith('customers/'))
+          return await handleCustomers(request, env, route);
         return await handleAdmin(request, env, route);
       }
       return env.ASSETS.fetch(request);
