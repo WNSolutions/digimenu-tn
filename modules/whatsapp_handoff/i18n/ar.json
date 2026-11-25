@@ -1,0 +1,18 @@
+{
+  "action.label": "اطلب عبر واتساب",
+  "action.note": "سيفتح واتساب وطلبك مكتوب: اضغط على إرسال.",
+  "action.after": "في واتساب، اضغط على إرسال. قائمتك تبقى هنا.",
+  "msg.title": "طلب جديد · {cafe}",
+  "msg.dineIn": "في المحل · الطاولة {table}",
+  "msg.noTable": "بدون رقم طاولة",
+  "msg.ref": "المرجع {ref}",
+  "msg.line": "{qty} × {name} — {price}",
+  "msg.lineNote": "   ملاحظة: {note}",
+  "msg.orderNote": "ملاحظة للطلب: {note}",
+  "msg.total": "المجموع: {total}",
+  "msg.customerLang": "لغة الحريف: {lang}",
+  "msg.footer": "أُرسل من قائمة DigiMenu",
+  "lang.fr": "الفرنسية",
+  "lang.ar": "العربية",
+  "lang.en": "الإنجليزية"
+}

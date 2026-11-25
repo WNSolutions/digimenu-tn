@@ -10,6 +10,7 @@
  *   /boot.js                     its script
  *   /api/boot                    built from cafes/demo/ on every request (edit menu.csv, reload)
  *   /r/dev/app.css               core/ui/tokens.css + core/ui/menu.css
+ *   /r/dev/m/<module>/<file>.js  customer code of an enabled module (modules/<module>/)
  *   /r/dev/<path>                files of core/ as they are (no bundling in dev)
  *
  * Local only: it listens on 127.0.0.1 unless --host is given.
@@ -30,7 +31,13 @@ Open http://localhost:8787/demo/t/5?k=7QF3K9 (table 5), or /demo for the menu wi
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const CORE = path.join(root, 'core');
 const PUBLIC = path.join(root, 'platform/shell/public');
-const RELEASE = { version: 'dev', entry: '/r/dev/app/main.js', css: '/r/dev/app.css' };
+const MODULES = path.join(root, 'modules');
+const RELEASE = {
+  version: 'dev',
+  entry: '/r/dev/app/main.js',
+  css: '/r/dev/app.css',
+  modules: '/r/dev/m/',
+};
 
 /** @type {Record<string, string>} */
 const TYPES = {
@@ -70,6 +77,16 @@ export async function handle(method, url) {
       readFile(path.join(CORE, 'ui/menu.css'), 'utf8'),
     ]);
     return { status: 200, type: TYPES['.css'], body: css.join('\n') };
+  }
+  if (p.startsWith('/r/dev/m/')) {
+    const target = path.normalize(
+      path.join(MODULES, decodeURIComponent(p.slice('/r/dev/m/'.length))),
+    );
+    const inside =
+      target.startsWith(MODULES + path.sep) &&
+      path.relative(MODULES, target).split(path.sep).length === 2;
+    if (!inside || !target.endsWith('.js')) return { status: 404 };
+    return file(target);
   }
   if (p.startsWith('/r/dev/')) {
     const target = path.normalize(path.join(CORE, decodeURIComponent(p.slice('/r/dev/'.length))));

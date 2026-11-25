@@ -6,8 +6,9 @@
  *
  * It re-reads the files on every call, so an edit to `menu.csv` shows on the next page load.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { importMenuCsv, parseCsv, formatReport } from '../import/menu-csv.js';
 import { buildSnapshot } from '../../core/menu/snapshot.js';
 import { accentTokens } from '../../core/ui/accent.js';
@@ -17,6 +18,7 @@ import { accentTokens } from '../../core/ui/accent.js';
 /** @typedef {import('../../core/i18n.js').LocalizedText} LocalizedText */
 
 const DEFAULT_DIR = fileURLToPath(new URL('../../cafes/demo/', import.meta.url));
+const MODULES_DIR = fileURLToPath(new URL('../../modules/', import.meta.url));
 
 /**
  * The parts of `info.json` this builder reads (the full shape is `cafe-config.schema.json`).
@@ -30,6 +32,7 @@ const DEFAULT_DIR = fileURLToPath(new URL('../../cafes/demo/', import.meta.url))
  * @property {string} [timeZone]
  * @property {{ primaryColor: string, buttonColor?: string }} branding
  * @property {{ maxQtyPerLine?: number }} [ordering]
+ * @property {Record<string, { enabled: boolean, settings?: Record<string, unknown> }>} [modules]
  */
 
 /**
@@ -54,8 +57,23 @@ export function loadDemo(dir = DEFAULT_DIR) {
     if (label?.trim()) tables.set(label.trim(), (code ?? '').trim().toUpperCase());
   }
 
+  /** Enabled modules that have customer code, with their texts (MOD-03: only these load). */
+  const modules = Object.entries(info.modules ?? {})
+    .filter(([key, m]) => m.enabled && existsSync(path.join(MODULES_DIR, key, 'client.js')))
+    .map(([key, m]) => ({
+      key,
+      settings: m.settings ?? {},
+      texts: Object.fromEntries(
+        ['fr', 'ar', 'en'].map((lang) => [
+          lang,
+          JSON.parse(readFileSync(path.join(MODULES_DIR, key, 'i18n', `${lang}.json`), 'utf8')),
+        ]),
+      ),
+    }));
+
   return {
     info,
+    modules,
     snapshot,
     tables,
     accent,
@@ -74,16 +92,18 @@ export function loadDemo(dir = DEFAULT_DIR) {
  * The boot answer for one table link.
  * @param {ReturnType<typeof loadDemo>} demo
  * @param {{ table?: string | null, code?: string | null }} link
- * @param {{ version: string, entry: string, css: string }} release
+ * @param {{ version: string, entry: string, css: string, modules?: string }} release
+ *   `modules`: where module files are served (`/r/dev/m/`); left out when they are bundled
  * @returns {Boot & { release: { version: string, entry: string, css: string } }}
  */
 export function demoBoot(demo, link, release) {
   const { info } = demo;
   const label = link.table ?? null;
   const expected = label ? demo.tables.get(label) : undefined;
+  const releaseInfo = { version: release.version, entry: release.entry, css: release.css };
   return {
     v: 1,
-    release,
+    release: releaseInfo,
     cafe: {
       slug: info.slug,
       name: info.names,
@@ -101,5 +121,9 @@ export function demoBoot(demo, link, release) {
         ? { label, valid: Boolean(link.code) && link.code?.toUpperCase() === expected }
         : null,
     menu: demo.snapshot,
+    modules: demo.modules.map((m) => ({
+      ...m,
+      ...(release.modules ? { entry: `${release.modules}${m.key}/client.js` } : {}),
+    })),
   };
 }
