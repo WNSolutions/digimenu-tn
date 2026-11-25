@@ -66,9 +66,7 @@
     },
     "requires": {
       "type": "array",
-      "items": {
-        "$ref": "#/$defs/moduleKey"
-      },
+      "items": { "$ref": "#/$defs/moduleKey" },
       "uniqueItems": true,
       "default": [],
       "description": "Modules that must be enabled for this one to be enabled."
@@ -77,9 +75,7 @@
       "type": "array",
       "items": {
         "type": "array",
-        "items": {
-          "$ref": "#/$defs/moduleKey"
-        },
+        "items": { "$ref": "#/$defs/moduleKey" },
         "minItems": 2,
         "uniqueItems": true
       },
@@ -88,9 +84,7 @@
     },
     "conflicts": {
       "type": "array",
-      "items": {
-        "$ref": "#/$defs/moduleKey"
-      },
+      "items": { "$ref": "#/$defs/moduleKey" },
       "uniqueItems": true,
       "default": [],
       "description": "Modules that may not be enabled at the same café."
@@ -121,15 +115,9 @@
       "required": ["fr", "ar", "en"],
       "description": "Interface texts per language, outside the code (MOD-17). Keys must be identical in all three files.",
       "properties": {
-        "fr": {
-          "$ref": "#/$defs/relativePath"
-        },
-        "ar": {
-          "$ref": "#/$defs/relativePath"
-        },
-        "en": {
-          "$ref": "#/$defs/relativePath"
-        }
+        "fr": { "$ref": "#/$defs/relativePath" },
+        "ar": { "$ref": "#/$defs/relativePath" },
+        "en": { "$ref": "#/$defs/relativePath" }
       }
     },
     "extends": {
@@ -205,25 +193,19 @@
       "properties": {
         "orderExt": {
           "type": "array",
-          "items": {
-            "$ref": "#/$defs/fieldName"
-          },
+          "items": { "$ref": "#/$defs/fieldName" },
           "uniqueItems": true,
           "description": "Fields stored in orders.ext.<key>."
         },
         "itemExt": {
           "type": "array",
-          "items": {
-            "$ref": "#/$defs/fieldName"
-          },
+          "items": { "$ref": "#/$defs/fieldName" },
           "uniqueItems": true,
           "description": "Fields stored in items.ext.<key>."
         },
         "records": {
           "type": "array",
-          "items": {
-            "$ref": "#/$defs/fieldName"
-          },
+          "items": { "$ref": "#/$defs/fieldName" },
           "uniqueItems": true,
           "description": "Kinds of rows stored in module_records with module_key = <key>."
         },
@@ -253,11 +235,7 @@
         }
       },
       "if": {
-        "properties": {
-          "access": {
-            "enum": ["read", "readWrite"]
-          }
-        }
+        "properties": { "access": { "enum": ["read", "readWrite"] } }
       },
       "then": {
         "required": ["purpose"]
@@ -289,11 +267,7 @@
         }
       },
       "if": {
-        "properties": {
-          "paid": {
-            "const": true
-          }
-        }
+        "properties": { "paid": { "const": true } }
       },
       "then": {
         "required": ["paidBy", "dailyCapSetting"]
@@ -301,9 +275,7 @@
     },
     "analyticsEvents": {
       "type": "array",
-      "items": {
-        "$ref": "#/$defs/fieldName"
-      },
+      "items": { "$ref": "#/$defs/fieldName" },
       "uniqueItems": true,
       "default": [],
       "description": "Allow-listed analytics event names. Counts only, never personal data."
@@ -344,18 +316,9 @@
       "additionalProperties": false,
       "required": ["fr"],
       "properties": {
-        "fr": {
-          "type": "string",
-          "minLength": 1
-        },
-        "ar": {
-          "type": "string",
-          "minLength": 1
-        },
-        "en": {
-          "type": "string",
-          "minLength": 1
-        }
+        "fr": { "type": "string", "minLength": 1 },
+        "ar": { "type": "string", "minLength": 1 },
+        "en": { "type": "string", "minLength": 1 }
       }
     }
   }
