@@ -6,7 +6,7 @@
 
 | Tool | Does | First needed |
 |---|---|---|
-| [`qr/`](qr/README.md) | Generates print-ready QR table cards (PDF) and logs every printed link | Sprint 1 (prototype), Sprint 3 (cards printed 16–20 Nov) |
+| [`qr/`](qr/README.md) | QR table cards in the tent design, as HTML or PDF, and the printed-links log (`npm run cards`) | Prototype now; print-ready files with #25 |
 | [`import/`](import/README.md) | Imports a café menu from the spreadsheet template, reporting bad rows | Sprint 1 |
 | [`validate/`](validate/README.md) | Checks a café configuration, the same validator as the server | Sprint 1 |
 | [`release/`](release/README.md) | Builds a release bundle and checks a release window | Sprint 1 (build), Sprint 3 (window) |
