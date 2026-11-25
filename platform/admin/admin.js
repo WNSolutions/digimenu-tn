@@ -11,6 +11,7 @@ import { staffTexts } from './staff-api.js';
 import { scanQr } from './scanner.js';
 import { customersView, CUSTOMER_TEXT } from './customers.js';
 import { teamView, accountView, TEAM_TEXT } from './team.js';
+import { visitsView, VISITS_TEXT } from './visits.js';
 
 const API = '/admin/api';
 const POLL_MS = 10_000;
@@ -575,6 +576,9 @@ function topBar() {
       tab('orders', t('orders')),
       tab('menu', t('menu')),
       ...state.panels.map((p) => tab(`m:${p.key}`, p.label)),
+      ['manager', 'maintainer', 'admin'].includes(cafeRole())
+        ? tab('visits', VISITS_TEXT[/** @type {'fr' | 'ar'} */ (lang)].tab)
+        : null,
       ['manager', 'admin'].includes(cafeRole())
         ? tab('team', TEAM_TEXT[/** @type {'fr' | 'ar'} */ (lang)].tab)
         : null,
@@ -598,7 +602,8 @@ function cafeSwitch() {
           if (
             (state.view.startsWith('m:') &&
               !state.panels.some((p) => `m:${p.key}` === state.view)) ||
-            (state.view === 'team' && !['manager', 'admin'].includes(cafeRole()))
+            (state.view === 'team' && !['manager', 'admin'].includes(cafeRole())) ||
+            (state.view === 'visits' && !['manager', 'maintainer', 'admin'].includes(cafeRole()))
           )
             state.view = 'orders';
           render();
@@ -629,7 +634,9 @@ function render() {
   if (state.view === 'orders') ordersView(body);
   else if (state.view === 'menu') menuView(body);
   else if (state.view === 'account') accountView(body, teamDeps);
-  else if (state.view === 'team' && ['manager', 'admin'].includes(cafeRole())) {
+  else if (state.view === 'visits' && ['manager', 'maintainer', 'admin'].includes(cafeRole())) {
+    visitsView(body, { ...teamDeps, admin: state.admin });
+  } else if (state.view === 'team' && ['manager', 'admin'].includes(cafeRole())) {
     teamView(body, teamDeps);
   } else if (state.view === 'customers' && state.admin) {
     customersView(body, {
