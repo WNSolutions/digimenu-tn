@@ -9,6 +9,7 @@ import { handleCreateOrder, handleOrderStatus } from './orders-api.js';
 import { handleAuth } from './auth.js';
 import { handleAdmin, handleCafeList } from './admin-api.js';
 import { handleCustomers } from './customers-api.js';
+import { handleTeam } from './team-api.js';
 import { handleModuleRoute } from './module-host.js';
 import { resolveCafe } from './cafes.js';
 import { runRetention } from './retention.js';
@@ -76,6 +77,8 @@ export default {
           return await handleCafeList(request, env);
         if (route === 'customers' || route.startsWith('customers/'))
           return await handleCustomers(request, env, route);
+        if (route === 'team' || route.startsWith('team/'))
+          return await handleTeam(request, env, route);
         return await handleAdmin(request, env, route);
       }
       return env.ASSETS.fetch(request);

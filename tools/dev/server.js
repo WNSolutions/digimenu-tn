@@ -337,7 +337,7 @@ function run() {
       const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
       /** @type {Record<string, string>} */
       const headers = {};
-      for (const name of ['origin', 'cookie', 'content-type']) {
+      for (const name of ['origin', 'cookie', 'content-type', 'user-agent']) {
         const value = req.headers[name];
         if (typeof value === 'string') headers[name] = value;
       }

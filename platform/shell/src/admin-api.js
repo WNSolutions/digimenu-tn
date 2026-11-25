@@ -150,6 +150,8 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       .bind(id, cafe.id)
       .first();
     if (!row) return problem(404, 'unknown_order');
+    // A Maintainer handles test orders only, never a real customer's order (roles table).
+    if (role === 'maintainer' && !row.is_test) return problem(403, 'forbidden');
     if (!(TRANSITIONS[String(row.status)] ?? []).includes(next))
       return problem(409, 'bad_transition');
     const at = isoNow(now);
@@ -189,7 +191,14 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       slug: cafe.slug,
       name: cafe.config.names ?? null,
       role,
-      modules: serverModules(cafe.config).map(([key]) => key),
+      // Only the modules whose staff panel this role may use (a Maintainer never sees loyalty
+      // cards: they hold customers' phone numbers).
+      modules: serverModules(cafe.config)
+        .filter(
+          ([, mod]) =>
+            !mod.staff || Object.values(mod.staff.roles).some((roles) => roles.includes(role)),
+        )
+        .map(([key]) => key),
     });
   }
 

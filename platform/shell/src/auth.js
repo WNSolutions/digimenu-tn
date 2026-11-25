@@ -389,7 +389,8 @@ async function mySessions(request, env, action, now) {
       lastSeen: String(r.last_seen_at),
       current: r.token_sha256 === current,
     }));
-  if (action === 'sessions' && request.method === 'GET') return json(200, { sessions: await list() });
+  if (action === 'sessions' && request.method === 'GET')
+    return json(200, { sessions: await list() });
   if (request.method !== 'POST' || !sameOrigin(request)) return problem(403, 'forbidden');
   const input = await body(request);
   if (!input) return problem(400, 'bad_request');
@@ -431,7 +432,12 @@ async function mySessions(request, env, action, now) {
     const salt = String(input.salt ?? '');
     const iterations = Number(input.iterations);
     const key = String(input.key ?? '');
-    if (salt.length < 16 || !Number.isInteger(iterations) || iterations < 310_000 || key.length < 40)
+    if (
+      salt.length < 16 ||
+      !Number.isInteger(iterations) ||
+      iterations < 310_000 ||
+      key.length < 40
+    )
       return problem(400, 'bad_request');
     const hash = `pbkdf2c-sha256$${iterations}$${salt}$${b64(await hmac(pepper, unb64(key)))}$p1`;
     await env.DB.batch([
