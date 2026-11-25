@@ -41,8 +41,8 @@ This reverses three rules of the v0.1 draft: dine-in orders asked for nothing pe
 - **Encrypted weekly backup (deploy repository, `backup.yml`, 25 Nov):**
   - Sundays 03:17 Tunis time and on demand: D1 export, encrypted with age to the public key(s) in the repository variable `BACKUP_RECIPIENT`, kept as a private artifact for 56 days, never in Git.
   - Every run proves the restore with a throwaway key: decrypt, byte comparison, import into a fresh database, integrity check, row counts per table. First run on preview passed.
-  - Ahmed's one real restore with his offline key is the last step (`backups/RESTORE.md`).
-- **Still to do before the go-live gate:** that real restore, and the retention job (proposal: 24 months without an order).
+  - Ahmed restored a real backup with his offline key on 25 Nov: integrity ok, row counts as expected (`backups/RESTORE.md`).
+- **Still to do before the go-live gate:** the retention job (proposal: 24 months without an order, Ahmed to decide).
 
 ## Consequences
 
