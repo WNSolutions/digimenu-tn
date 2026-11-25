@@ -19,7 +19,7 @@ below. Sources: REQUIREMENTS NFR-12 and NFR-22, `HOSTING_AND_COSTS.md` §5,
 | `META_APP_SECRET` (only if we use the Tech Provider route for WhatsApp) | **Yes** | Worker secret | Ahmed |
 | Each café's WhatsApp Business token | **Yes** | Entered **once** by the café owner in the admin app, stored **encrypted** (AES-256-GCM) in D1, decrypted only with `WA_KEK_v1`. Never in config files, never sent by WhatsApp or email, never shown back | nobody reads it; the Worker uses it |
 | Staff and owner passwords | **Yes** | Never stored as such: only a slow salted hash + pepper in D1 (NFR-23). Reset by the café manager or Ahmed | the person only |
-| Backup encryption: **public** key | No | May be committed in the deploy repo | anyone |
+| Backup encryption: **public** key | No | Repository variable `BACKUP_RECIPIENT` of the deploy repo | anyone |
 | Backup encryption: **private** key | **Yes, critical** | Offline only (password-manager vault), never on GitHub | Ahmed + backup person |
 | Preview secrets | Yes, but different | Separate dummy values on the `digimenu-preview` Worker. **Never copy production keys or production personal data to preview** | Tech Lead |
 | Cloudflare token for data jobs (backup, migrate, pin, media) | **Yes, critical**: it can read customer data | GitHub Actions secret of the **private** deploy repo only: these jobs never run in the public repo, whose logs and artifacts anyone can read | Ahmed, Tech Lead |

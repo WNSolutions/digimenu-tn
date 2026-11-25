@@ -38,7 +38,11 @@ This reverses three rules of the v0.1 draft: dine-in orders asked for nothing pe
   - Modules erase their part first (`customer.records`, fail-closed). Then one batch puts the keyed hash on the suppression list, removes contact and free-text notes from every order (lines and totals stay, anonymous), and deletes the consents and the record.
   - Logged with the record id and the number of orders, never the number or the name.
 - **Consent semantics already in place:** each order records the offers choice as ticked or not, so the latest choice wins. Joining loyalty is recorded only when ticked.
-- **Still to do before the go-live gate:** the encrypted weekly backup with a tested restore (deploy repository), and the retention job (proposal: 24 months without an order).
+- **Encrypted weekly backup (deploy repository, `backup.yml`, 25 Nov):**
+  - Sundays 03:17 Tunis time and on demand: D1 export, encrypted with age to the public key(s) in the repository variable `BACKUP_RECIPIENT`, kept as a private artifact for 56 days, never in Git.
+  - Every run proves the restore with a throwaway key: decrypt, byte comparison, import into a fresh database, integrity check, row counts per table. First run on preview passed.
+  - Ahmed's one real restore with his offline key is the last step (`backups/RESTORE.md`).
+- **Still to do before the go-live gate:** that real restore, and the retention job (proposal: 24 months without an order).
 
 ## Consequences
 
