@@ -12,12 +12,13 @@ Short records of the important technical decisions in DigiMenu TN: the context, 
 | [0004](0004-permanent-table-link-and-hosts.md) | Permanent table link `digimenu.wnsolutions.tn/<café>/t/<table>`, and the host layout | Accepted (frozen Fri 13 Nov 2026) | D-025, D-037, D-024 |
 | [0005](0005-release-window-pinning-and-approval.md) | Release window, per-café pinning, and Ahmed's approval gate | Accepted · pilot café **open** (D-029) | D-021, D-029 |
 | [0006](0006-accounts-passwords-and-roles.md) | Username and password sign-in on any device, with four roles | Accepted · password length open | D-026 |
-| [0007](0007-order-notifications-staff-screen-and-whatsapp.md) | Orders go to the staff screen; WhatsApp only as hand-off or an optional paid module; no Telegram, no SMS | Accepted | D-023, D-028, D-030 |
+| [0007](0007-order-notifications-staff-screen-and-whatsapp.md) | Orders go to the staff screen; WhatsApp only as hand-off or an optional paid module; no Telegram, no SMS | Accepted · hand-off for dine-in too (D-063) | D-023, D-028, D-030, D-063 |
 | [0008](0008-module-system.md) | Optional features are modules with a manifest, switched per café by configuration only | Accepted | D-009, D-028 |
 | [0009](0009-certificates-outside-the-cafe-toolkit.md) | Youth certificates are a separate WNS tool in `WNSolutions/wns-certificates`, not a café module and not part of this repository | Accepted · repository to be created by Ahmed | D-032 |
 | [0010](0010-customer-data-consent-and-deletion.md) | Customer records with recorded consent, field encryption, Admin-only access and deletion on request | Accepted · retention open | D-027 |
 | [0011](0011-design-language-hig-inspired.md) | Design based on Apple's Human Interface Guidelines, applied as is for an iPhone-first audience; no Apple assets | Accepted | D-039, D-040, D-044 |
 | [0012](0012-optional-button-colour.md) | Buttons use the café's colour darkened automatically, or an optional separate button colour | Accepted | D-049 |
+| [0013](0013-loyalty-at-launch-phone-number-and-wallet-card.md) | Loyalty ships at launch: customers are their phone number, and carry a card in Apple Wallet or Google Wallet | Accepted · stamps or points, Apple Wallet funding open | D-064 |
 
 **Source decisions** are IDs in the project's internal decision log, kept by the project lead. Each ADR restates what matters, so you do not need the log to understand it. Requirement IDs such as `MOD-14` or `US-36` refer to the [product requirements](../product/README.md).
 
@@ -28,6 +29,8 @@ Short records of the important technical decisions in DigiMenu TN: the context, 
 | Which café receives each new version first (D-029)? | [0005](0005-release-window-pinning-and-approval.md) | Ahmed | Sun 22 Nov 2026 |
 | Minimum password length for Manager and Staff: 12, 15, or 8 as in the requirements? | [0006](0006-accounts-passwords-and-roles.md) | Ahmed | before accounts go live (Sprint 2) |
 | Retention period and data controller named in the privacy notice | [0010](0010-customer-data-consent-and-deletion.md) | Ahmed | Fri 13 Nov 2026 |
+| Loyalty: stamps or points per dinar (Q30)? | [0013](0013-loyalty-at-launch-phone-number-and-wallet-card.md) | Ahmed | Thu 12 Nov 2026 |
+| Apple Wallet: who pays the Apple Developer Program, $99 per year (Q31)? | [0013](0013-loyalty-at-launch-phone-number-and-wallet-card.md) | Ahmed | Thu 12 Nov 2026 |
 | May a Maintainer switch a module **on** at a live café, or only off? | [0008](0008-module-system.md) | Ahmed | Sun 8 Nov 2026 |
 | Create the `WNSolutions/wns-certificates` repository (name confirmed 22 Oct 2026, D-041) | [0009](0009-certificates-outside-the-cafe-toolkit.md) | Ahmed | when WO-042 starts, before WO-044 |
 | Final approval mechanism: public-repo `production` environment or the interim allow-listed deploy workflow | [0005](0005-release-window-pinning-and-approval.md) | Tech Lead | before the first production deploy |

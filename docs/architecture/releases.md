@@ -80,7 +80,7 @@ The pin lives in the database (`cafes.pinned_release`, with every change kept in
 
 **Which café is the pilot** is decision D-029, still open (due Sun 22 Nov 2026). The earlier proposal is "the wave-1 café with the most engaged owner". Until D-029 is decided, no partner café is pinned to a candidate; candidates run on the demo café and on preview only.
 
-**Go-live freeze.** From Fri 20 Nov to Fri 4 Dec 2026 only patch releases are published. Loyalty (M-15) and WhatsApp Business (M-16) are built on their own branch and ship as a minor release after the second go-live wave, pilot café first.
+**Go-live freeze.** From Fri 20 Nov to Fri 4 Dec 2026 only patch releases are published. WhatsApp Business (M-16) is built on its own branch and ships as a minor release after the second go-live wave, pilot café first. Loyalty (M-15) is part of the go-live release (D-064).
 
 ## Rollback in 15 minutes
 
