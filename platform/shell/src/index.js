@@ -5,6 +5,7 @@
  */
 import { json, problem } from './http.js';
 import { handleBoot } from './boot-api.js';
+import { handleCreateOrder, handleOrderStatus } from './orders-api.js';
 
 export default {
   /**
@@ -18,6 +19,14 @@ export default {
       if (url.pathname === '/api/boot') {
         if (request.method !== 'GET') return problem(405, 'method_not_allowed');
         return await handleBoot(request, env, ctx);
+      }
+      if (url.pathname === '/api/orders') {
+        if (request.method !== 'POST') return problem(405, 'method_not_allowed');
+        return await handleCreateOrder(request, env);
+      }
+      if (url.pathname === '/api/orders/status') {
+        if (request.method !== 'GET') return problem(405, 'method_not_allowed');
+        return await handleOrderStatus(request, env);
       }
       if (url.pathname === '/api/health') {
         return json(200, { ok: true, environment: env.ENVIRONMENT ?? 'unknown' });

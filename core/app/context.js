@@ -28,10 +28,14 @@ export const TEXTS = { fr, ar, en };
  *   info?: { address?: LocalizedText },
  *   unavailable: 'grey' | 'hide', maxQtyPerLine: number, listMaxAgeHours?: number,
  *   accent?: Record<string, string> }} cafe
- * @property {{ label: string, valid: boolean } | null} table
+ * @property {{ label: string, valid: boolean, code?: string } | null} table
  * @property {Snapshot} menu
  * @property {{ savedAt: number } | null} [offline]   set by the boot page when this is the saved copy
  * @property {import('./extensions.js').BootModule[]} [modules]   only the modules switched on (MOD-03)
+ * @property {{ types: Record<string, string[]>, dineInDetails: 'required' | 'optional' }} [ordering]
+ *   order types the café accepts, each with its channels (main one first)
+ * @property {{ version: number, short: Record<string, string>, full: Record<string, string>,
+ *   optIn: Record<string, Record<string, string>> } | null} [privacy]   the notice shown at checkout
  */
 
 /**

@@ -33,14 +33,31 @@ export const CLIENT_POINTS = /** @type {const} */ (['list.action']);
  */
 
 /**
- * What a `list.action` contribution returns: a link the core draws as the list's main button.
+ * A stored order as the server returns it (POST /api/orders).
+ * @typedef {object} StoredOrder
+ * @property {string} id
+ * @property {string} number     number of the day, e.g. "A12"
+ * @property {string} status
+ * @property {number} total      millimes
+ * @property {string | null} table
+ * @property {string} note
+ * @property {{ qty: number, name: LocalizedText, variantName?: LocalizedText, total: number, note?: string }[]} lines
+ */
+
+/**
+ * What a `list.action` contribution returns: the list's main button.
+ * - `link`: the core opens `href`.
+ * - `checkout`: a channel. With a server, the core runs checkout (details, notice, consent),
+ *   stores the order, then shows `complete(order)` as the next step. Without a server
+ *   (standalone demo), the core opens `href` directly.
  * @typedef {object} ListAction
- * @property {'link'} kind
+ * @property {'link' | 'checkout'} kind
  * @property {string} href     https only
  * @property {string} label
  * @property {string} [icon]   a name from core/ui/icons.js
  * @property {string} [note]   one short line above the button
  * @property {string} [after]  shown once the customer has tapped the button
+ * @property {(order: StoredOrder) => { href: string, label: string, note?: string }} [complete]
  */
 
 /**
@@ -133,7 +150,8 @@ export function createRegistry(report = (message, err) => console.error(message,
  */
 function isSafeAction(action) {
   return (
-    action.kind === 'link' &&
+    (action.kind === 'link' ||
+      (action.kind === 'checkout' && typeof action.complete === 'function')) &&
     typeof action.label === 'string' &&
     action.label.trim() !== '' &&
     typeof action.href === 'string' &&

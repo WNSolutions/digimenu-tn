@@ -11,6 +11,7 @@ import { setQty, setListNote, checkList, NOTE_MAX, DEFAULT_MAX_QTY, emptyList } 
 import { indexSnapshot } from '../menu/snapshot.js';
 import { langParts } from './context.js';
 import { formatClock, openStatus } from '../hours.js';
+import { openCheckout } from './checkout.js';
 
 /** @typedef {import('./context.js').Ctx} Ctx */
 /** @typedef {import('../list.js').CheckedLine} CheckedLine */
@@ -205,6 +206,18 @@ export function openListSheet(ctx) {
         ? t('list.orderClosed', { time: hours.opensAt })
         : t('list.orderClosedNoTime');
       return [h('p', { class: 'dm-actions-note' }, closed), showWaiter(true)];
+    }
+    if (channel.kind === 'checkout' && ctx.boot.ordering) {
+      return [
+        h('p', { class: 'dm-actions-note' }, channel.note ?? ''),
+        h(
+          'button',
+          { type: 'button', class: 'dm-prominent', onclick: () => openCheckout(ctx, channel) },
+          channel.icon ? icon(channel.icon) : null,
+          channel.label,
+        ),
+        showWaiter(false),
+      ];
     }
     return [
       h(

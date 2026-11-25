@@ -20,9 +20,18 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
-import { loadDemo, demoBoot } from '../demo/boot.js';
+import { loadDemo } from '../demo/boot.js';
+import { createD1 } from './d1.js';
+import { seedSql, noticeSql } from '../seed/seed.js';
+import worker from '../../platform/shell/src/index.js';
+import { handleCreateOrder } from '../../platform/shell/src/orders-api.js';
 
-const HELP = `Usage: node tools/dev/server.js [--port 8787] [--host 127.0.0.1]
+/** @type {Date | null} */
+let devNow = null;
+import { clearCaches } from '../../platform/shell/src/cafes.js';
+import { clearManifests } from '../../platform/shell/src/releases.js';
+
+const HELP = `Usage: node tools/dev/server.js [--port 8787] [--host 127.0.0.1] [--now 2026-11-25T11:30:00+01:00]
 
 Serves the customer page of the demo café on your computer.
 Open http://localhost:8787/demo/t/5?k=7QF3K9 (table 5), or /demo for the menu without a table.
@@ -52,25 +61,16 @@ const TYPES = {
  * Handles one request. Exported for tests.
  * @param {string} method
  * @param {URL} url
+ * @param {string} [body]
  * @returns {Promise<{ status: number, type?: string, body?: string | Buffer, location?: string }>}
  */
-export async function handle(method, url) {
-  if (method !== 'GET' && method !== 'HEAD') return { status: 405 };
+export async function handle(method, url, body) {
   const p = url.pathname;
+  if (p.startsWith('/api/')) return api(method, url, body);
+  if (method !== 'GET' && method !== 'HEAD') return { status: 405 };
 
   if (p === '/') return { status: 302, location: '/demo/t/5?k=7QF3K9' };
   if (p === '/boot.js') return file(path.join(PUBLIC, 'boot.js'));
-  if (p === '/api/boot') {
-    const demo = loadDemo();
-    if (url.searchParams.get('cafe') !== demo.info.slug)
-      return json(404, { error: 'unknown_cafe' });
-    const boot = demoBoot(
-      demo,
-      { table: url.searchParams.get('t'), code: url.searchParams.get('k') },
-      RELEASE,
-    );
-    return json(200, boot);
-  }
   if (p === '/r/dev/app.css') {
     const css = await Promise.all([
       readFile(path.join(CORE, 'ui/tokens.css'), 'utf8'),
@@ -99,6 +99,84 @@ export async function handle(method, url) {
   return { status: 404, type: TYPES['.html'], body: 'Not found' };
 }
 
+/**
+ * The real Worker (platform/shell) on an in-memory D1 with the demo café, re-seeded on every
+ * boot so an edit to cafes/demo/menu.csv shows on the next reload. Orders stay until restart.
+ * The keys are random for each run: nothing typed here is kept.
+ */
+/** @type {{ DB: ReturnType<typeof createD1>, env: Record<string, unknown> } | null} */
+let local = null;
+function localWorker() {
+  if (!local) {
+    const DB = createD1().migrate();
+    DB.exec(noticeSql(path.join(root, 'tools/seed/demo-privacy-notice.json')));
+    const key = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64');
+    local = {
+      DB,
+      env: { DB, ASSETS: devAssets, ENVIRONMENT: 'dev', FIELD_KEY: key(), LOOKUP_KEY: key() },
+    };
+  }
+  return local;
+}
+
+/** The asset layer as the Worker sees it: only the dev release manifest is needed. */
+const devAssets = {
+  /** @param {Request} request */
+  async fetch(request) {
+    if (new URL(request.url).pathname !== '/r/dev/manifest.json')
+      return new Response('', { status: 404 });
+    const modules = Object.fromEntries(
+      loadDemo().modules.map((m) => [
+        m.key,
+        { entry: `/r/dev/m/${m.key}/client.js`, texts: m.texts },
+      ]),
+    );
+    return Response.json({
+      version: 'dev',
+      platformApi: 1,
+      entry: RELEASE.entry,
+      css: RELEASE.css,
+      modules,
+    });
+  },
+};
+
+/**
+ * @param {string} method
+ * @param {URL} url
+ * @param {string} [body]
+ */
+async function api(method, url, body) {
+  const { DB, env } = localWorker();
+  if (url.pathname === '/api/boot') {
+    DB.exec(seedSql({ dir: path.join(root, 'cafes/demo'), release: 'dev', replace: true }));
+    clearCaches();
+    clearManifests();
+  }
+  const request = new Request(url, {
+    method,
+    ...(body && method !== 'GET' && method !== 'HEAD' ? { body } : {}),
+  });
+  // --now (dev only): pretend it is another time, to try ordering at night.
+  if (devNow && url.pathname === '/api/orders' && method === 'POST') {
+    const response = await handleCreateOrder(request, /** @type {any} */ (env), devNow);
+    return { status: response.status, type: response.headers.get('content-type') ?? undefined, body: await response.text() };
+  }
+  const response = await worker.fetch(
+    new Request(url, {
+      method,
+      ...(body && method !== 'GET' && method !== 'HEAD' ? { body } : {}),
+    }),
+    /** @type {any} */ (env),
+    { waitUntil: () => {} },
+  );
+  return {
+    status: response.status,
+    type: response.headers.get('content-type') ?? undefined,
+    body: await response.text(),
+  };
+}
+
 /** @param {string} target */
 async function file(target) {
   try {
@@ -109,16 +187,12 @@ async function file(target) {
   }
 }
 
-/** @param {number} status @param {unknown} value */
-function json(status, value) {
-  return { status, type: TYPES['.json'], body: JSON.stringify(value) };
-}
-
 function run() {
   const { values } = parseArgs({
     options: {
       port: { type: 'string', default: '8787' },
       host: { type: 'string', default: '127.0.0.1' },
+      now: { type: 'string' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -126,6 +200,7 @@ function run() {
     process.stdout.write(HELP);
     return;
   }
+  if (values.now) devNow = new Date(values.now);
   const demo = loadDemo();
   if (demo.errors.length) {
     process.stderr.write(`The demo café has problems:\n  ${demo.errors.join('\n  ')}\n`);
@@ -135,7 +210,10 @@ function run() {
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? '/', 'http://localhost');
-      const out = await handle(req.method ?? 'GET', url);
+      /** @type {Buffer[]} */
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const out = await handle(req.method ?? 'GET', url, Buffer.concat(chunks).toString('utf8'));
       res.statusCode = out.status;
       if (out.type) res.setHeader('content-type', out.type);
       if (out.location) res.setHeader('location', out.location);

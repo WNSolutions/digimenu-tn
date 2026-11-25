@@ -21,21 +21,46 @@ import { accentTokens } from '../../../core/ui/accent.js';
  * @property {{ primaryColor: string, buttonColor?: string }} branding
  * @property {{ maxQtyPerLine?: number, listMaxAgeHours?: number }} [ordering]
  * @property {Record<string, { enabled: boolean, settings?: Record<string, unknown> }>} [modules]
+ * @property {string} [status]
  */
+
+/**
+ * The privacy notice shown at checkout (ADR-0010), in the boot answer so checkout needs no
+ * extra call. Texts are LocalizedText; `version` is sent back with the order.
+ * @typedef {{ version: number, short: Record<string, string>, full: Record<string, string>,
+ *   optIn: Record<string, Record<string, string>> }} PrivacyNotice
+ */
+
+/**
+ * Order types the café accepts, each with its channels (enabled modules only), and whether
+ * dine-in needs a name and phone.
+ * @param {CafeConfig & { ordering?: any }} config
+ */
+export function orderingInfo(config) {
+  /** @type {Record<string, string[]>} */
+  const types = {};
+  for (const [type, value] of Object.entries(config.ordering?.types ?? {})) {
+    const channel = /** @type {any} */ (value).channel;
+    const list = (Array.isArray(channel) ? channel : [channel]).filter(
+      (key) => key && config.modules?.[key]?.enabled,
+    );
+    if (list.length) types[type] = list;
+  }
+  return { types, dineInDetails: config.ordering?.dineInDetails ?? 'required' };
+}
 
 /**
  * Which table the link names, and whether its check code is right. An unknown or retired table
  * still opens the menu, as "no table" (ADR-0004).
  * @param {{ label: string, check_code: string, active: number | boolean } | null} row
  * @param {string | null} code
- * @returns {{ label: string, valid: boolean } | null}
+ * @returns {{ label: string, valid: boolean, code?: string } | null}
+ *   `code` comes back only when it is right, so the page can send it with the order.
  */
 export function tableStatus(row, code) {
   if (!row || !row.active) return null;
-  return {
-    label: row.label,
-    valid: Boolean(code) && String(code).toUpperCase() === row.check_code,
-  };
+  const valid = Boolean(code) && String(code).toUpperCase() === row.check_code;
+  return { label: row.label, valid, ...(valid ? { code: row.check_code } : {}) };
 }
 
 /**
@@ -62,9 +87,10 @@ export function enabledModules(config, available) {
  * @param {import('../../../core/menu/snapshot.js').Snapshot} input.menu
  * @param {{ version: string, entry: string, css: string }} input.release
  * @param {BootModule[]} input.modules
+ * @param {PrivacyNotice | null} [input.privacy]
  * @returns {Boot & { release: { version: string, entry: string, css: string } }}
  */
-export function bootBody({ config, table, menu, release, modules }) {
+export function bootBody({ config, table, menu, release, modules, privacy = null }) {
   return {
     v: 1,
     release,
@@ -85,5 +111,7 @@ export function bootBody({ config, table, menu, release, modules }) {
     table,
     menu,
     modules,
+    ordering: orderingInfo(config),
+    privacy,
   };
 }
