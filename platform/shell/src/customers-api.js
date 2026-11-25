@@ -19,7 +19,8 @@ import { isoNow } from './clock.js';
 import { ulid } from './ids.js';
 import { loadKeys, open, lookupHash } from './crypto.js';
 import { normalizePhone } from '../../../core/phone.js';
-import { runCustomerExport, runCustomerErase } from './module-host.js';
+import { runCustomerExport } from './module-host.js';
+import { eraseCustomer } from './customer-erase.js';
 
 const PAGE = 50;
 const EXPORT_PAGE = 200;
@@ -409,10 +410,8 @@ async function bulkExport(env, keys, url, actor, now) {
 }
 
 /**
- * Deletion on request (ADR-0010 §7): modules erase first (fail-closed), then in one batch the
- * number goes on the suppression list (keyed hash only), every order loses its contact and
- * notes but keeps its lines and total for counts, consents and the record are removed.
- * Logged without the phone number; it cannot be undone.
+ * Deletion on request (ADR-0010 §7, customer-erase.js), with the number suppressed. Logged
+ * without the phone number; it cannot be undone.
  * @param {CustomersEnv} env
  * @param {any} row
  * @param {{ actor: string, role: string }} actor
@@ -420,9 +419,9 @@ async function bulkExport(env, keys, url, actor, now) {
  */
 async function erase(env, row, actor, now) {
   const id = String(row.id);
-  let modules;
+  let done;
   try {
-    modules = await runCustomerErase(env, id, now);
+    done = await eraseCustomer(env, row, { suppress: true, now });
   } catch (err) {
     console.error(
       'customer deletion stopped: a module could not erase',
@@ -431,32 +430,6 @@ async function erase(env, row, actor, now) {
     await audit(env, { ...actor, action: 'delete_failed', target: id }, now);
     return problem(500, 'delete_failed');
   }
-  const orders = (
-    await env.DB.prepare('SELECT id, lines FROM orders WHERE customer_id = ?1').bind(id).all()
-  ).results;
-  const writes = [
-    env.DB.prepare(
-      'INSERT INTO suppressions (phone_idx, since) VALUES (?1, ?2) ON CONFLICT DO NOTHING',
-    ).bind(row.phone_idx, isoNow(now)),
-    ...orders.map((o) =>
-      env.DB.prepare(
-        `UPDATE orders SET customer_id = NULL, contact_ct = NULL, note = '', lines = ?1 WHERE id = ?2`,
-      ).bind(
-        JSON.stringify(
-          JSON.parse(String(o.lines)).map((/** @type {any} */ l) => {
-            const rest = { ...l };
-            delete rest.note;
-            return rest;
-          }),
-        ),
-        o.id,
-      ),
-    ),
-    env.DB.prepare('DELETE FROM consents WHERE customer_id = ?1').bind(id),
-    env.DB.prepare('DELETE FROM customers WHERE id = ?1').bind(id),
-  ];
-  await env.DB.batch(writes);
-  const moduleRows = Object.values(modules).reduce((n, x) => n + x, 0);
-  await audit(env, { ...actor, action: 'delete', target: id, count: orders.length }, now);
-  return json(200, { deleted: true, ordersAnonymised: orders.length, moduleRows });
+  await audit(env, { ...actor, action: 'delete', target: id, count: done.orders }, now);
+  return json(200, { deleted: true, ordersAnonymised: done.orders, moduleRows: done.moduleRows });
 }

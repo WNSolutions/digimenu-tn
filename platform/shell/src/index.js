@@ -11,8 +11,24 @@ import { handleAdmin, handleCafeList } from './admin-api.js';
 import { handleCustomers } from './customers-api.js';
 import { handleModuleRoute } from './module-host.js';
 import { resolveCafe } from './cafes.js';
+import { runRetention } from './retention.js';
 
 export default {
+  /**
+   * Nightly jobs (cron trigger in wrangler.template.jsonc): the retention rule (D-067).
+   * @param {{ scheduledTime: number, cron: string }} event
+   * @param {import('./d1.d.js').Env} env
+   * @param {import('./d1.d.js').ExecutionContext} ctx
+   */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      runRetention(env, { now: new Date(event.scheduledTime) }).then((r) => {
+        if (r.deleted || r.failed)
+          console.log(`retention: ${r.deleted} deleted, ${r.failed} failed`);
+      }),
+    );
+  },
+
   /**
    * @param {Request} request
    * @param {import('./d1.d.js').Env} env

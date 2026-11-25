@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Accepted — retention period and legal points are open with Ahmed (see Consequences) |
+| **Status** | Accepted — retention decided (24 months, D-067); legal points open with Ahmed (see Consequences) |
 | **Date** | 2026-10-21 (decision approved 2026-10-14) |
 | **Source decisions** | D-027 · C-15, US-40 to US-43, NFR-13, NFR-14, NFR-15, NFR-16, NFR-22 |
 | **Deciders** | Ahmed (project lead) for keeping the data; Software Architect for the protection design |
@@ -42,13 +42,13 @@ This reverses three rules of the v0.1 draft: dine-in orders asked for nothing pe
   - Sundays 03:17 Tunis time and on demand: D1 export, encrypted with age to the public key(s) in the repository variable `BACKUP_RECIPIENT`, kept as a private artifact for 56 days, never in Git.
   - Every run proves the restore with a throwaway key: decrypt, byte comparison, import into a fresh database, integrity check, row counts per table. First run on preview passed.
   - Ahmed restored a real backup with his offline key on 25 Nov: integrity ok, row counts as expected (`backups/RESTORE.md`).
-- **Still to do before the go-live gate:** the retention job (proposal: 24 months without an order, Ahmed to decide).
+- **Retention (D-067, 25 Nov):** a record with no order for **24 months** is deleted every night, at 03:43 Tunis time, by the Worker's cron job (`retention.js`). It uses the same erase as a deletion on request (`customer-erase.js`: module data first, fail-closed per record; orders kept as anonymous lines), but makes no suppression entry. At most 200 records per night, oldest first, and one audit line with the count. With this, the go-live data gate is complete on the technical side.
 
 ## Consequences
 
 - **Positive:** a customer base built with provable consent; a leaked database or backup alone does not expose names or phones; every access to customer data is traceable; the design leaves room for a future per-café "marketing access" without moving data.
 - **Negative / costs:** more checkout fields than the v0.1 design, which may lower dine-in ordering; Ahmed can make the phone optional per café. Key management becomes critical. Encryption adds microseconds per record, so exports are paginated to stay inside the CPU limit.
-- **Open with Ahmed:** the retention period (proposal: delete records with no order for 24 months); the name of the data controller and the contact for requests; whether staff see first names on every order; whether keeping a suppression list of opted-out numbers is acceptable; the legal check with a qualified person before the first real order (due Fri 20 Nov 2026).
+- **Open with Ahmed:** the name of the data controller and the contact for requests; whether staff see first names on every order; whether keeping a suppression list of opted-out numbers is acceptable; the legal check with a qualified person before the first real order (due Fri 20 Nov 2026).
 
 ## Alternatives considered
 
