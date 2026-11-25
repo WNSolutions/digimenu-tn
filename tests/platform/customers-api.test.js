@@ -141,7 +141,17 @@ async function setup() {
 
 /** Every audit line as text, to check no phone number or name ever lands there. */
 async function auditText(/** @type {any} */ DB) {
-  return JSON.stringify((await DB.prepare('SELECT * FROM audit_log').all()).results);
+  // Random identifiers (row ids, account and customer ids) are left out: a random id can hold
+  // "321" by chance, which is not a leak. Everything else in each line is checked.
+  const ID = /^([a-z]{1,3}-)?[0-9a-f-]{20,}$|^[0-9A-HJKMNP-TV-Z]{26}$/i;
+  const rows = (await DB.prepare('SELECT * FROM audit_log').all()).results;
+  return JSON.stringify(
+    rows.map((/** @type {Record<string, unknown>} */ r) =>
+      Object.fromEntries(
+        Object.entries(r).filter(([, v]) => !(typeof v === 'string' && ID.test(v))),
+      ),
+    ),
+  );
 }
 
 test('only Admin has customer records; other roles get nothing and the attempt is logged', async () => {
