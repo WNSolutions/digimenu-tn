@@ -19,7 +19,7 @@ import { parseArgs } from 'node:util';
 import { importMenuCsv, parseCsv } from '../import/menu-csv.js';
 import { buildSnapshot, SNAPSHOT_SCHEMA } from '../../core/menu/snapshot.js';
 
-const HELP = `Usage: node tools/seed/seed.js --cafe <folder> --release <x.y.z> [--replace] [--out file.sql]
+const HELP = `Usage: node tools/seed/seed.js --cafe <folder> --release <x.y.z> [--replace] [--notice <file.json>] [--out file.sql]
 
 Prints the SQL that seeds the café in <folder> (info.json, menu.csv, tables.csv).
 `;
@@ -39,6 +39,18 @@ export function sql(v) {
 /** @param {string} table @param {Record<string, unknown>} row */
 const insert = (table, row) =>
   `INSERT INTO ${table} (${Object.keys(row).join(', ')}) VALUES (${Object.values(row).map(sql).join(', ')});`;
+
+/**
+ * SQL that adds a privacy notice version if it is not there yet (versions are never edited).
+ * @param {string} file  JSON with version, short, full, optIn (LocalizedText each)
+ * @param {string} [now]
+ */
+export function noticeSql(file, now = new Date().toISOString()) {
+  const n = JSON.parse(readFileSync(file, 'utf8'));
+  if (!Number.isInteger(n.version) || !n.short?.fr || !n.full?.fr)
+    throw new Error('notice needs version, short.fr and full.fr');
+  return `INSERT INTO privacy_notice_versions (version_no, short_text, full_text, opt_in_text, published_at) VALUES (${sql(n.version)}, ${sql(n.short)}, ${sql(n.full)}, ${sql(n.optIn ?? {})}, ${sql(now)}) ON CONFLICT (version_no) DO NOTHING;\n`;
+}
 
 /**
  * @param {{ dir: string, release: string, replace?: boolean, now?: string, status?: string }} o
@@ -216,6 +228,7 @@ function run() {
       release: { type: 'string' },
       replace: { type: 'boolean', default: false },
       out: { type: 'string' },
+      notice: { type: 'string' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });

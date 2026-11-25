@@ -62,7 +62,7 @@ test('boot answers with the café, a valid table, the pinned release and the men
   const boot = await res.json();
   assert.equal(boot.v, 1);
   assert.equal(boot.cafe.slug, 'demo');
-  assert.deepEqual(boot.table, { label: '5', valid: true });
+  assert.deepEqual(boot.table, { label: '5', valid: true, code: '7QF3K9' });
   assert.equal(boot.release.version, '0.1.0');
   assert.match(boot.release.entry, /^\/r\/0\.1\.0\/app\.[0-9a-f]{10}\.js$/);
   assert.equal(boot.menu.rev, 1);

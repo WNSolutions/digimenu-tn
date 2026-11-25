@@ -9,6 +9,7 @@ import { resolveCafe, menuSnapshot, findTable } from './cafes.js';
 import { releaseManifest } from './releases.js';
 import { bootBody, tableStatus, enabledModules } from './boot-body.js';
 import { countVisit } from './visits.js';
+import { latestNotice } from './privacy.js';
 
 /**
  * @param {Request} request
@@ -25,10 +26,11 @@ export async function handleBoot(request, env, ctx, now = new Date()) {
 
   const cafe = await resolveCafe(env.DB, slug, now.getTime());
   if (!cafe) return problem(404, 'unknown_cafe');
-  const [menu, row, manifest] = await Promise.all([
+  const [menu, row, manifest, privacy] = await Promise.all([
     menuSnapshot(env.DB, cafe.id, cafe.menuRev),
     label ? findTable(env.DB, cafe.id, label) : Promise.resolve(null),
     releaseManifest(env.ASSETS, cafe.pinnedRelease, url.origin),
+    latestNotice(env.DB, now.getTime()),
   ]);
   if (!menu || !manifest) return problem(503, 'not_published');
 
@@ -52,6 +54,7 @@ export async function handleBoot(request, env, ctx, now = new Date()) {
       menu,
       release: { version: manifest.version, entry: manifest.entry, css: manifest.css },
       modules: enabledModules(cafe.config, manifest.modules),
+      privacy,
     }),
   );
 }

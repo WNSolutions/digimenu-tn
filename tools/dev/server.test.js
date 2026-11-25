@@ -17,7 +17,7 @@ test('table links and café pages get the static boot page', async () => {
 test('/api/boot answers for the demo café and checks the table code', async () => {
   const ok = JSON.parse(String((await get('/api/boot?cafe=demo&t=5&k=7QF3K9')).body));
   assert.equal(ok.v, 1);
-  assert.deepEqual(ok.table, { label: '5', valid: true });
+  assert.deepEqual(ok.table, { label: '5', valid: true, code: '7QF3K9' });
   assert.equal(ok.release.entry, '/r/dev/app/main.js');
   assert.ok(ok.menu.categories.length > 0);
 

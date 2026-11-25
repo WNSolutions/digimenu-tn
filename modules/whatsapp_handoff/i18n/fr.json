@@ -14,5 +14,7 @@
   "msg.footer": "Envoyé depuis la carte DigiMenu",
   "lang.fr": "français",
   "lang.ar": "arabe",
-  "lang.en": "anglais"
+  "lang.en": "anglais",
+  "done.open": "Ouvrir WhatsApp",
+  "done.note": "Dans WhatsApp, appuyez sur Envoyer pour que le serveur reçoive votre commande."
 }

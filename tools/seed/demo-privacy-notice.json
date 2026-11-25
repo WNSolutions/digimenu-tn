@@ -1,0 +1,26 @@
+{
+  "$comment": "DEMO notice for the fictional demo café on preview only. It is NOT the project's approved privacy notice: production loads the approved text from the private deploy repository.",
+  "version": 1,
+  "short": {
+    "fr": "Démo : n'entrez pas de vraies données. Votre prénom et votre numéro servent à préparer votre commande et, si vous le choisissez, à votre carte de fidélité.",
+    "ar": "تجربة: لا تُدخل بيانات حقيقية. يُستعمل اسمك ورقمك لتحضير طلبك، ولبطاقة الوفاء إن اخترت ذلك.",
+    "en": "Demo: do not enter real details. Your first name and number are used to prepare your order and, if you choose, for your loyalty card."
+  },
+  "full": {
+    "fr": "Démo DigiMenu. Ce café est fictif ; aucune donnée saisie ici n'est utilisée.",
+    "ar": "تجربة DigiMenu. هذا المقهى خيالي؛ لا تُستعمل أي بيانات تُدخل هنا.",
+    "en": "DigiMenu demo. This café is fictional; nothing entered here is used."
+  },
+  "optIn": {
+    "marketing": {
+      "fr": "Recevoir les offres de ce café",
+      "ar": "تلقّي عروض هذا المقهى",
+      "en": "Receive this café's offers"
+    },
+    "loyalty": {
+      "fr": "Rejoindre la fidélité de ce café",
+      "ar": "الانضمام إلى برنامج وفاء هذا المقهى",
+      "en": "Join this café's loyalty card"
+    }
+  }
+}
