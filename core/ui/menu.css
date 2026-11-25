@@ -28,6 +28,30 @@ textarea {
   color: inherit;
 }
 
+/* Display fonts a café theme may choose (ADR-0014). Declared here, downloaded only by the
+ * menus that use them; SIL Open Font License, served from /fonts/ by the release build. */
+@font-face {
+  font-family: 'DM Mohave';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/mohave-latin-600-italic.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2212, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Mohave';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/mohave-latin-500-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2212, U+FEFF, U+FFFD;
+}
+
 button {
   cursor: pointer;
 }
@@ -252,6 +276,117 @@ bdi,
   font-weight: 700;
   line-height: var(--dm-lh-tight);
   letter-spacing: -0.01em;
+}
+
+/* ---------- A café's own theme (ADR-0014, D-070) ---------- */
+
+/* A photo on the cover, darkened at the top for the bar and melting into the page below. */
+.dm-cover--photo {
+  position: relative;
+  height: calc(44px + var(--dm-safe-top) + 210px);
+  overflow: hidden;
+  background: var(--dm-bg);
+}
+
+.dm-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dm-cover--photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.5),
+    transparent calc(44px + var(--dm-safe-top) + 40px),
+    transparent 40%,
+    var(--dm-bg)
+  );
+}
+
+:root[data-dm-theme] .dm-cover:not(.dm-cover--photo) {
+  background: var(--dm-surface);
+}
+
+:root[data-dm-theme] .dm-top:not(.is-scrolled) :is(.dm-iconbtn, .dm-langbtn, .dm-plain) {
+  color: #fff;
+}
+
+/* A transparent logo drawn large on the photo: it stands for the café's name. */
+.dm-logo--bare {
+  position: relative;
+  width: 148px;
+  height: auto;
+  margin: -150px auto var(--dm-space-2);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 12px rgb(0 0 0 / 0.6));
+}
+
+:root[data-dm-theme]
+  :is(.dm-title, .dm-category-title, .dm-inline-title, .dm-group-title, .dm-sheet-title) {
+  font-family: var(--dm-title-font);
+  font-style: italic;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* Two thin rules in the café's second colour: under the header, and after each section title. */
+:root[data-dm-theme] .dm-header::after {
+  content: '';
+  display: block;
+  width: min(100%, 300px);
+  height: 8px;
+  margin: var(--dm-space-4) auto 0;
+  border-block: 2px solid var(--dm-cafe-line);
+}
+
+:root[data-dm-theme] .dm-category-title {
+  display: flex;
+  align-items: center;
+  gap: var(--dm-space-3);
+  font-size: var(--dm-title-1);
+}
+
+:root[data-dm-theme] .dm-category-title::after {
+  content: '';
+  flex: 1;
+  min-width: 24px;
+  height: 8px;
+  border-block: 2px solid var(--dm-cafe-line);
+}
+
+:root[data-dm-theme] .dm-group-title {
+  color: var(--dm-ink);
+  font-size: var(--dm-title-3);
+}
+
+:root[data-dm-theme] .dm-price {
+  font-family: var(--dm-title-font);
+  font-size: 1.18rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+:root[data-dm-theme] .dm-chip span {
+  font-family: var(--dm-title-font);
+  font-size: 1.12rem;
+  font-style: italic;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+:lang(ar) :is(.dm-title, .dm-category-title, .dm-group-title, .dm-sheet-title, .dm-chip span) {
+  font-style: normal;
 }
 
 .dm-subtitle {

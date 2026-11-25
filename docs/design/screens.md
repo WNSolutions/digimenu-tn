@@ -23,6 +23,8 @@ Symbols: `(+)` add button, `(−)` remove one, `(x)` Close, `(<)` Back, `(i)` in
 
 **Cover (D-068, 25 Nov 2026).** The page opens on a band in the café's colour that runs behind the top bar and the status bar, with the café's logo in a circle set on its lower edge (96 px, a 3 px ring of page colour), then the café's name, address and status, centred. The top bar's buttons are drawn in the colour that reads on the café's colour until the menu scrolls under them; the browser's own bar (`theme-color`) follows. A café without a logo gets the band and its name. DigiMenu itself appears only in the footer line.
 
+**A café's own theme ([ADR-0014](../adr/0014-cafe-themes.md), D-070).** With `branding.theme`, the page takes the café's colours in light and dark mode alike; the cover can be a photo, darkened at the top and fading into the page, with a transparent logo drawn large on it in place of the name; section titles, chips and prices use the café's display face, and two thin rules in its second colour sit under the header and after each section title. Same components, sizes and order.
+
 At rest (top of the page), and after scrolling: the café name moves into the top bar, which turns to glass (solid on low-end Android and with reduced transparency or increased contrast).
 
 ```text

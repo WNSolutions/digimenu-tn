@@ -226,6 +226,8 @@ system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Arabic', sans-serif
 
 One family, no web fonts: 0 KB and 0 requests (`typography.md › Conveying hierarchy`: "Minimize the number of typefaces you use"). Café brand fonts are not loaded: the café's identity is its name, logo and colour.
 
+A café's own theme is the other exception ([ADR-0014](../adr/0014-cafe-themes.md), D-070): a café may choose a display font for titles and prices from the toolkit's curated list (today Mohave, about 15 KB per style), declared in the menu CSS and downloaded only by the menus that use it.
+
 DigiMenu's own screens are the exception (D-068, 25 Nov 2026): the home page, the staff sign-in and the staff app's frame wear the DigiMenu brand, with Jost and Cairo (about 10 to 14 KB per weight, loaded only for the characters on screen) from [`platform/brand/`](../../platform/brand/README.md). The customer page never loads them.
 
 ### 4.2 Text size follows the reader (Dynamic Type)

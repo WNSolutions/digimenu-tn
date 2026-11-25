@@ -130,22 +130,33 @@ export function renderPage(root, ctx) {
   }
   // The cover: a band in the café's own colour behind the top bar, with the café's logo set on
   // its lower edge (D-068: each café keeps its own look; DigiMenu stays in the footer line).
-  const cover = h('div', { class: 'dm-cover', 'aria-hidden': 'true' });
+  // A café theme (ADR-0014) may put a photo on the cover and draw a transparent logo large on
+  // it, standing for the café's name (which stays in the page for screen readers).
+  const theme = cafe.theme;
+  const bare = Boolean(cafe.logo && theme?.logo === 'bare');
+  const cover = h(
+    'div',
+    { class: theme?.cover ? 'dm-cover dm-cover--photo' : 'dm-cover', 'aria-hidden': 'true' },
+    theme?.cover
+      ? h('img', { class: 'dm-cover-img', src: theme.cover, alt: '', decoding: 'async' })
+      : null,
+  );
   const address = cafe.info?.address ? ctx.pick(cafe.info.address) : '';
+  const logo = cafe.logo
+    ? h('img', {
+        class: bare ? 'dm-logo dm-logo--bare' : 'dm-logo',
+        src: cafe.logo,
+        alt: '',
+        width: bare ? 148 : 96,
+        height: bare ? 148 : 96,
+        decoding: 'async',
+      })
+    : null;
   const header = h(
     'header',
     { class: cafe.logo ? 'dm-header dm-header--logo' : 'dm-header' },
-    cafe.logo
-      ? h('img', {
-          class: 'dm-logo',
-          src: cafe.logo,
-          alt: '',
-          width: 96,
-          height: 96,
-          decoding: 'async',
-        })
-      : null,
-    langText('h1', name, ctx.lang, 'dm-title'),
+    logo,
+    langText('h1', name, ctx.lang, bare ? 'dm-title dm-sr' : 'dm-title'),
     address ? langText('p', address, ctx.lang, 'dm-subtitle') : null,
     statusParts.length ? h('p', { class: 'dm-statusline' }, statusParts) : null,
   );
@@ -257,12 +268,14 @@ export function renderPage(root, ctx) {
 
   // ---- Behaviour: inline title, scroll spy ----------------------------------------------------
   const topEl = /** @type {HTMLElement} */ (root.querySelector('.dm-top'));
-  const titleEl = /** @type {HTMLElement} */ (header.querySelector('.dm-title'));
+  // With a bare logo, the logo stands for the title: the bar shows the name once it scrolls away.
+  const titleEl = /** @type {HTMLElement} */ (bare ? logo : header.querySelector('.dm-title'));
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(
       ([e]) => {
         topEl.classList.toggle('is-scrolled', !e.isIntersecting);
-        browserBar(e.isIntersecting ? cafe.accent?.['--dm-cafe-accent'] : null);
+        const page = cafe.accent?.['--dm-cafe-bg'];
+        browserBar(page ?? (e.isIntersecting ? cafe.accent?.['--dm-cafe-accent'] : null));
       },
       { rootMargin: '-52px 0px 0px 0px' },
     ).observe(titleEl);
