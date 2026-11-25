@@ -34,7 +34,7 @@ steps, are placeholders today: they print what they will do.
 | `deploy.yml` | deploy the release window to preview or production; no café pin changes | accounts in `DEPLOY_ALLOWED_ACTORS` (Ahmed; later the Tech Lead) |
 | `pin-cafe.yml` | move one café to another release of the window (fallback when the admin app is down) | back to an older release: `PIN_ALLOWED_ACTORS`; forward: `DEPLOY_ALLOWED_ACTORS` only (D-021) |
 | `publish-media.yml` | publish logos, photos and daily fallback menus to `digimenu-media` | `DEPLOY_ALLOWED_ACTORS` |
-| `backup.yml` | weekly encrypted D1 export, kept 8 weeks | `DEPLOY_ALLOWED_ACTORS` |
+| `backup.yml` | weekly encrypted D1 export (age, to `BACKUP_RECIPIENT`), kept 8 weeks as an artifact, with a restore drill on every run | `DEPLOY_ALLOWED_ACTORS` (manual runs) |
 | `migrate.yml` | D1 migrations: plan (dry run), backup, apply, verify, undo | plan: `PIN_ALLOWED_ACTORS`; the others: `DEPLOY_ALLOWED_ACTORS` |
 | `spike.yml` | deploy a throwaway spike Worker (fictional data) on workers.dev, measure it and attach the report to the run (issue #5, [`spikes/`](../../spikes/README.md)) | `DEPLOY_ALLOWED_ACTORS` |
 
