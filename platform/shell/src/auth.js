@@ -91,19 +91,62 @@ export function lockFor(failures) {
  * @param {boolean} remember
  * @param {Date} now
  */
-async function newSession(env, userId, remember, now) {
+async function newSession(env, userId, remember, now, label = '') {
   const token = b64(crypto.getRandomValues(new Uint8Array(32)))
     .replaceAll('+', '-')
     .replaceAll('/', '_')
     .replace(/=+$/, '');
   const expires = new Date(now.getTime() + (remember ? REMEMBER_MS : IDLE_MS));
   await env.DB.prepare(
-    `INSERT INTO sessions (token_sha256, user_id, remember, created_at, last_seen_at, expires_at) VALUES (?1, ?2, ?3, ?4, ?4, ?5)`,
+    `INSERT INTO sessions (token_sha256, user_id, remember, created_at, last_seen_at, expires_at, device_label) VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6)`,
   )
-    .bind(await sha256(token), userId, remember ? 1 : 0, isoNow(now), isoNow(expires))
+    .bind(await sha256(token), userId, remember ? 1 : 0, isoNow(now), isoNow(expires), label)
     .run();
   const maxAge = remember ? `; Max-Age=${REMEMBER_MS / 1000}` : '';
   return `${COOKIE}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/${maxAge}`;
+}
+
+/**
+ * A short name for the device a session was opened on ("iPhone · Safari"), for "Mes appareils".
+ * Only the kind of device and browser are kept, nothing that identifies the person.
+ * @param {Request} request
+ */
+export function deviceLabel(request) {
+  const ua = request.headers.get('user-agent') ?? '';
+  const os = /iPhone/.test(ua)
+    ? 'iPhone'
+    : /iPad/.test(ua)
+      ? 'iPad'
+      : /Android/.test(ua)
+        ? 'Android'
+        : /Mac OS X|Macintosh/.test(ua)
+          ? 'Mac'
+          : /Windows/.test(ua)
+            ? 'Windows'
+            : /Linux/.test(ua)
+              ? 'Linux'
+              : '';
+  const browser = /SamsungBrowser/.test(ua)
+    ? 'Samsung Internet'
+    : /Edg\//.test(ua)
+      ? 'Edge'
+      : /Firefox|FxiOS/.test(ua)
+        ? 'Firefox'
+        : /Chrome|CriOS/.test(ua)
+          ? 'Chrome'
+          : /Safari/.test(ua)
+            ? 'Safari'
+            : '';
+  return [os, browser].filter(Boolean).join(' · ');
+}
+
+/** The session token in a request's cookie, or null. @param {Request} request */
+function sessionToken(request) {
+  const token = (request.headers.get('cookie') ?? '')
+    .split(/;\s*/)
+    .find((c) => c.startsWith(`${COOKIE}=`))
+    ?.slice(COOKIE.length + 1);
+  return token && token.length <= 64 ? token : null;
 }
 
 /**
@@ -170,6 +213,8 @@ export async function handleAuth(request, env, action, now = new Date()) {
     const account = await currentAccount(request, env, now);
     return account ? json(200, account) : problem(401, 'signed_out');
   }
+  if (action === 'sessions' || action === 'sessions/revoke' || action === 'change-password')
+    return mySessions(request, env, action, now);
   if (request.method !== 'POST' || !sameOrigin(request)) return problem(403, 'forbidden');
   const pepper = await pepperKey(env);
   if (!pepper) return problem(503, 'auth_unavailable');
@@ -224,7 +269,13 @@ export async function handleAuth(request, env, action, now = new Date()) {
     await env.DB.prepare('UPDATE users SET failed_count = 0, locked_until = NULL WHERE id = ?1')
       .bind(user?.id)
       .run();
-    const cookie = await newSession(env, String(user?.id), Boolean(input?.remember), now);
+    const cookie = await newSession(
+      env,
+      String(user?.id),
+      Boolean(input?.remember),
+      now,
+      deviceLabel(request),
+    );
     return json(200, { ok: true }, { 'set-cookie': cookie });
   }
 
@@ -277,7 +328,13 @@ export async function handleAuth(request, env, action, now = new Date()) {
         `INSERT INTO audit_log (id, category, action, target, actor, actor_role, at) VALUES (?1, 'account', 'password_set', ?2, ?2, 'self', ?3)`,
       ).bind(ulid(now.getTime()), user.id, isoNow(now)),
     ]);
-    const cookie = await newSession(env, String(user.id), Boolean(input?.remember), now);
+    const cookie = await newSession(
+      env,
+      String(user.id),
+      Boolean(input?.remember),
+      now,
+      deviceLabel(request),
+    );
     return json(200, { ok: true }, { 'set-cookie': cookie });
   }
 
@@ -297,6 +354,105 @@ export async function handleAuth(request, env, action, now = new Date()) {
       { ok: true },
       { 'set-cookie': `${COOKIE}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0` },
     );
+  }
+  return problem(404, 'not_found');
+}
+
+/**
+ * "Mes appareils" and the own password, for every signed-in account (own data only):
+ *   GET  /admin/api/auth/sessions                       where this account is signed in
+ *   POST /admin/api/auth/sessions/revoke { id | all }   sign out one device, or all others
+ *   POST /admin/api/auth/change-password { currentKey, salt, iterations, key }
+ * @param {Request} request
+ * @param {AuthEnv} env
+ * @param {string} action
+ * @param {Date} now
+ */
+async function mySessions(request, env, action, now) {
+  const account = await currentAccount(request, env, now);
+  if (!account) return problem(401, 'signed_out');
+  const token = sessionToken(request);
+  const current = token ? await sha256(token) : '';
+  const list = async () =>
+    (
+      await env.DB.prepare(
+        `SELECT token_sha256, device_label, created_at, last_seen_at FROM sessions
+          WHERE user_id = ?1 AND revoked_at IS NULL AND expires_at > ?2 ORDER BY last_seen_at DESC`,
+      )
+        .bind(account.id, isoNow(now))
+        .all()
+    ).results.map((r) => ({
+      // A short reference, never the token or its full hash.
+      id: String(r.token_sha256).slice(0, 12),
+      device: String(r.device_label),
+      since: String(r.created_at),
+      lastSeen: String(r.last_seen_at),
+      current: r.token_sha256 === current,
+    }));
+  if (action === 'sessions' && request.method === 'GET')
+    return json(200, { sessions: await list() });
+  if (request.method !== 'POST' || !sameOrigin(request)) return problem(403, 'forbidden');
+  const input = await body(request);
+  if (!input) return problem(400, 'bad_request');
+
+  if (action === 'sessions/revoke') {
+    if (input.all === true) {
+      await env.DB.prepare(
+        'UPDATE sessions SET revoked_at = ?1 WHERE user_id = ?2 AND revoked_at IS NULL AND token_sha256 != ?3',
+      )
+        .bind(isoNow(now), account.id, current)
+        .run();
+    } else {
+      const id = String(input.id ?? '');
+      if (!/^[A-Za-z0-9+/=]{12}$/.test(id)) return problem(400, 'bad_request');
+      await env.DB.prepare(
+        `UPDATE sessions SET revoked_at = ?1
+          WHERE user_id = ?2 AND revoked_at IS NULL AND substr(token_sha256, 1, 12) = ?3`,
+      )
+        .bind(isoNow(now), account.id, id)
+        .run();
+    }
+    return json(200, { sessions: await list() });
+  }
+
+  if (action === 'change-password') {
+    const pepper = await pepperKey(env);
+    if (!pepper) return problem(503, 'auth_unavailable');
+    const user = await env.DB.prepare('SELECT password_hash FROM users WHERE id = ?1')
+      .bind(account.id)
+      .first();
+    const currentKey = String(input.currentKey ?? '');
+    const [, , , stored] = String(user?.password_hash ?? '').split('$');
+    const ok =
+      Boolean(stored) &&
+      currentKey.length >= 40 &&
+      currentKey.length <= 64 &&
+      same(b64(await hmac(pepper, unb64(currentKey))), stored);
+    if (!ok) return problem(401, 'wrong_credentials');
+    const salt = String(input.salt ?? '');
+    const iterations = Number(input.iterations);
+    const key = String(input.key ?? '');
+    if (
+      salt.length < 16 ||
+      !Number.isInteger(iterations) ||
+      iterations < 310_000 ||
+      key.length < 40
+    )
+      return problem(400, 'bad_request');
+    const hash = `pbkdf2c-sha256$${iterations}$${salt}$${b64(await hmac(pepper, unb64(key)))}$p1`;
+    await env.DB.batch([
+      env.DB.prepare(
+        'UPDATE users SET password_hash = ?1, salt = ?2, iterations = ?3, must_change_password = 0 WHERE id = ?4',
+      ).bind(hash, salt, iterations, account.id),
+      // Every other device signs in again with the new password.
+      env.DB.prepare(
+        'UPDATE sessions SET revoked_at = ?1 WHERE user_id = ?2 AND revoked_at IS NULL AND token_sha256 != ?3',
+      ).bind(isoNow(now), account.id, current),
+      env.DB.prepare(
+        `INSERT INTO audit_log (id, category, action, target, actor, actor_role, at) VALUES (?1, 'account', 'password_changed', ?2, ?2, 'self', ?3)`,
+      ).bind(ulid(now.getTime()), account.id, isoNow(now)),
+    ]);
+    return json(200, { ok: true });
   }
   return problem(404, 'not_found');
 }

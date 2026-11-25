@@ -22,8 +22,10 @@ import { menuSource, publishChange } from './menu-publish.js';
 import { ulid } from './ids.js';
 import { runStatusChanged, handleStaffModuleRoute, serverModules } from './module-host.js';
 
-const STAFF = ['staff', 'manager', 'admin'];
-const PRICES = ['manager', 'admin'];
+// Maintainers work on menus and test orders of their assigned cafés, never on real orders or
+// customer details (roles table, data-model.md).
+const STAFF = ['staff', 'manager', 'admin', 'maintainer'];
+const PRICES = ['manager', 'admin', 'maintainer'];
 
 /** Order status changes staff may make. */
 export const TRANSITIONS = /** @type {Record<string, string[]>} */ ({
@@ -98,7 +100,7 @@ export async function handleAdmin(request, env, route, now = new Date()) {
     const rows = (
       await env.DB.prepare(
         `SELECT id, number, type, channel, status, table_label, lines, note, total, contact_ct, lang, created_at, accepted_at, closed_at, reject_reason
-           FROM orders WHERE cafe_id = ?1 AND day = ?2 ${since ? 'AND (created_at > ?3 OR accepted_at > ?3 OR closed_at > ?3)' : ''}
+           FROM orders WHERE cafe_id = ?1 AND day = ?2 ${role === 'maintainer' ? 'AND is_test = 1' : ''} ${since ? 'AND (created_at > ?3 OR accepted_at > ?3 OR closed_at > ?3)' : ''}
           ORDER BY created_at DESC LIMIT 200`,
       )
         .bind(...(since ? [cafe.id, day, since] : [cafe.id, day]))
@@ -109,7 +111,7 @@ export async function handleAdmin(request, env, route, now = new Date()) {
     for (const r of rows) {
       /** @type {{ firstName?: string, phone?: string } | null} */
       let contact = null;
-      if (r.contact_ct && keys) {
+      if (r.contact_ct && keys && role !== 'maintainer') {
         const c = await open(keys, String(r.contact_ct));
         // Staff see the first name; the phone only on open takeaway orders (ADR-0010).
         const open_ = !['served', 'rejected', 'unconfirmed', 'cancelled'].includes(
@@ -143,11 +145,13 @@ export async function handleAdmin(request, env, route, now = new Date()) {
     const id = String(input?.id ?? '');
     const next = String(input?.status ?? '');
     const row = await env.DB.prepare(
-      'SELECT status, total, customer_id FROM orders WHERE id = ?1 AND cafe_id = ?2',
+      'SELECT status, total, customer_id, is_test FROM orders WHERE id = ?1 AND cafe_id = ?2',
     )
       .bind(id, cafe.id)
       .first();
     if (!row) return problem(404, 'unknown_order');
+    // A Maintainer handles test orders only, never a real customer's order (roles table).
+    if (role === 'maintainer' && !row.is_test) return problem(403, 'forbidden');
     if (!(TRANSITIONS[String(row.status)] ?? []).includes(next))
       return problem(409, 'bad_transition');
     const at = isoNow(now);
@@ -187,7 +191,14 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       slug: cafe.slug,
       name: cafe.config.names ?? null,
       role,
-      modules: serverModules(cafe.config).map(([key]) => key),
+      // Only the modules whose staff panel this role may use (a Maintainer never sees loyalty
+      // cards: they hold customers' phone numbers).
+      modules: serverModules(cafe.config)
+        .filter(
+          ([, mod]) =>
+            !mod.staff || Object.values(mod.staff.roles).some((roles) => roles.includes(role)),
+        )
+        .map(([key]) => key),
     });
   }
 
