@@ -21,7 +21,7 @@ Customers scan the QR card on their table and the café's menu opens on their ow
 
 ## Status
 
-This repository is the **foundation**: folder structure, contracts (JSON schemas), architecture and decision records. Application code arrives sprint by sprint.
+This repository holds the **foundation** (folder structure, contracts, architecture and decision records) and the first application code: the **customer menu of the demo café** runs on your laptop with `npm run dev`. The Worker, database and staff screens arrive sprint by sprint.
 
 | Milestone | Target |
 |---|---|
@@ -68,8 +68,6 @@ Read more: [architecture overview](docs/architecture/overview.md) · [module sys
 
 ## Quick start
 
-> The application code is not here yet. These commands already work for the checks that exist, and grow with the MVP.
-
 You need **Node.js 22** (the exact version is in `.nvmrc`) and Git.
 
 ```bash
@@ -78,7 +76,11 @@ cd digimenu-tn
 npm ci          # install exactly the versions in package-lock.json
 npm test        # run the tests
 npm run check   # lint, formatting, type check and tests, as CI does
+npm run dev     # the demo café on http://localhost:8787/demo/t/5?k=7QF3K9
+npm run demo    # the demo café as one HTML file: dist/demo/index.html
 ```
+
+`npm run dev` re-reads [`cafes/demo/menu.csv`](cafes/demo/menu.csv) on every page load, so you can edit the menu and reload.
 
 **Planned:** `wrangler dev` to run the whole system on your laptop with a local database and the demo café. Instructions will be in [operations](docs/operations/README.md) when it lands.
 

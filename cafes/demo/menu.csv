@@ -1,0 +1,30 @@
+category_fr;category_ar;category_en;group_fr;group_ar;group_en;item_fr;item_ar;item_en;description_fr;description_ar;description_en;variant_fr;variant_ar;variant_en;price;available
+Cafés;قهوة;Coffee;Classiques;كلاسيكية;Classics;Express;إسبريسو;Espresso;Court et intense;قصيرة ومركّزة;Short and strong;;;;1,500;oui
+Cafés;قهوة;Coffee;Classiques;كلاسيكية;Classics;Capucin;كابوسان;Capucin;Express avec un nuage de lait;إسبريسو مع قليل من الحليب;Espresso with a dash of milk;;;;2,200;oui
+Cafés;قهوة;Coffee;Classiques;كلاسيكية;Classics;Café turc;قهوة تركية;Turkish coffee;Préparé au zezwa, servi avec un verre d'eau;محضّرة في الززوة، تُقدَّم مع كأس ماء;Brewed on hot sand, served with a glass of water;;;;2,500;oui
+Cafés;قهوة;Coffee;Au lait;بالحليب;With milk;Café crème;قهوة بالحليب;Café crème;Espresso et lait chaud, servi dans une grande tasse;إسبريسو وحليب ساخن في فنجان كبير;Espresso and hot milk in a large cup;Petit;صغير;Small;2,000;oui
+Cafés;قهوة;Coffee;Au lait;بالحليب;With milk;Café crème;قهوة بالحليب;Café crème;;;;Grand;كبير;Large;2,800;oui
+Cafés;قهوة;Coffee;Au lait;بالحليب;With milk;Cappuccino;كابتشينو;Cappuccino;Mousse de lait onctueuse;رغوة حليب كثيفة;Creamy milk foam;;;;3,500;non
+Cafés;قهوة;Coffee;Au lait;بالحليب;With milk;Latte noisette;لاتيه بالبندق;Hazelnut latte;Sirop de noisette maison;شراب بندق محضّر في المقهى;House hazelnut syrup;;;;4,200;oui
+Thés et infusions;شاي وأعشاب;Teas and infusions;;;;Thé à la menthe;شاي بالنعناع;Mint tea;Menthe fraîche;نعناع طازج;Fresh mint;Nature;سادة;Plain;1,800;oui
+Thés et infusions;شاي وأعشاب;Teas and infusions;;;;Thé à la menthe;شاي بالنعناع;Mint tea;;;;Aux pignons;بالبندق التونسي;With pine nuts;3,500;oui
+Thés et infusions;شاي وأعشاب;Teas and infusions;;;;Thé vert;شاي أخضر;Green tea;;;;;;;2,000;oui
+Thés et infusions;شاي وأعشاب;Teas and infusions;;;;Verveine;لويزة;Lemon verbena;Infusion apaisante;منقوع مهدّئ;;;;;2,000;oui
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Pressés;معصورة;Freshly squeezed;Jus d'orange pressé;عصير برتقال طازج;Fresh orange juice;Orange de Tunisie, sans sucre ajouté;برتقال تونسي، دون سكر مضاف;Tunisian oranges, no added sugar;Petit;صغير;Small;3,000;oui
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Pressés;معصورة;Freshly squeezed;Jus d'orange pressé;عصير برتقال طازج;Fresh orange juice;;;;Grand;كبير;Large;4,500;oui
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Pressés;معصورة;Freshly squeezed;Citronnade;ليموناضة;Lemonade;Citron, menthe et une touche de fleur d'oranger;ليمون ونعناع ولمسة من ماء الزهر;Lemon, mint and a touch of orange blossom;;;;3,000;oui
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Pressés;معصورة;Freshly squeezed;Jus de fraise;عصير فراولة;Strawberry juice;Selon la saison;حسب الموسم;Seasonal;;;;4,500;non
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Fraîches;مشروبات باردة;Cold drinks;Eau minérale;ماء معدني;Mineral water;;;;50 cl;50 صل;50 cl;1,000;oui
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Fraîches;مشروبات باردة;Cold drinks;Eau minérale;ماء معدني;Mineral water;;;;1,5 l;1,5 ل;1.5 l;1,800;oui
+Jus et boissons;عصائر ومشروبات;Juices and drinks;Fraîches;مشروبات باردة;Cold drinks;Boisson gazeuse;مشروب غازي;Soft drink;Canette 33 cl;علبة 33 صل;33 cl can;;;;2,500;oui
+Viennoiseries et douceurs;معجنات وحلويات;Pastries and sweets;;;;Croissant;كرواسون;Croissant;Pur beurre;بالزبدة;All butter;;;;1,800;oui
+Viennoiseries et douceurs;معجنات وحلويات;Pastries and sweets;;;;Pain au chocolat;خبز بالشوكولاتة;Chocolate croissant;;;;;;;2,000;oui
+Viennoiseries et douceurs;معجنات وحلويات;Pastries and sweets;;;;Bambalouni;بمبالوني;;Beignet tunisien saupoudré de sucre;فطيرة تونسية مرشوشة بالسكر;;;;;1,500;oui
+Viennoiseries et douceurs;معجنات وحلويات;Pastries and sweets;;;;Makroudh;مقروض;Makroudh;Semoule et pâte de dattes, au miel;سميد وعجينة تمر بالعسل;Semolina and date paste, with honey;;;;1,200;oui
+Petit-déjeuner;فطور الصباح;Breakfast;;;;Petit-déjeuner tunisien;فطور تونسي;Tunisian breakfast;Œuf, fromage, olives, harissa, pain tabouna, jus et boisson chaude;بيض وجبن وزيتون وهريسة وخبز طابونة وعصير ومشروب ساخن;Egg, cheese, olives, harissa, tabouna bread, juice and a hot drink;;;;9,500;oui
+Petit-déjeuner;فطور الصباح;Breakfast;;;;Omelette;عجة;Omelette;Trois œufs, servie avec du pain;ثلاث بيضات مع الخبز;Three eggs, served with bread;Nature;سادة;Plain;5,000;oui
+Petit-déjeuner;فطور الصباح;Breakfast;;;;Omelette;عجة;Omelette;;;;Au fromage;بالجبن;With cheese;6,000;oui
+Petit-déjeuner;فطور الصباح;Breakfast;;;;Bsissa;بسيسة;;Orge et sésame, à l'huile d'olive;شعير وسمسم بزيت الزيتون;;;;;3,500;oui
+Snacks;وجبات خفيفة;Snacks;;;;Fricassé;فريكاسي;Fricassé;Petit pain frit au thon, œuf et harissa;خبز صغير مقلي بالتن والبيض والهريسة;Small fried bun with tuna, egg and harissa;;;;2,500;oui
+Snacks;وجبات خفيفة;Snacks;;;;Sandwich tabouna;سندويتش طابونة;Tabouna sandwich;Pain tabouna, salade méchouia et thon;خبز طابونة وسلطة مشوية وتن;Tabouna bread, grilled pepper salad and tuna;;;;6,500;oui
+Snacks;وجبات خفيفة;Snacks;;;;Chapati;شباتي;Chapati;Thon, œuf, fromage et frites;تن وبيض وجبن وبطاطا مقلية;Tuna, egg, cheese and fries;;;;5,500;oui

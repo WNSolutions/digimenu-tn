@@ -2,7 +2,7 @@
 
 The **Worker entry point**: everything that receives a request before any café-specific release code runs.
 
-**Status:** Planned — Sprint 1 (boot path, release dispatcher, visit counting); Sprint 2 (sign-in and roles).
+**Status:** In progress — the static boot page is done ([`public/`](public/index.html), Sprint 1). Next in Sprint 1: the Worker with `/api/boot`, release dispatcher and visit counting. Sprint 2: sign-in and roles.
 
 ## What lives here
 

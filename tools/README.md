@@ -10,6 +10,8 @@
 | [`import/`](import/README.md) | Imports a café menu from the spreadsheet template, reporting bad rows | Sprint 1 |
 | [`validate/`](validate/README.md) | Checks a café configuration, the same validator as the server | Sprint 1 |
 | [`release/`](release/README.md) | Builds a release bundle and checks a release window | Sprint 1 (build), Sprint 3 (window) |
+| [`demo/`](demo/README.md) | Builds the demo café's boot data, and the demo as one standalone HTML file (`npm run demo`) | Sprint 1 |
+| [`dev/`](dev/README.md) | Local dev server for the customer page (`npm run dev`) | Sprint 1 |
 | [`migrate/`](migrate/README.md) | Plans, backs up, applies, verifies and undoes database migrations | v1.0 (manual procedure until then) |
 
 ## Rules

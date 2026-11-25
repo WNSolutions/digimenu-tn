@@ -2,7 +2,7 @@
 
 **Interface texts of the core**, one file per language: `fr.json`, `ar.json`, `en.json`. Texts live outside the code, so adding or correcting a language never touches code (MOD-17).
 
-**Status:** Planned — Sprint 1.
+**Status:** In progress — [`fr.json`](fr.json), [`ar.json`](ar.json) and [`en.json`](en.json) hold the customer page texts (Sprint 1). The Arabic texts still need a review by a native speaker.
 
 ## What lives here
 

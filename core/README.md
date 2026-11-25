@@ -2,7 +2,7 @@
 
 The **customer-side core** of each release: what every café gets on the customer's phone. It is part of the release bundle, so each café runs the core of the release it is pinned to.
 
-**Status:** Planned — Sprint 1 (menu, languages, list, show-to-waiter on the demo café).
+**Status:** In progress — menu, languages, list and show-to-waiter work on the demo café (Sprint 1, [`app/`](app/main.js)). Checkout and the module registry come next.
 
 ## What lives here
 
