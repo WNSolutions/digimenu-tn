@@ -128,3 +128,24 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   assert.match(headers, /style-src 'self' 'sha256-[A-Za-z0-9+/=]+'/);
   assert.match(headers, /\/r\/\*\n {2}Cache-Control: public, max-age=31536000, immutable/);
 });
+
+test('seeding again with --replace refreshes the menu and keeps the café row and its counters', async () => {
+  const { call, DB, waits } = setup();
+  await call('/api/boot?cafe=demo&t=5&k=7QF3K9&lang=fr&nv=1');
+  await Promise.all(waits);
+  DB.exec(
+    seedSql({
+      dir: path.join(root, 'cafes/demo'),
+      release: '0.1.0',
+      replace: true,
+      now: '2026-11-26T10:00:00Z',
+    }),
+  );
+  clearCaches();
+  const boot = await (await call('/api/boot?cafe=demo&t=5&k=7QF3K9')).json();
+  assert.equal(boot.menu.rev, 1);
+  const counted = await DB.prepare(
+    "SELECT SUM(value) AS n FROM analytics_counters WHERE cafe_id = 'cafe-demo'",
+  ).first();
+  assert.equal(counted?.n, 1);
+});

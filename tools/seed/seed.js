@@ -63,6 +63,8 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
   ];
 
   if (replace) {
+    // Children first (foreign keys). The café row itself is kept and updated below, so its
+    // orders, customers and counters stay attached.
     for (const t of [
       'variants',
       'items',
@@ -75,8 +77,6 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
     ]) {
       lines.push(`DELETE FROM ${t} WHERE cafe_id = ${sql(cafeId)};`);
     }
-    lines.push(`DELETE FROM cafes WHERE id = ${sql(cafeId)};`);
-    lines.push(`DELETE FROM config_versions WHERE cafe_id = ${sql(cafeId)};`);
   }
 
   lines.push(
@@ -89,7 +89,11 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
       active_config_version: 1,
       menu_rev: 1,
       created_at: now,
-    }),
+    }).replace(
+      /;$/,
+      ` ON CONFLICT (id) DO UPDATE SET pinned_release = excluded.pinned_release, active_config_version = 1, menu_rev = 1;`,
+    ),
+    ...(replace ? [`DELETE FROM config_versions WHERE cafe_id = ${sql(cafeId)};`] : []),
     insert('config_versions', {
       cafe_id: cafeId,
       version_no: 1,
