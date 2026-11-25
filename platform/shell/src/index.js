@@ -6,6 +6,8 @@
 import { json, problem } from './http.js';
 import { handleBoot } from './boot-api.js';
 import { handleCreateOrder, handleOrderStatus } from './orders-api.js';
+import { handleAuth } from './auth.js';
+import { handleAdmin } from './admin-api.js';
 
 export default {
   /**
@@ -32,6 +34,18 @@ export default {
         return json(200, { ok: true, environment: env.ENVIRONMENT ?? 'unknown' });
       }
       if (url.pathname.startsWith('/api/')) return problem(404, 'not_found');
+      // Staff app API: only on the admin host (ADR-0004), or on the one preview host when
+      // ADMIN_ON_MAIN_HOST is "1" (workers.dev has a single host).
+      if (url.pathname.startsWith('/admin/api/')) {
+        const adminHost = env.ADMIN_HOST
+          ? url.hostname === env.ADMIN_HOST
+          : env.ADMIN_ON_MAIN_HOST === '1';
+        if (!adminHost) return problem(404, 'not_found');
+        const route = url.pathname.slice('/admin/api/'.length);
+        if (route.startsWith('auth/'))
+          return await handleAuth(request, env, route.slice('auth/'.length));
+        return await handleAdmin(request, env, route);
+      }
       return env.ASSETS.fetch(request);
     } catch (err) {
       console.error('request failed', url.pathname, err instanceof Error ? err.message : err);

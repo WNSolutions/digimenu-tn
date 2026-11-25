@@ -31,6 +31,12 @@
  * @property {D1Database} DB
  * @property {{ fetch: (request: Request) => Promise<Response> }} ASSETS
  * @property {string} [ENVIRONMENT]   "preview" or "production"
+ * @property {string} [ADMIN_HOST]    host name of the staff app (production)
+ * @property {string} [ADMIN_ON_MAIN_HOST]   "1" on preview: staff app under /admin on the one host
+ * @property {string} [AUTH_PEPPER]   Worker secret (ADR-0006)
+ * @property {string} [FIELD_KEY]     Worker secret (ADR-0010)
+ * @property {string} [LOOKUP_KEY]    Worker secret (ADR-0010)
+ * @property {string} [KEY_VERSION]
  */
 
 /** @typedef {{ waitUntil: (promise: Promise<unknown>) => void }} ExecutionContext */
