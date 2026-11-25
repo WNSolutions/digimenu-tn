@@ -8,6 +8,8 @@ import { handleBoot } from './boot-api.js';
 import { handleCreateOrder, handleOrderStatus } from './orders-api.js';
 import { handleAuth } from './auth.js';
 import { handleAdmin } from './admin-api.js';
+import { handleModuleRoute } from './module-host.js';
+import { resolveCafe } from './cafes.js';
 
 export default {
   /**
@@ -32,6 +34,15 @@ export default {
       }
       if (url.pathname === '/api/health') {
         return json(200, { ok: true, environment: env.ENVIRONMENT ?? 'unknown' });
+      }
+      // Customer calls of the modules a café switched on (module-host.js).
+      if (url.pathname.startsWith('/api/m/')) {
+        return await handleModuleRoute(
+          request,
+          env,
+          url.pathname.slice('/api/m/'.length),
+          resolveCafe,
+        );
       }
       if (url.pathname.startsWith('/api/')) return problem(404, 'not_found');
       // Staff app API: only on the admin host (ADR-0004), or on the one preview host when

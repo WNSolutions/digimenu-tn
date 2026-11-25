@@ -116,7 +116,7 @@ export async function handle(method, url, body, headers = {}) {
     if (!target.startsWith(CORE + path.sep) || target.endsWith('.test.js')) return { status: 404 };
     return file(target);
   }
-  if (/^\/[a-z0-9][a-z0-9-]{0,30}[a-z0-9](\/t\/[^/]+)?\/?$/.test(p)) {
+  if (/^\/[a-z0-9][a-z0-9-]{0,30}[a-z0-9](\/t\/[^/]+|\/[a-z]{2,20})?\/?$/.test(p)) {
     return file(path.join(PUBLIC, 'index.html'));
   }
   return { status: 404, type: TYPES['.html'], body: 'Not found' };

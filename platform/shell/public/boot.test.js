@@ -20,6 +20,24 @@ test('reads the printed link /<café>/t/<table>?k=<code> (ADR-0004)', () => {
   assert.deepEqual(parseLink('/demo/t/%E0%A4%A', ''), { cafe: 'demo', table: null, code: null });
 });
 
+test("reads a module page's own link /<café>/<page>, e.g. the loyalty card", () => {
+  assert.deepEqual(parseLink('/demo/carte', ''), {
+    cafe: 'demo',
+    table: null,
+    code: null,
+    page: 'carte',
+  });
+  assert.deepEqual(parseLink('/demo/carte/', ''), {
+    cafe: 'demo',
+    table: null,
+    code: null,
+    page: 'carte',
+  });
+  assert.equal(parseLink('/demo/Carte', '')?.page, undefined);
+  assert.equal(parseLink('/demo/t', '')?.page, undefined);
+  assert.equal(parseLink('/demo/carte/x', '')?.page, undefined);
+});
+
 test('anything that is not a café slug is refused', () => {
   for (const path of ['/', '/Demo', '/-demo', '/d', '/a_b/t/1', `/${'a'.repeat(33)}`]) {
     assert.equal(parseLink(path, ''), null, path);

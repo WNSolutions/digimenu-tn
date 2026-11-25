@@ -51,7 +51,14 @@
     "payment_choice": { "enabled": true, "settings": { "methods": ["cash", "card"] } },
     "dietary_tags": { "enabled": true },
     "photos": { "enabled": false },
-    "google_review": { "enabled": false }
+    "google_review": { "enabled": false },
+    "loyalty": {
+      "enabled": true,
+      "settings": {
+        "stampsNeeded": 10,
+        "reward": { "fr": "Un café offert", "ar": "قهوة مجانية", "en": "A free coffee" }
+      }
+    }
   },
   "release": {
     "pinned": "0.1.0"

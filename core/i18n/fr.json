@@ -91,5 +91,7 @@
   "checkout.err.notice": "La notice de confidentialité a changé. Rechargez la page pour la lire.",
   "checkout.err.busy": "Trop de commandes depuis cette table. Patientez un moment ou appelez le serveur.",
   "checkout.err.off": "La commande n'est pas disponible ici. Montrez votre liste au serveur.",
-  "checkout.err.network": "La commande n'est pas partie. Réessayez, ou montrez votre liste au serveur."
+  "checkout.err.network": "La commande n'est pas partie. Réessayez, ou montrez votre liste au serveur.",
+  "module.loading": "Chargement…",
+  "module.error": "Une erreur est survenue. Vérifiez la connexion, puis réessayez."
 }

@@ -91,5 +91,7 @@
   "checkout.err.notice": "The privacy notice has changed. Reload the page to read it.",
   "checkout.err.busy": "Too many orders from this table. Wait a moment or call the waiter.",
   "checkout.err.off": "Ordering is not available here. Show your list to the waiter.",
-  "checkout.err.network": "The order did not go through. Try again, or show your list to the waiter."
+  "checkout.err.network": "The order did not go through. Try again, or show your list to the waiter.",
+  "module.loading": "Loading…",
+  "module.error": "Something went wrong. Check the connection, then try again."
 }

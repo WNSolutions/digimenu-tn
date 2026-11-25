@@ -3,6 +3,8 @@
 
 # Generated
 package-lock.json
+platform/shell/src/server-modules.js
+platform/admin/staff-modules.js
 
 # Markdown is prose written by many people: Prettier would re-pad whole tables when one cell
 # changes, which makes reviews noisy. Write Markdown by hand, following .editorconfig.

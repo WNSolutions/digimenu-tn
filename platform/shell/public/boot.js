@@ -49,7 +49,7 @@ const TEXT = {
 };
 
 /** @typedef {'fr' | 'ar' | 'en'} Lang */
-/** @typedef {{ cafe: string, table: string | null, code: string | null }} Link */
+/** @typedef {{ cafe: string, table: string | null, code: string | null, page?: string | null }} Link */
 
 /**
  * Reads a printed link. `null` when the path is not a café page.
@@ -70,7 +70,9 @@ export function parseLink(pathname, search) {
     }
   }
   const k = new URLSearchParams(search).get('k');
-  return { cafe, table, code: k ? k.trim().slice(0, 16) : null };
+  // /<café>/<page>: a module page with its own link, e.g. /<café>/carte (loyalty card).
+  const page = !table && parts.length === 2 && /^[a-z]{2,20}$/.test(parts[1]) ? parts[1] : null;
+  return { cafe, table, code: k ? k.trim().slice(0, 16) : null, ...(page ? { page } : {}) };
 }
 
 /**
@@ -316,7 +318,7 @@ async function main() {
     await loadCss(release.css);
     const mod = await import(release.entry);
     root.replaceChildren();
-    mod.start(boot, { root });
+    mod.start(boot, { root, page: link.page ?? null });
   } catch {
     minimalRender(root, boot, lang);
   }

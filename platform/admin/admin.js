@@ -1,10 +1,13 @@
 // @ts-check
 /**
  * The staff app: sign-in (password stretched here, ADR-0006), the orders screen with "Reçue"
- * for WhatsApp orders (#45), and the menu editor for prices and sold-out (#11).
+ * for WhatsApp orders (#45), the menu editor for prices and sold-out (#11), and a tab for each
+ * switched-on module that has a staff panel (staff.panel, e.g. Fidélité).
  * Plain DOM, text set with textContent only.
  */
 import { parsePrice, formatPrice } from '../../core/money.js';
+import { STAFF_MODULES } from './staff-modules.js';
+import { staffTexts } from './staff-api.js';
 
 const API = '/admin/api';
 const POLL_MS = 10_000;
@@ -352,8 +355,46 @@ function setupView() {
   app.replaceChildren(h('main', { class: 'a-wrap a-stack' }, form));
 }
 
-/** @type {{ me: any, cafe: string, view: 'orders' | 'menu', timer: number, known: Set<string>, audio: AudioContext | null }} */
-const state = { me: null, cafe: '', view: 'orders', timer: 0, known: new Set(), audio: null };
+/**
+ * @type {{ me: any, cafe: string, view: string, timer: number, known: Set<string>,
+ *   audio: AudioContext | null, panels: { key: string, label: string, render: (root: HTMLElement) => void }[] }}
+ *   view: 'orders', 'menu' or 'm:<module>'
+ */
+const state = {
+  me: null,
+  cafe: '',
+  view: 'orders',
+  timer: 0,
+  known: new Set(),
+  audio: null,
+  panels: [],
+};
+
+/** The staff panels of the modules this café switched on. */
+async function loadPanels() {
+  const res = await api(`/cafe?cafe=${encodeURIComponent(state.cafe)}`);
+  if (res.status !== 200) return [];
+  const panels = [];
+  for (const key of res.data.modules ?? []) {
+    const mod = Object.hasOwn(STAFF_MODULES, key) ? STAFF_MODULES[key] : null;
+    if (!mod?.panel) continue;
+    try {
+      const panel = mod.panel({
+        key,
+        lang: /** @type {'fr' | 'ar'} */ (lang),
+        t: staffTexts(mod.texts[/** @type {'fr' | 'ar'} */ (lang)] ?? {}, mod.texts.fr),
+        h,
+        call: (route, body = {}) => api(`/m/${key}/${route}`, { ...body, cafe: state.cafe }),
+        role: res.data.role,
+        price: formatPrice,
+      });
+      if (panel) panels.push({ key, ...panel });
+    } catch (err) {
+      console.error(`module ${key}: staff panel failed`, err);
+    }
+  }
+  return panels;
+}
 
 async function start() {
   const me = await api('/auth/me');
@@ -370,6 +411,7 @@ async function start() {
     );
     return;
   }
+  state.panels = await loadPanels();
   render();
 }
 
@@ -386,7 +428,7 @@ function beep() {
 }
 
 function topBar() {
-  const tab = (/** @type {'orders' | 'menu'} */ v) =>
+  const tab = (/** @type {string} */ v, /** @type {string} */ label) =>
     h(
       'button',
       {
@@ -397,7 +439,7 @@ function topBar() {
           render();
         },
       },
-      t(v),
+      label,
     );
   const sound = h(
     'button',
@@ -418,7 +460,13 @@ function topBar() {
     h(
       'div',
       { class: 'a-wrap a-row a-spread' },
-      h('div', { class: 'a-tabs', role: 'group' }, tab('orders'), tab('menu')),
+      h(
+        'div',
+        { class: 'a-tabs', role: 'group' },
+        tab('orders', t('orders')),
+        tab('menu', t('menu')),
+        ...state.panels.map((p) => tab(`m:${p.key}`, p.label)),
+      ),
       h(
         'div',
         { class: 'a-row' },
@@ -446,7 +494,16 @@ function render() {
   const body = h('main', { class: 'a-wrap a-stack' });
   app.replaceChildren(topBar(), body);
   if (state.view === 'orders') ordersView(body);
-  else menuView(body);
+  else if (state.view === 'menu') menuView(body);
+  else {
+    const panel = state.panels.find((p) => `m:${p.key}` === state.view);
+    try {
+      panel?.render(body);
+    } catch (err) {
+      console.error(`module ${panel?.key}: staff panel failed`, err);
+      body.replaceChildren(h('p', { class: 'a-error' }, t('error')));
+    }
+  }
 }
 
 /** @param {any} text */

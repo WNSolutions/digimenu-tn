@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WNSolutions/digimenu-tn/modules/loyalty/settings.schema.json",
+  "title": "loyalty settings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "stampsNeeded": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 50,
+      "default": 10,
+      "description": "Stamps needed for one reward (\"10 commandes = 1 café offert\"). A change applies to new stamps only: stamps already given stay."
+    },
+    "reward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fr"],
+      "description": "The reward, as customers and staff read it. French required; Arabic and English fall back to French.",
+      "properties": {
+        "fr": { "type": "string", "minLength": 2, "maxLength": 60 },
+        "ar": { "type": "string", "minLength": 2, "maxLength": 60 },
+        "en": { "type": "string", "minLength": 2, "maxLength": 60 }
+      }
+    },
+    "minOrderTotal": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000000,
+      "default": 0,
+      "description": "Smallest order total, in millimes, that earns a stamp (0 = every order). Counter stamps are the staff's choice."
+    }
+  }
+}

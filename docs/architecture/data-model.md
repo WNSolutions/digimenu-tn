@@ -295,9 +295,10 @@ Module M-15 `loyalty`, design in [ADR-0013](../adr/0013-loyalty-at-launch-phone-
 
 | Table | Module | Purpose |
 |---|---|---|
-| `loyalty_cards` | M-15 `loyalty` | One card per customer record and café: card number, keyed hash of the signed card token, wallet object references (Google, Apple), status. No phone number. |
-| `loyalty_ledger` | M-15 `loyalty` | Every earn, redeem and reversal, per café, linked to a staff-confirmed order or a staff scan, with the staff member and time. |
-| `loyalty_rewards` | M-15 `loyalty` | The café's rule set by the manager: stamps needed, reward text in FR/AR/EN, optional minimum order total, version. |
+| `loyalty_cards` | M-15 `loyalty` | One card per customer record and café (migration `0004_loyalty.sql`): 6-character card number, SHA-256 of the card's secret token and a sealed copy (so a retried order gets it again), the order that made it, status (`active`, `left`), one-time new-phone code (hash and expiry), wallet object references (Google, Apple; empty until wallets are built). No phone number. |
+| `loyalty_ledger` | M-15 `loyalty` | Every earn, redeem and reversal, per café: units (stamps), the order or the staff member, source (`order`, `staff`, `customer`) and time. At most one earn and one reversal per order. |
+
+The café's rule (stamps needed, reward text in FR/AR/EN, optional minimum order total) is the module's settings in the café configuration, which is already versioned; there is no separate rules table. Deleting a customer on request also deletes their cards and ledger lines.
 
 ## Planned for v1.1
 
