@@ -20,6 +20,8 @@
   "scripts": {
     "dev": "node tools/dev/server.js",
     "demo": "node tools/demo/build.js",
+    "release": "node tools/release/build.js",
+    "seed": "node tools/seed/seed.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

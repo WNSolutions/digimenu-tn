@@ -2,7 +2,16 @@
 
 The **Worker entry point**: everything that receives a request before any café-specific release code runs.
 
-**Status:** In progress — the static boot page is done ([`public/`](public/index.html), Sprint 1). Next in Sprint 1: the Worker with `/api/boot`, release dispatcher and visit counting. Sprint 2: sign-in and roles.
+**Status:** In progress — the static boot page ([`public/`](public/index.html)) and the Worker ([`src/`](src/index.js)) with `/api/boot`, the release dispatcher and visit counting are done. Next: orders, sign-in and roles.
+
+| File | Does |
+|---|---|
+| [`src/index.js`](src/index.js) | Worker entry: `/api/boot`, `/api/health`; everything else goes to the static assets |
+| [`src/boot-api.js`](src/boot-api.js) | One call per page view; counts the visit when `nv=1` |
+| [`src/boot-body.js`](src/boot-body.js) | Builds the boot answer from the café's active configuration (also used by `npm run dev`) |
+| [`src/cafes.js`](src/cafes.js) | Café resolver (cached 30 s), menu snapshot, table lookup |
+| [`src/releases.js`](src/releases.js) | Reads the pinned release's `manifest.json` from the assets |
+| [`src/visits.js`](src/visits.js) | Visit counters: café, local day and hour, table and language; no personal data |
 
 ## What lives here
 

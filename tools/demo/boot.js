@@ -12,6 +12,7 @@ import path from 'node:path';
 import { importMenuCsv, parseCsv, formatReport } from '../import/menu-csv.js';
 import { buildSnapshot } from '../../core/menu/snapshot.js';
 import { accentTokens } from '../../core/ui/accent.js';
+import { bootBody, tableStatus } from '../../platform/shell/src/boot-body.js';
 
 /** @typedef {import('../../core/app/context.js').Boot} Boot */
 /** @typedef {import('../../core/i18n.js').Lang} Lang */
@@ -97,33 +98,17 @@ export function loadDemo(dir = DEFAULT_DIR) {
  * @returns {Boot & { release: { version: string, entry: string, css: string } }}
  */
 export function demoBoot(demo, link, release) {
-  const { info } = demo;
   const label = link.table ?? null;
   const expected = label ? demo.tables.get(label) : undefined;
-  const releaseInfo = { version: release.version, entry: release.entry, css: release.css };
-  return {
-    v: 1,
-    release: releaseInfo,
-    cafe: {
-      slug: info.slug,
-      name: info.names,
-      languages: info.languages,
-      ...(info.hours ? { hours: info.hours } : {}),
-      timeZone: info.timeZone ?? 'Africa/Tunis',
-      ...(info.info?.address ? { info: { address: info.info.address } } : {}),
-      unavailable: info.menu?.unavailable ?? 'grey',
-      maxQtyPerLine: info.ordering?.maxQtyPerLine ?? 20,
-      accent: demo.accent.tokens,
-    },
-    // An unknown table still opens the menu, as "no table" (ADR-0004 §3).
-    table:
-      label && expected !== undefined
-        ? { label, valid: Boolean(link.code) && link.code?.toUpperCase() === expected }
-        : null,
+  const row = label && expected !== undefined ? { label, check_code: expected, active: 1 } : null;
+  return bootBody({
+    config: demo.info,
+    table: tableStatus(row, link.code ?? null),
     menu: demo.snapshot,
+    release: { version: release.version, entry: release.entry, css: release.css },
     modules: demo.modules.map((m) => ({
       ...m,
       ...(release.modules ? { entry: `${release.modules}${m.key}/client.js` } : {}),
     })),
-  };
+  });
 }

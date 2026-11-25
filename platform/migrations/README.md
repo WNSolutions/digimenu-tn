@@ -2,7 +2,7 @@
 
 Numbered **SQL migrations** for the D1 database. They change the shape of the database; they never carry real data.
 
-**Status:** Planned — `0001_init.sql` lands with the first database code (Sprint 1).
+**Status:** [`0001_init.sql`](0001_init.sql): platform, configuration, menu and analytics tables. Orders, customers and accounts come in the next migrations.
 
 ## What lives here
 

@@ -25,6 +25,8 @@ const TEXT = {
     failed: 'Le menu ne se charge pas. Vérifiez votre connexion.',
     retry: 'Réessayer',
     simple: 'Affichage simplifié : noms et prix seulement.',
+    landing: "La carte de votre café, d'un scan.",
+    demo: 'Voir le café de démonstration',
   },
   ar: {
     loading: 'جارٍ تحميل القائمة…',
@@ -32,6 +34,8 @@ const TEXT = {
     failed: 'تعذّر تحميل القائمة. تحقّق من اتصالك.',
     retry: 'أعد المحاولة',
     simple: 'عرض مبسّط: الأسماء والأسعار فقط.',
+    landing: 'قائمة مقهاك، بمسحة واحدة.',
+    demo: 'شاهد المقهى التجريبي',
   },
   en: {
     loading: 'Loading the menu…',
@@ -39,6 +43,8 @@ const TEXT = {
     failed: 'The menu does not load. Check your connection.',
     retry: 'Try again',
     simple: 'Simple view: names and prices only.',
+    landing: 'Your café menu, in one scan.',
+    demo: 'See the demo café',
   },
 };
 
@@ -182,12 +188,29 @@ function el(tag, className, text) {
   return node;
 }
 
+/** The café in the link does not exist (or no longer does): retrying will not help. */
+class UnknownCafe extends Error {}
+
+/**
+ * The root address: what DigiMenu is, and the demo café.
+ * @param {HTMLElement} root
+ * @param {Lang} lang
+ */
+function showLanding(root, lang) {
+  const wrap = el('main', 'dm-boot');
+  const link = el('a', '', TEXT[lang].demo);
+  link.setAttribute('href', '/demo');
+  wrap.append(el('h1', '', 'DigiMenu'), el('p', '', TEXT[lang].landing), link);
+  root.replaceChildren(wrap);
+}
+
 /** @param {string} url */
 async function fetchJson(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const response = await fetch(url, { signal: controller.signal, credentials: 'omit' });
+    if (response.status === 404) throw new UnknownCafe();
     if (!response.ok) throw new Error(`boot ${response.status}`);
     return await response.json();
   } finally {
@@ -265,6 +288,7 @@ async function main() {
   const lang = bootLanguage(savedLang, navigator.languages ?? [navigator.language]);
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  if (location.pathname === '/') return showLanding(root, lang);
   if (!link) return showMessage(root, TEXT[lang].badLink, null, lang);
   root.querySelector('[role="status"]')?.replaceChildren(TEXT[lang].loading);
 
@@ -278,7 +302,8 @@ async function main() {
     boot = await fetchJson(bootUrl(link, { lang: savedLang, newVisit }));
     write(session, seenKey, '1');
     write(local, bootKey, JSON.stringify({ savedAt: Date.now(), link, boot }));
-  } catch {
+  } catch (err) {
+    if (err instanceof UnknownCafe) return showMessage(root, TEXT[lang].badLink, null, lang);
     boot = savedBoot(read(local, bootKey), link, Date.now());
   }
   if (!boot) return showMessage(root, TEXT[lang].failed, () => location.reload(), lang);
