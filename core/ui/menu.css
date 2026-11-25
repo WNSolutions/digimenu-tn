@@ -206,19 +206,44 @@ bdi,
   width: var(--dm-target);
 }
 
-/* ---------- Café header ---------- */
+/* ---------- Café header: cover in the café's colour, logo, name ---------- */
 
-.dm-header {
-  padding: var(--dm-space-1) calc(var(--dm-margin) + var(--dm-safe-x)) var(--dm-space-3);
+/* The cover runs behind the top bar (which is transparent until the menu scrolls under it). */
+.dm-cover {
+  height: calc(44px + var(--dm-safe-top) + 64px);
+  margin-top: calc(-44px - var(--dm-safe-top));
+  background: var(--dm-cafe-accent, #1a1a1a);
 }
 
+.dm-top:not(.is-scrolled) :is(.dm-iconbtn, .dm-langbtn, .dm-plain) {
+  color: var(--dm-cafe-on-accent, #fff);
+}
+
+@supports (background: color-mix(in srgb, red, blue)) {
+  .dm-top:not(.is-scrolled) :is(.dm-iconbtn, .dm-langbtn):active {
+    background: color-mix(in srgb, var(--dm-cafe-on-accent, #fff) 18%, transparent);
+  }
+}
+
+.dm-header {
+  padding: var(--dm-space-4) calc(var(--dm-margin) + var(--dm-safe-x)) var(--dm-space-3);
+  text-align: center;
+}
+
+.dm-header--logo {
+  padding-top: 0;
+}
+
+/* The logo sits on the cover's lower edge, in a ring of page colour. */
 .dm-logo {
   display: block;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--dm-radius-m);
+  width: 96px;
+  height: 96px;
+  margin: -48px auto var(--dm-space-3);
+  border: 3px solid var(--dm-bg);
+  border-radius: 50%;
   object-fit: cover;
-  margin-bottom: var(--dm-space-2);
+  background: var(--dm-cafe-accent, var(--dm-fill));
 }
 
 .dm-title {
@@ -229,10 +254,18 @@ bdi,
   letter-spacing: -0.01em;
 }
 
-.dm-statusline {
+.dm-subtitle {
   margin: var(--dm-space-1) 0 0;
+  color: var(--dm-ink-2);
+  font-size: var(--dm-callout);
+  line-height: var(--dm-lh-ui);
+}
+
+.dm-statusline {
+  margin: var(--dm-space-2) 0 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: var(--dm-space-1) var(--dm-space-3);
   color: var(--dm-ink-2);
@@ -384,7 +417,7 @@ bdi,
   position: relative;
   display: flex;
   gap: var(--dm-space-3);
-  align-items: flex-start;
+  align-items: center;
   min-height: 64px;
   padding: var(--dm-space-3) 0;
   border-bottom: 1px solid var(--dm-sep);

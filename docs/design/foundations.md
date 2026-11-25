@@ -226,6 +226,8 @@ system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Arabic', sans-serif
 
 One family, no web fonts: 0 KB and 0 requests (`typography.md › Conveying hierarchy`: "Minimize the number of typefaces you use"). Café brand fonts are not loaded: the café's identity is its name, logo and colour.
 
+DigiMenu's own screens are the exception (D-068, 25 Nov 2026): the home page, the staff sign-in and the staff app's frame wear the DigiMenu brand, with Jost and Cairo (about 10 to 14 KB per weight, loaded only for the characters on screen) from [`platform/brand/`](../../platform/brand/README.md). The customer page never loads them.
+
 ### 4.2 Text size follows the reader (Dynamic Type)
 
 - On iPhone and iPad, `tokens.css` sets `font: -apple-system-body` on the root, so **1 rem equals the Body size of the reader's Text Size setting**: 17 px by default, 14 px at the smallest, 53 px at the largest accessibility size (`typography.md › Specifications`). The rule is limited to iOS by `-webkit-touch-callout`, because macOS Safari would make it 13 px.

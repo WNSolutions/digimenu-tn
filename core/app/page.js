@@ -128,13 +128,25 @@ export function renderPage(root, ctx) {
       ),
     );
   }
+  // The cover: a band in the café's own colour behind the top bar, with the café's logo set on
+  // its lower edge (D-068: each café keeps its own look; DigiMenu stays in the footer line).
+  const cover = h('div', { class: 'dm-cover', 'aria-hidden': 'true' });
+  const address = cafe.info?.address ? ctx.pick(cafe.info.address) : '';
   const header = h(
     'header',
-    { class: 'dm-header' },
+    { class: cafe.logo ? 'dm-header dm-header--logo' : 'dm-header' },
     cafe.logo
-      ? h('img', { class: 'dm-logo', src: cafe.logo, alt: '', width: 48, height: 48 })
+      ? h('img', {
+          class: 'dm-logo',
+          src: cafe.logo,
+          alt: '',
+          width: 96,
+          height: 96,
+          decoding: 'async',
+        })
       : null,
     langText('h1', name, ctx.lang, 'dm-title'),
+    address ? langText('p', address, ctx.lang, 'dm-subtitle') : null,
     statusParts.length ? h('p', { class: 'dm-statusline' }, statusParts) : null,
   );
 
@@ -236,6 +248,7 @@ export function renderPage(root, ctx) {
   root.replaceChildren(
     h('a', { class: 'dm-skip', href: '#menu' }, t('menu.skip')),
     h('div', { class: 'dm-top' }, topbar),
+    cover,
     header,
     nav,
     main,
@@ -246,9 +259,13 @@ export function renderPage(root, ctx) {
   const topEl = /** @type {HTMLElement} */ (root.querySelector('.dm-top'));
   const titleEl = /** @type {HTMLElement} */ (header.querySelector('.dm-title'));
   if ('IntersectionObserver' in window) {
-    new IntersectionObserver(([e]) => topEl.classList.toggle('is-scrolled', !e.isIntersecting), {
-      rootMargin: '-52px 0px 0px 0px',
-    }).observe(titleEl);
+    new IntersectionObserver(
+      ([e]) => {
+        topEl.classList.toggle('is-scrolled', !e.isIntersecting);
+        browserBar(e.isIntersecting ? cafe.accent?.['--dm-cafe-accent'] : null);
+      },
+      { rootMargin: '-52px 0px 0px 0px' },
+    ).observe(titleEl);
   }
   /** @param {string} id */
   function select(id) {
@@ -317,6 +334,19 @@ export function renderPage(root, ctx) {
   }
   refreshList();
   return refreshList;
+}
+
+/**
+ * The browser's own bar (Safari's status bar area, Chrome's toolbar) follows the page: the
+ * café's colour while the cover is in view, the page's colour once the menu scrolls under it.
+ * @param {string | null | undefined} colour   the cover colour, or null to restore the page's
+ */
+function browserBar(colour) {
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    const el = /** @type {HTMLMetaElement} */ (meta);
+    el.dataset.page ??= el.content;
+    el.content = colour || el.dataset.page;
+  }
 }
 
 /**

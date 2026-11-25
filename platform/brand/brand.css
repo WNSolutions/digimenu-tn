@@ -1,0 +1,275 @@
+/*
+ * The DigiMenu brand layer, for DigiMenu's own screens only: the home page, the staff sign-in
+ * and the staff app's frame (D-068). Never loaded on a café's menu, which keeps the café's own
+ * look (design system, product layer).
+ *
+ * Colours (brand kit v1.2, D-052/D-059): deep emerald ~60 %, ivory ~30 %, champagne 10 % or
+ * less, as the dot, thin rules, the frame and small capitals on emerald. Champagne is never
+ * text on ivory, and below 14 px it is weight 500 or heavier. No lighter tint of the green, no
+ * gradients, shadows or glass; square corners.
+ *
+ * Type: Jost (Latin) and Cairo (Arabic), 300/400/500, both SIL Open Font License, from
+ * @fontsource and served from /brand/fonts/ (copied at build time). The logo files come from
+ * the deployment's brand folder (tools/release/build.js --brand); without them a plain
+ * wordmark is shown.
+ */
+
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url('/brand/fonts/jost-latin-300-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/brand/fonts/jost-latin-400-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('/brand/fonts/jost-latin-500-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url('/brand/fonts/cairo-arabic-300-normal.woff2') format('woff2');
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E,
+    U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/brand/fonts/cairo-arabic-400-normal.woff2') format('woff2');
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E,
+    U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('/brand/fonts/cairo-arabic-500-normal.woff2') format('woff2');
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E,
+    U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+:root {
+  --b-emerald: #004532;
+  --b-ivory: #fbf7ee;
+  --b-champagne: #c9a45c;
+  --b-frame-light: #e6e0d2;
+  --b-ink: #1a1a1a;
+  --b-danger: #a3261a;
+  --b-font:
+    'Jost', 'Cairo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Arabic', sans-serif;
+}
+
+/* ---- A brand screen: emerald, with the champagne frame set inside the edge ---------------- */
+
+.b-screen {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(max(8px, 4vmin) + 24px + env(safe-area-inset-top, 0px))
+    calc(max(8px, 4vmin) + 16px + env(safe-area-inset-right, 0px))
+    calc(max(8px, 4vmin) + 24px + env(safe-area-inset-bottom, 0px))
+    calc(max(8px, 4vmin) + 16px + env(safe-area-inset-left, 0px));
+  background: var(--b-emerald);
+  color: var(--b-ivory);
+  font-family: var(--b-font);
+  font-weight: 400;
+}
+
+/* Inset 4 % of the shorter side (at least 8 px), 1 px line, 3 px corners (D-059). */
+.b-screen::before {
+  content: '';
+  position: fixed;
+  inset: max(8px, 4vmin);
+  border: 1px solid var(--b-champagne);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.b-stage {
+  position: relative;
+  width: min(100%, 400px);
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.b-heading {
+  margin: 0;
+  font-size: inherit;
+  line-height: 0;
+}
+
+.b-logo {
+  display: block;
+  width: 200px;
+  max-width: 60vw;
+  height: auto;
+}
+
+.b-logo--small {
+  width: 150px;
+}
+
+/* Without the logo files (a build without --brand): the product name, plainly. */
+.b-wordmark {
+  display: block;
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.b-tagline {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1.35;
+}
+
+.b-caps {
+  margin: 0;
+  color: var(--b-champagne);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+:lang(ar) .b-caps,
+:lang(ar) .b-wordmark {
+  letter-spacing: 0;
+}
+
+.b-rule {
+  width: 48px;
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: var(--b-champagne);
+}
+
+.b-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 28px;
+  border: 1px solid var(--b-ivory);
+  border-radius: 0;
+  background: var(--b-ivory);
+  color: var(--b-emerald);
+  font: inherit;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.b-button:active {
+  background: transparent;
+  color: var(--b-ivory);
+}
+
+.b-langs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.b-lang {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--b-ivory);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.b-lang[aria-current='true'] {
+  color: var(--b-champagne);
+  font-weight: 500;
+}
+
+.b-screen :focus-visible {
+  outline: 2px solid var(--b-champagne);
+  outline-offset: 3px;
+}
+
+/* ---- An ivory card on the emerald screen (forms), with its light frame -------------------- */
+
+.b-card {
+  position: relative;
+  width: 100%;
+  padding: 32px 28px 28px;
+  background: var(--b-ivory);
+  color: var(--b-ink);
+  text-align: start;
+}
+
+.b-card::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid var(--b-frame-light);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.b-card > * {
+  position: relative;
+}
+
+.b-card-title {
+  margin: 0 0 4px;
+  color: var(--b-emerald);
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+.b-card :focus-visible {
+  outline: 2px solid var(--b-emerald);
+  outline-offset: 2px;
+}

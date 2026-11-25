@@ -1,4 +1,24 @@
-/* Staff app: same tokens as the customer page (core/ui/tokens.css is bundled in front). */
+/* Staff app: same tokens as the customer page (core/ui/tokens.css and platform/brand/brand.css
+ * are bundled in front). The frame (top bar, sign-in) wears the DigiMenu brand (D-068); the work
+ * area stays plain, on ivory, with emerald for the main actions. */
+:root {
+  --dm-bg-grouped: var(--b-ivory);
+  --dm-sep: var(--b-frame-light);
+  --dm-accent: var(--b-emerald);
+  --dm-on-accent: var(--b-ivory);
+  --dm-accent-text: var(--b-emerald);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dm-bg-grouped: #121212;
+    --dm-sep: #333;
+    --dm-accent: var(--b-ivory);
+    --dm-on-accent: var(--b-emerald);
+    --dm-accent-text: var(--b-ivory);
+  }
+}
+
 *,
 *::before,
 *::after {
@@ -128,33 +148,176 @@ input {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--dm-bar-bg);
-  -webkit-backdrop-filter: var(--dm-bar-filter);
-  backdrop-filter: var(--dm-bar-filter);
-  border-bottom: 1px solid var(--dm-sep);
+  background: var(--b-emerald);
+  color: var(--b-ivory);
+  border-bottom: 1px solid var(--b-champagne);
 }
+
 .a-top .a-wrap {
-  padding-block: calc(8px + env(safe-area-inset-top, 0px)) 8px;
+  padding-block: 0;
 }
-.a-tabs {
-  display: inline-flex;
-  padding: 2px;
-  border-radius: var(--dm-radius-full);
-  background: var(--dm-fill);
+
+.a-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
 }
-.a-tabs button {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: var(--dm-radius-full);
-  background: transparent;
+
+.a-top .a-bar {
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+}
+
+.a-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.a-mark img {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.a-cafe {
+  overflow: hidden;
   font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.a-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.a-toplink,
+.a-topbtn {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--b-ivory);
+  font-size: var(--dm-callout);
+  font-weight: 500;
   cursor: pointer;
 }
-.a-tabs button[aria-pressed='true'] {
-  background: var(--dm-surface);
-  box-shadow: 0 1px 3px var(--dm-shadow);
+
+.a-topbtn {
+  min-height: 36px;
+  border: 1px solid var(--b-ivory);
 }
+
+.a-topbtn[aria-pressed='true'] {
+  border-color: var(--b-champagne);
+  color: var(--b-champagne);
+}
+
+.a-top :focus-visible {
+  outline-color: var(--b-champagne);
+}
+
+.a-top .a-input--cafe {
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 1px solid var(--b-ivory);
+  border-radius: 0;
+  background: transparent;
+  color: var(--b-ivory);
+  font-weight: 600;
+}
+
+.a-top .a-input--cafe option {
+  color: var(--b-ink);
+  background: #fff;
+}
+
+/* Sections: ivory labels on emerald; the current one underlined in champagne. */
+.a-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.a-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.a-tabs button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--b-ivory);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.a-tabs button[aria-pressed='true'] {
+  border-bottom-color: var(--b-champagne);
+  font-weight: 700;
+}
+
+/* ---- Sign-in and first-time screens: the form on the brand's ivory card ------------------ */
+
+.b-card {
+  color-scheme: light;
+  max-width: 400px;
+}
+
+.b-card .a-label {
+  color: var(--b-emerald);
+  font-family: var(--b-font);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.b-card .a-input {
+  border: 1px solid var(--b-emerald);
+  border-radius: 0;
+  background: #fff;
+  color: var(--b-ink);
+}
+
+.b-card .a-btn--main {
+  min-height: 48px;
+  border-radius: 0;
+  background: var(--b-emerald);
+  color: var(--b-ivory);
+  font-family: var(--b-font);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.b-card .a-btn--link {
+  justify-self: center;
+  color: var(--b-emerald);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.b-card .a-check {
+  color: var(--b-ink);
+}
+
+.b-card .a-check input {
+  accent-color: var(--b-emerald);
+}
+
+.b-card .a-error {
+  color: var(--b-danger);
+}
+
 .a-order {
   display: grid;
   gap: 8px;
