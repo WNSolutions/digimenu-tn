@@ -25,9 +25,13 @@ import { createD1 } from './d1.js';
 import { seedSql, noticeSql } from '../seed/seed.js';
 import worker from '../../platform/shell/src/index.js';
 import { handleCreateOrder } from '../../platform/shell/src/orders-api.js';
+import { accountSql } from '../accounts/account.js';
+import { build } from 'esbuild';
 
 /** @type {Date | null} */
 let devNow = null;
+/** Setup code of the local demo manager (local dev server only, never deployed). */
+const DEV_CODE = 'DEVCODE234';
 import { clearCaches } from '../../platform/shell/src/cafes.js';
 import { clearManifests } from '../../platform/shell/src/releases.js';
 
@@ -62,11 +66,30 @@ const TYPES = {
  * @param {string} method
  * @param {URL} url
  * @param {string} [body]
- * @returns {Promise<{ status: number, type?: string, body?: string | Buffer, location?: string }>}
+ * @param {Record<string, string>} [headers]
+ * @returns {Promise<{ status: number, type?: string, body?: string | Buffer, location?: string, cookie?: string }>}
  */
-export async function handle(method, url, body) {
+export async function handle(method, url, body, headers = {}) {
   const p = url.pathname;
-  if (p.startsWith('/api/')) return api(method, url, body);
+  if (p.startsWith('/api/') || p.startsWith('/admin/api/')) return api(method, url, body, headers);
+  if (p === '/admin' || p === '/admin/') return file(path.join(root, 'platform/admin/index.html'));
+  if (p === '/admin/admin.css') {
+    const css = await Promise.all([
+      readFile(path.join(CORE, 'ui/tokens.css'), 'utf8'),
+      readFile(path.join(root, 'platform/admin/admin.css'), 'utf8'),
+    ]);
+    return { status: 200, type: TYPES['.css'], body: css.join('\n') };
+  }
+  if (p === '/admin/admin.js') {
+    const out = await build({
+      entryPoints: [path.join(root, 'platform/admin/admin.js')],
+      bundle: true,
+      format: 'esm',
+      write: false,
+      logLevel: 'silent',
+    });
+    return { status: 200, type: TYPES['.js'], body: out.outputFiles[0].text };
+  }
   if (method !== 'GET' && method !== 'HEAD') return { status: 405 };
 
   if (p === '/') return { status: 302, location: '/demo/t/5?k=7QF3K9' };
@@ -111,9 +134,29 @@ function localWorker() {
     const DB = createD1().migrate();
     DB.exec(noticeSql(path.join(root, 'tools/seed/demo-privacy-notice.json')));
     const key = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64');
+    // The demo café must exist before accounts point at it; boots re-seed it with --replace.
+    DB.exec(seedSql({ dir: path.join(root, 'cafes/demo'), release: 'dev' }));
+    // Local only: a demo manager with a fixed setup code (printed at start).
+    DB.exec(
+      accountSql({
+        username: 'demo-manager',
+        name: 'Demo manager',
+        role: 'manager',
+        cafe: 'demo',
+        code: DEV_CODE,
+      }),
+    );
     local = {
       DB,
-      env: { DB, ASSETS: devAssets, ENVIRONMENT: 'dev', FIELD_KEY: key(), LOOKUP_KEY: key() },
+      env: {
+        DB,
+        ASSETS: devAssets,
+        ENVIRONMENT: 'dev',
+        ADMIN_ON_MAIN_HOST: '1',
+        AUTH_PEPPER: key(),
+        FIELD_KEY: key(),
+        LOOKUP_KEY: key(),
+      },
     };
   }
   return local;
@@ -145,38 +188,30 @@ const devAssets = {
  * @param {string} method
  * @param {URL} url
  * @param {string} [body]
+ * @param {Record<string, string>} [headers]
  */
-async function api(method, url, body) {
+async function api(method, url, body, headers = {}) {
   const { DB, env } = localWorker();
   if (url.pathname === '/api/boot') {
     DB.exec(seedSql({ dir: path.join(root, 'cafes/demo'), release: 'dev', replace: true }));
     clearCaches();
     clearManifests();
   }
+  // The browser's headers go through (origin, cookie, content type), as on Cloudflare.
   const request = new Request(url, {
     method,
+    headers,
     ...(body && method !== 'GET' && method !== 'HEAD' ? { body } : {}),
   });
   // --now (dev only): pretend it is another time, to try ordering at night.
-  if (devNow && url.pathname === '/api/orders' && method === 'POST') {
-    const response = await handleCreateOrder(request, /** @type {any} */ (env), devNow);
-    return {
-      status: response.status,
-      type: response.headers.get('content-type') ?? undefined,
-      body: await response.text(),
-    };
-  }
-  const response = await worker.fetch(
-    new Request(url, {
-      method,
-      ...(body && method !== 'GET' && method !== 'HEAD' ? { body } : {}),
-    }),
-    /** @type {any} */ (env),
-    { waitUntil: () => {} },
-  );
+  const response =
+    devNow && url.pathname === '/api/orders' && method === 'POST'
+      ? await handleCreateOrder(request, /** @type {any} */ (env), devNow)
+      : await worker.fetch(request, /** @type {any} */ (env), { waitUntil: () => {} });
   return {
     status: response.status,
     type: response.headers.get('content-type') ?? undefined,
+    cookie: response.headers.get('set-cookie') ?? undefined,
     body: await response.text(),
   };
 }
@@ -213,14 +248,26 @@ function run() {
   }
   const server = createServer(async (req, res) => {
     try {
-      const url = new URL(req.url ?? '/', 'http://localhost');
+      const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
+      /** @type {Record<string, string>} */
+      const headers = {};
+      for (const name of ['origin', 'cookie', 'content-type']) {
+        const value = req.headers[name];
+        if (typeof value === 'string') headers[name] = value;
+      }
       /** @type {Buffer[]} */
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
-      const out = await handle(req.method ?? 'GET', url, Buffer.concat(chunks).toString('utf8'));
+      const out = await handle(
+        req.method ?? 'GET',
+        url,
+        Buffer.concat(chunks).toString('utf8'),
+        headers,
+      );
       res.statusCode = out.status;
       if (out.type) res.setHeader('content-type', out.type);
       if (out.location) res.setHeader('location', out.location);
+      if ('cookie' in out && out.cookie) res.setHeader('set-cookie', out.cookie);
       res.setHeader('cache-control', 'no-store');
       res.end(req.method === 'HEAD' ? undefined : out.body);
     } catch (err) {
@@ -229,7 +276,10 @@ function run() {
     }
   });
   server.listen(Number(values.port), values.host, () => {
-    process.stdout.write(`Demo café: http://localhost:${values.port}/demo/t/5?k=7QF3K9\n`);
+    process.stdout.write(
+      `Demo café: http://localhost:${values.port}/demo/t/5?k=7QF3K9\n` +
+        `Staff app: http://localhost:${values.port}/admin/ (first sign-in: demo-manager, code ${DEV_CODE})\n`,
+    );
   });
 }
 

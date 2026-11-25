@@ -2,7 +2,7 @@
 
 The **admin app**, served on the separate staff/admin host. One app, with screens shown according to the signed-in role.
 
-**Status:** Planned — Sprint 1 (sold out and price for the demo), Sprint 2 (full editor, staff screen, accounts).
+**Status:** In progress — sign-in (first password with a one-time code, password stretched on the device, ADR-0006), the orders screen (new orders every 10 s with a sound, "Reçue" / "Pas reçue" for WhatsApp orders, accept, ready, served) and the menu editor (sold out for staff, prices for managers, D-045 question for whole numbers) are built. French and Arabic. Next: accounts screen, dashboard, module switches.
 
 ## What lives here
 
