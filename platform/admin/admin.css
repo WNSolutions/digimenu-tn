@@ -448,3 +448,39 @@ input {
   border: 2px solid var(--dm-warning);
   background: color-mix(in srgb, var(--dm-warning) 12%, var(--dm-surface));
 }
+
+/* ---- Accounts (issue #18): the team, one-time codes, my devices ------------------------- */
+
+.a-codebox {
+  border: 2px solid var(--dm-accent);
+  /* Scrolled into view under the sticky top bar. */
+  scroll-margin-top: 140px;
+}
+
+.a-code {
+  margin: 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-align: center;
+  user-select: all;
+}
+
+.a-member--off {
+  opacity: 0.7;
+}
+
+.a-member p,
+.a-device p {
+  margin: 2px 0 0;
+}
+
+.a-device {
+  padding-block: 8px;
+  border-bottom: 1px solid var(--dm-sep);
+}
+
+.a-device .a-badge {
+  margin-inline-start: 8px;
+}
