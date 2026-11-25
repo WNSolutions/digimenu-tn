@@ -12,6 +12,7 @@ import { scanQr } from './scanner.js';
 import { customersView, CUSTOMER_TEXT } from './customers.js';
 import { teamView, accountView, TEAM_TEXT } from './team.js';
 import { visitsView, VISITS_TEXT } from './visits.js';
+import { modulesView, noticeBar, MODULES_TEXT } from './modules.js';
 
 const API = '/admin/api';
 const POLL_MS = 10_000;
@@ -413,9 +414,9 @@ function setupView() {
 /**
  * @type {{ me: any, cafe: string, view: string, timer: number, known: Set<string>,
  *   audio: AudioContext | null, panels: { key: string, label: string, render: (root: HTMLElement) => void }[],
- *   cards: import('./visits.js').ModuleCard[],
+ *   cards: import('./visits.js').ModuleCard[], notice: HTMLElement | null,
  *   admin: boolean, cafes: { slug: string, name: any, role: string }[] }}
- *   view: 'orders', 'menu', 'team', 'account', 'customers' or 'm:<module>';
+ *   view: 'orders', 'menu', 'team', 'visits', 'modules', 'account', 'customers' or 'm:<module>';
  *   cards: the switched-on modules' cards on "Visites"
  */
 const state = {
@@ -427,6 +428,7 @@ const state = {
   audio: null,
   panels: [],
   cards: [],
+  notice: null,
   admin: false,
   cafes: [],
 };
@@ -505,6 +507,18 @@ async function start() {
   }
   state.panels = await loadPanels();
   render();
+  // Admin is told what others changed in the cafés' modules (MOD-16), above any screen.
+  // It stays above every screen until Admin taps "Vu".
+  if (state.admin) {
+    state.notice = await noticeBar({
+      h,
+      lang: /** @type {'fr' | 'ar'} */ (lang),
+      api,
+      open: (slug) => goCafe(slug, 'modules'),
+      seen: () => (state.notice = null),
+    });
+    if (state.notice) render();
+  }
 }
 
 function beep() {
@@ -606,6 +620,9 @@ function topBar() {
       ['manager', 'admin'].includes(cafeRole())
         ? tab('team', TEAM_TEXT[/** @type {'fr' | 'ar'} */ (lang)].tab)
         : null,
+      ['manager', 'maintainer', 'admin'].includes(cafeRole())
+        ? tab('modules', MODULES_TEXT[/** @type {'fr' | 'ar'} */ (lang)].tab)
+        : null,
       state.admin ? tab('customers', CUSTOMER_TEXT[lang].tab) : null,
     ),
   );
@@ -619,19 +636,7 @@ function cafeSwitch() {
       {
         class: 'a-input a-input--cafe',
         'aria-label': t('cafe'),
-        onchange: async () => {
-          state.cafe = select.value;
-          state.known = new Set();
-          state.panels = await loadPanels();
-          if (
-            (state.view.startsWith('m:') &&
-              !state.panels.some((p) => `m:${p.key}` === state.view)) ||
-            (state.view === 'team' && !['manager', 'admin'].includes(cafeRole())) ||
-            (state.view === 'visits' && !['manager', 'maintainer', 'admin'].includes(cafeRole()))
-          )
-            state.view = 'orders';
-          render();
-        },
+        onchange: () => goCafe(select.value),
       },
       ...state.cafes.map((c) =>
         h('option', { value: c.slug, selected: c.slug === state.cafe }, pick(c.name) || c.slug),
@@ -641,10 +646,34 @@ function cafeSwitch() {
   return select;
 }
 
+/**
+ * Shows another café, keeping the view when this role may use it there.
+ * @param {string} slug
+ * @param {string} [view]
+ */
+async function goCafe(slug, view) {
+  state.cafe = slug;
+  state.known = new Set();
+  state.panels = await loadPanels();
+  if (view) state.view = view;
+  const manage = ['manager', 'maintainer', 'admin'].includes(cafeRole());
+  if (
+    (state.view.startsWith('m:') && !state.panels.some((p) => `m:${p.key}` === state.view)) ||
+    (state.view === 'team' && !['manager', 'admin'].includes(cafeRole())) ||
+    ((state.view === 'visits' || state.view === 'modules') && !manage)
+  )
+    state.view = 'orders';
+  render();
+}
+
 function render() {
   clearTimeout(state.timer);
   const body = h('main', { class: 'a-wrap a-stack' });
-  app.replaceChildren(topBar(), body);
+  app.replaceChildren(
+    topBar(),
+    ...(state.notice ? [h('div', { class: 'a-wrap a-noticewrap' }, state.notice)] : []),
+    body,
+  );
   const teamDeps = {
     h,
     lang: /** @type {'fr' | 'ar'} */ (lang),
@@ -662,6 +691,8 @@ function render() {
     visitsView(body, { ...teamDeps, admin: state.admin, cards: state.cards });
   } else if (state.view === 'team' && ['manager', 'admin'].includes(cafeRole())) {
     teamView(body, teamDeps);
+  } else if (state.view === 'modules' && ['manager', 'maintainer', 'admin'].includes(cafeRole())) {
+    modulesView(body, teamDeps);
   } else if (state.view === 'customers' && state.admin) {
     customersView(body, {
       h,

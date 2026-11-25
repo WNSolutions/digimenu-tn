@@ -11,6 +11,7 @@ import { handleAdmin, handleCafeList } from './admin-api.js';
 import { handleCustomers } from './customers-api.js';
 import { handleTeam } from './team-api.js';
 import { handleVisits } from './visits-api.js';
+import { handleModules } from './modules-api.js';
 import { handleModuleRoute } from './module-host.js';
 import { resolveCafe } from './cafes.js';
 import { runRetention } from './retention.js';
@@ -82,6 +83,8 @@ export default {
           return await handleTeam(request, env, route);
         if (route === 'visits' || route === 'visits/export')
           return await handleVisits(request, env, route);
+        if (route === 'modules' || route.startsWith('modules/'))
+          return await handleModules(request, env, route);
         return await handleAdmin(request, env, route);
       }
       return env.ASSETS.fetch(request);

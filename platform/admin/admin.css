@@ -657,3 +657,29 @@ input {
 .a-nowrap {
   white-space: nowrap;
 }
+
+/* ---------- Modules (#21) ---------- */
+
+.a-badge--on {
+  background: var(--dm-accent);
+  color: var(--dm-on-accent);
+}
+
+.a-request {
+  padding: 10px 12px;
+  border-radius: var(--dm-radius-m, 12px);
+  background: var(--dm-fill);
+}
+
+.a-hist {
+  margin: 0;
+  font-size: var(--dm-callout);
+}
+
+.a-notice {
+  border-inline-start: 4px solid var(--dm-accent);
+}
+
+.a-noticewrap {
+  padding-top: 16px;
+}
