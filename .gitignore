@@ -61,3 +61,7 @@ desktop.ini
 !.vscode/extensions.json
 *.swp
 *~
+
+# Wrangler configuration made from a template (never committed)
+wrangler.jsonc
+.wrangler/

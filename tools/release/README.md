@@ -2,7 +2,7 @@
 
 **Release bundling and window checks.** Builds a tagged version once into an immutable release, and checks that a release window can be deployed.
 
-**Status:** Planned — build in Sprint 1 (`v0.1.0`), window checks in Sprint 3 (per-café pinning).
+**Status:** In progress — [`build.js`](build.js) builds a release and the static site (`npm run release -- --version 0.1.0`), with the 20 KB budget check and the `_headers` security policy. Window checks come with per-café pinning.
 
 ## What it does
 

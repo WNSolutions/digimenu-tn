@@ -11,6 +11,7 @@
 | [`validate/`](validate/README.md) | Checks a café configuration, the same validator as the server | Sprint 1 |
 | [`release/`](release/README.md) | Builds a release bundle and checks a release window | Sprint 1 (build), Sprint 3 (window) |
 | [`demo/`](demo/README.md) | Builds the demo café's boot data, and the demo as one standalone HTML file (`npm run demo`) | Sprint 1 |
+| [`seed/`](seed/seed.js) | Writes the SQL that puts a café (configuration, tables, menu, first snapshot) into D1 (`npm run seed`) | Sprint 3 |
 | [`dev/`](dev/README.md) | Local dev server for the customer page (`npm run dev`) | Sprint 1 |
 | [`migrate/`](migrate/README.md) | Plans, backs up, applies, verifies and undoes database migrations | v1.0 (manual procedure until then) |
 

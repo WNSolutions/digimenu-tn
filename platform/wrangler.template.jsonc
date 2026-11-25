@@ -1,0 +1,41 @@
+// Wrangler configuration TEMPLATE for the Worker `digimenu` (ADR-0002).
+//
+// The deploy repository's Deploy workflow copies this file to wrangler.jsonc, sets the Worker
+// name and the D1 database id for the target (preview or production), and points "assets" at
+// the site built by tools/release/build.js. Ids are identifiers, not secrets. Never put a token
+// here: Wrangler reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the workflow.
+//
+// Local work: copy it to wrangler.jsonc (git-ignored), build the site, then
+//   npx wrangler@4.151.3 d1 migrations apply digimenu-local --local
+//   npx wrangler@4.151.3 d1 execute digimenu-local --local --file seed.sql
+//   npx wrangler@4.151.3 dev
+{
+  "$schema": "https://unpkg.com/wrangler@4.151.3/config-schema.json",
+  "name": "REPLACE_ME_WORKER_NAME",
+  "main": "shell/src/index.js",
+  "compatibility_date": "2026-10-15",
+  "workers_dev": true,
+  "preview_urls": false,
+
+  // Table pages and release files are static: they never run the Worker, so menus keep loading
+  // even if the Worker's daily quota runs out. Only /api/* runs the Worker first.
+  "assets": {
+    "directory": "../dist/public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "REPLACE_ME_DATABASE_NAME",
+      "database_id": "REPLACE_ME_DATABASE_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+
+  "observability": { "enabled": true },
+
+  "vars": { "ENVIRONMENT": "REPLACE_ME_ENVIRONMENT" },
+}
