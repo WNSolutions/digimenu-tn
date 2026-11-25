@@ -55,6 +55,7 @@ const ERRORS = /** @type {Record<string, string>} */ ({
   notice_changed: 'checkout.err.notice',
   too_many_orders: 'checkout.err.busy',
   ordering_off: 'checkout.err.off',
+  ordering_paused: 'checkout.err.paused',
 });
 
 /**

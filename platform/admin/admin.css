@@ -443,6 +443,12 @@ input {
   min-width: 10rem;
 }
 
+/* Orders paused (#29): impossible to miss on the staff screen. */
+.a-paused {
+  border: 2px solid var(--dm-warning);
+  background: color-mix(in srgb, var(--dm-warning) 12%, var(--dm-surface));
+}
+
 /* ---- Accounts (issue #18): the team, one-time codes, my devices ------------------------- */
 
 .a-codebox {

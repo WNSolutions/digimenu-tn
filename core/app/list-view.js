@@ -200,6 +200,10 @@ export function openListSheet(ctx) {
     if (!channel || checked.count === 0) {
       return [h('p', { class: 'dm-actions-note' }, t('list.showOnly')), showWaiter(true)];
     }
+    // Staff paused new orders in a rush (#29): the list goes to the waiter.
+    if (ctx.boot.ordering?.paused) {
+      return [h('p', { class: 'dm-actions-note' }, t('list.paused')), showWaiter(true)];
+    }
     const hours = openStatus(ctx.boot.cafe.hours, ctx.now(), ctx.boot.cafe.timeZone);
     if (hours && !hours.open) {
       const closed = hours.opensAt

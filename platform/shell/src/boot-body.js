@@ -136,9 +136,18 @@ export function themeInfo(config, dark) {
  * @param {{ version: string, entry: string, css: string }} input.release
  * @param {BootModule[]} input.modules
  * @param {PrivacyNotice | null} [input.privacy]
+ * @param {boolean} [input.paused]   staff paused new orders (#29)
  * @returns {Boot & { release: { version: string, entry: string, css: string } }}
  */
-export function bootBody({ config, table, menu, release, modules, privacy = null }) {
+export function bootBody({
+  config,
+  table,
+  menu,
+  release,
+  modules,
+  privacy = null,
+  paused = false,
+}) {
   const logo = logoUrl(config);
   const theme = themeTokens(config.branding);
   const themed = theme.errors.length === 0 ? themeInfo(config, theme.dark) : null;
@@ -165,7 +174,7 @@ export function bootBody({ config, table, menu, release, modules, privacy = null
     table,
     menu,
     modules,
-    ordering: orderingInfo(config),
+    ordering: { ...orderingInfo(config), ...(paused ? { paused: true } : {}) },
     privacy,
   };
 }

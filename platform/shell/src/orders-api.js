@@ -119,6 +119,8 @@ export async function handleCreateOrder(request, env, now = new Date()) {
   // Idempotency first: a retry of a stored order gets the same answer, whatever changed since.
   const existing = await findByClientKey(env, cafe.id, body.clientKey);
   if (existing) return json(200, await withModules(env, cafe, existing, body, false, now));
+  // Staff paused new orders in a rush (#29): the list goes to the waiter instead.
+  if (cafe.orderingPausedAt) return problem(409, 'ordering_paused');
 
   const type = body.type;
   if (type !== 'dine_in' && type !== 'takeaway') return problem(400, 'bad_request');
