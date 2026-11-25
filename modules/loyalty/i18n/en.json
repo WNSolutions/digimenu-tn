@@ -27,5 +27,7 @@
   "after.joined": "Welcome to the loyalty programme! Your stamp will be added when staff confirm the order.",
   "after.member": "Loyalty: {stamps} of {needed}. A stamp will be added when staff confirm the order.",
   "after.known": "You already have a loyalty card: the stamp goes on it. To see it on this phone, ask for a code at the counter.",
-  "after.open": "See my card"
+  "after.open": "See my card",
+  "qr.label": "QR code of your loyalty card",
+  "showQr": "At the counter, show this QR code or give the number, for a stamp or a reward."
 }

@@ -80,9 +80,9 @@ export async function handle(method, url, body, headers = {}) {
     ]);
     return { status: 200, type: TYPES['.css'], body: css.join('\n') };
   }
-  if (p === '/admin/admin.js') {
+  if (p === '/admin/admin.js' || p === '/admin/scan.js') {
     const out = await build({
-      entryPoints: [path.join(root, 'platform/admin/admin.js')],
+      entryPoints: [path.join(root, 'platform/admin', p.slice('/admin/'.length))],
       bundle: true,
       format: 'esm',
       write: false,

@@ -2,7 +2,7 @@
 
 **What it does.** Customers join the café's loyalty programme when they order, by ticking **Rejoindre la fidélité** in checkout (the privacy notice's own text, never pre-ticked). They get a stamp card on their phone: **Fidélité** in the menu's top bar, or the link `/<café>/carte`, which they can add to the home screen. Each order **staff confirm** adds one stamp; when the card is full, staff give the reward. Design: [ADR-0013](../../docs/adr/0013-loyalty-at-launch-phone-number-and-wallet-card.md), decision D-064.
 
-**Status:** experimental (0.1.0). Wallet passes (Google Wallet, Apple Wallet) and a QR code on the card come next; until then staff type the card number.
+**Status:** experimental (0.2.0). Wallet passes (Google Wallet, Apple Wallet) come next.
 
 ## Settings
 
@@ -41,13 +41,13 @@ A customer can never add a stamp alone, and a typed phone number is never enough
 
 ## What staff see (Fidélité tab)
 
-Search by the **card number** on the customer's card, or by the customer's **phone number**. The card shows the first name, the last three digits of the phone, stamps and rewards, and the buttons above.
+Tap **Scanner la carte** and point the phone at the QR code on the customer's card, or type the **card number** shown under it, or the customer's **phone number**. The QR code holds the card number, an expiry and the server's signature, never the phone number or the card's secret; it is valid 24 hours and the card page shows a fresh one each time it opens with internet. Phones whose browser has no QR reader (iPhone Safari) load one the first time staff scan. The card shows the first name, the last three digits of the phone, stamps and rewards, and the buttons above.
 
 **New phone.** Staff check the customer has the number (for example the customer calls or writes to the café from it), tap **Nouveau téléphone**, then give the 10-character code. On the new phone: menu, **Fidélité**, enter the code. The code works once, for 15 minutes; the old phone no longer sees the card.
 
 ## What the customer can do
 
-See stamps, the reward and the card number; open the card on a new phone with a staff code; **Quitter la fidélité** (the card stops, its stamps are cleared, the choice is recorded as a consent withdrawal). Joining again later starts from zero with the same card number.
+See stamps, the reward, the QR code and the card number; open the card on a new phone with a staff code; **Quitter la fidélité** (the card stops, its stamps are cleared, the choice is recorded as a consent withdrawal). Joining again later starts from zero with the same card number.
 
 ## Data
 

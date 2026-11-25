@@ -18,6 +18,8 @@
  *   POST /admin/api/m/<module>/<route> for the café on screen
  * @property {string} role   the signed-in person's role in this café
  * @property {(millimes: number) => string} price
+ * @property {() => Promise<string | null>} scan
+ *   opens the camera and returns the text of the first QR code read (null if cancelled)
  */
 
 /**

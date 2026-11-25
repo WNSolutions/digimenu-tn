@@ -130,6 +130,15 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   // The CSP blocks style attributes: release code must not write any.
   const core = readFileSync(path.join(site, manifest.entry), 'utf8');
   assert.doesNotMatch(core, /style=/);
+  // Customer pages may not use the camera; the staff app may (scanning loyalty cards).
+  assert.match(headers, /\/\*\n(.*\n)*? {2}Permissions-Policy: camera=\(\)/);
+  assert.match(
+    headers,
+    /\/admin\/\*\n(.*\n)*? {2}! Permissions-Policy\n {2}Permissions-Policy: camera=\(self\)/,
+  );
+  const scan = readFileSync(path.join(site, 'admin/scan.js'), 'utf8');
+  assert.match(scan, /^\/\*! jsQR \d+\.\d+\.\d+ \| Apache License 2\.0/);
+  assert.doesNotMatch(readFileSync(path.join(site, 'admin/admin.js'), 'utf8'), /jsQR/);
 });
 
 test('seeding again with --replace refreshes the menu and keeps the café row and its counters', async () => {

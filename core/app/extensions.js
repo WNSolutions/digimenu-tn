@@ -78,12 +78,14 @@ export const CLIENT_POINTS = /** @type {const} */ ([
  *   | { kind: 'text', text: string, tone?: 'muted' | 'success' | 'error' }
  *   | { kind: 'stamps', filled: number, total: number, label: string }
  *   | { kind: 'code', label: string, value: string }
+ *   | { kind: 'qr', rows: string[], label: string }
  *   | { kind: 'form', fields: FormField[], submit: string,
  *       run: (values: Record<string, string>) => Promise<Block[]> }
  *   | { kind: 'button', label: string, look?: 'prominent' | 'plain' | 'danger', confirm?: string,
  *       run: () => Promise<Block[] | null> }
  *   | { kind: 'page', label: string, page: string }} Block
- *   A `page` block opens one of the module's own sheet pages.
+ *   A `page` block opens one of the module's own sheet pages. A `qr` block is a QR code the
+ *   server encoded: square rows of "1" (dark) and "0" (light), 21 to 57 modules.
  */
 
 /**

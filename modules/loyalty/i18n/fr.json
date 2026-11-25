@@ -27,5 +27,7 @@
   "after.joined": "Bienvenue dans la fidélité ! Votre tampon sera ajouté quand le personnel confirmera la commande.",
   "after.member": "Fidélité : {stamps} sur {needed}. Un tampon sera ajouté quand le personnel confirmera la commande.",
   "after.known": "Vous avez déjà une carte de fidélité : le tampon y sera ajouté. Pour la voir sur ce téléphone, demandez un code au comptoir.",
-  "after.open": "Voir ma carte"
+  "after.open": "Voir ma carte",
+  "qr.label": "QR code de votre carte de fidélité",
+  "showQr": "Au comptoir, montrez ce QR code ou donnez le numéro, pour un tampon ou une récompense."
 }

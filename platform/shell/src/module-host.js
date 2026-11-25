@@ -21,6 +21,7 @@ import { ulid } from './ids.js';
 import { sha256 } from './auth.js';
 import { loadKeys, seal, open, lookupHash } from './crypto.js';
 import { normalizePhone } from '../../../core/phone.js';
+import { encodeQr } from '../../../core/qr.js';
 
 /** @typedef {{ id: string, slug: string, status: string, config: any }} Cafe */
 
@@ -39,6 +40,7 @@ import { normalizePhone } from '../../../core/phone.js';
  * @property {{ seal: (v: unknown) => Promise<string>, open: (ct: string) => Promise<any>,
  *   lookup: (v: string) => Promise<string> } | null} crypto   customer-data keys; null if not set
  * @property {(input: string) => string | null} normalizePhone   "+216XXXXXXXX" or null
+ * @property {(text: string) => string[]} qr   a QR code's rows ("1" dark, "0" light), error correction M
  * @property {(message: string, err?: unknown) => void} log
  * @property {(action: string, target: string, actor: { userId: string, role: string }) => Promise<void>} audit
  *   a line in the audit log (category = the module key)
@@ -109,6 +111,7 @@ export async function serverApi(env, cafe, key, now) {
         }
       : null,
     normalizePhone,
+    qr: (text) => encodeQr(text).rows,
     log: (message, err) =>
       console.error(`module ${key}: ${message}`, err instanceof Error ? err.message : (err ?? '')),
     audit: async (action, target, actor) => {
