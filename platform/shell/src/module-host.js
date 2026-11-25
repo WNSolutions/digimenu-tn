@@ -71,6 +71,11 @@ import { encodeQr } from '../../../core/qr.js';
  * @property {Record<string, (api: ServerApi, body: any) => Promise<RouteAnswer>>} [routes]
  * @property {{ roles: Record<string, string[]>,
  *   routes: Record<string, (api: ServerApi, body: any, actor: { userId: string, role: string }) => Promise<RouteAnswer>> }} [staff]
+ * @property {{ export: (api: ServerApi, c: { customerId: string }) => Promise<unknown>,
+ *   erase: (api: ServerApi, c: { customerId: string }) => Promise<number> }} [customer]
+ *   customer records (ADR-0010): what the module keeps about a customer, in an export, and
+ *   erasing it on a deletion request. Runs for every module with server code, switched on or
+ *   not, since data is kept when a module is switched off. `api.cafe` is empty here.
  */
 
 /** @typedef {import('./d1.d.js').Env & { FIELD_KEY?: string, LOOKUP_KEY?: string }} HostEnv */
@@ -122,7 +127,7 @@ export async function serverApi(env, cafe, key, now) {
           ulid(now.getTime()),
           key,
           action,
-          cafe.id,
+          cafe.id || null,
           target,
           actor.userId,
           actor.role,
@@ -131,6 +136,46 @@ export async function serverApi(env, cafe, key, now) {
         .run();
     },
   };
+}
+
+/** No café: the customer-record hooks work across cafés. */
+const NO_CAFE = { id: '', slug: '', status: '', config: {} };
+
+/**
+ * What each module keeps about a customer, for an export (ADR-0010 §7).
+ * @param {HostEnv} env
+ * @param {string} customerId
+ * @param {Date} now
+ * @param {Record<string, ServerModule>} [registry]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export async function runCustomerExport(env, customerId, now, registry = SERVER_MODULES) {
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  for (const [key, mod] of Object.entries(registry)) {
+    if (!mod.customer) continue;
+    out[key] = await mod.customer.export(await serverApi(env, NO_CAFE, key, now), { customerId });
+  }
+  return out;
+}
+
+/**
+ * Erases what each module keeps about a customer. Fail-closed: an error stops the deletion,
+ * so nothing is left half-deleted without the Admin knowing.
+ * @param {HostEnv} env
+ * @param {string} customerId
+ * @param {Date} now
+ * @param {Record<string, ServerModule>} [registry]
+ * @returns {Promise<Record<string, number>>}  rows removed per module
+ */
+export async function runCustomerErase(env, customerId, now, registry = SERVER_MODULES) {
+  /** @type {Record<string, number>} */
+  const out = {};
+  for (const [key, mod] of Object.entries(registry)) {
+    if (!mod.customer) continue;
+    out[key] = await mod.customer.erase(await serverApi(env, NO_CAFE, key, now), { customerId });
+  }
+  return out;
 }
 
 /**

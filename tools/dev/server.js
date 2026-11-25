@@ -30,8 +30,9 @@ import { build } from 'esbuild';
 
 /** @type {Date | null} */
 let devNow = null;
-/** Setup code of the local demo manager (local dev server only, never deployed). */
+/** Setup codes of the local demo manager and Admin (local dev server only, never deployed). */
 const DEV_CODE = 'DEVCODE234';
+const DEV_ADMIN_CODE = 'DEVADMIN34';
 import { clearCaches } from '../../platform/shell/src/cafes.js';
 import { clearManifests } from '../../platform/shell/src/releases.js';
 
@@ -144,6 +145,14 @@ function localWorker() {
         role: 'manager',
         cafe: 'demo',
         code: DEV_CODE,
+      }),
+    );
+    DB.exec(
+      accountSql({
+        username: 'demo-admin',
+        name: 'Demo Admin',
+        role: 'admin',
+        code: DEV_ADMIN_CODE,
       }),
     );
     local = {
@@ -278,7 +287,7 @@ function run() {
   server.listen(Number(values.port), values.host, () => {
     process.stdout.write(
       `Demo café: http://localhost:${values.port}/demo/t/5?k=7QF3K9\n` +
-        `Staff app: http://localhost:${values.port}/admin/ (first sign-in: demo-manager, code ${DEV_CODE})\n`,
+        `Staff app: http://localhost:${values.port}/admin/ (first sign-in: demo-manager, code ${DEV_CODE}; or demo-admin, code ${DEV_ADMIN_CODE})\n`,
     );
   });
 }

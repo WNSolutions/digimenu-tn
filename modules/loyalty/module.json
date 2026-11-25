@@ -30,7 +30,7 @@
   "extends": {
     "client": ["header.action", "sheet.page", "checkout.fields", "postOrder.block"],
     "staff": ["staff.panel"],
-    "server": ["order.afterStore", "order.statusChanged"]
+    "server": ["order.afterStore", "order.statusChanged", "customer.records"]
   },
   "data": {
     "orderExt": [],

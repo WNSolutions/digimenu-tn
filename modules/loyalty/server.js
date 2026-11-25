@@ -544,3 +544,59 @@ export const staff = {
     },
   },
 };
+
+/** Customer records (ADR-0010 §7): the cards and their history in an export, and erasure. */
+export const customer = {
+  /** @param {ServerApi} api @param {{ customerId: string }} c */
+  async export(api, { customerId }) {
+    const cards = (
+      await api.db
+        .prepare(
+          `SELECT lc.id, c.slug AS cafe, lc.number, lc.status, lc.created_at, lc.left_at
+             FROM loyalty_cards lc JOIN cafes c ON c.id = lc.cafe_id WHERE lc.customer_id = ?1
+            ORDER BY lc.created_at`,
+        )
+        .bind(customerId)
+        .all()
+    ).results;
+    const out = [];
+    for (const card of cards) {
+      const ledger = (
+        await api.db
+          .prepare(
+            'SELECT kind, units, order_id, source, at FROM loyalty_ledger WHERE card_id = ?1 ORDER BY at, id',
+          )
+          .bind(card.id)
+          .all()
+      ).results;
+      out.push({
+        cafe: card.cafe,
+        number: card.number,
+        status: card.status,
+        createdAt: card.created_at,
+        leftAt: card.left_at,
+        ledger: ledger.map((l) => ({
+          kind: l.kind,
+          units: l.units,
+          orderId: l.order_id,
+          source: l.source,
+          at: l.at,
+        })),
+      });
+    }
+    return { cards: out };
+  },
+
+  /** @param {ServerApi} api @param {{ customerId: string }} c */
+  async erase(api, { customerId }) {
+    const [ledger, cards] = await api.db.batch([
+      api.db
+        .prepare(
+          'DELETE FROM loyalty_ledger WHERE card_id IN (SELECT id FROM loyalty_cards WHERE customer_id = ?1)',
+        )
+        .bind(customerId),
+      api.db.prepare('DELETE FROM loyalty_cards WHERE customer_id = ?1').bind(customerId),
+    ]);
+    return Number(ledger?.meta?.changes ?? 0) + Number(cards?.meta?.changes ?? 0);
+  },
+};

@@ -129,3 +129,32 @@ test('a staff route needs its module on, a known route and an allowed role', asy
   assert.equal(await go(on, 'm/__proto__'), 404);
   assert.equal(await go(cafe({ m: { enabled: false } }), 'm/look'), 404);
 });
+
+test('customer erasure runs for every module with records, switched on or not, and stops on an error', async () => {
+  const { runCustomerErase, runCustomerExport } =
+    await import('../../platform/shell/src/module-host.js');
+  const env = /** @type {any} */ ({ DB: createD1().migrate() });
+  /** @type {string[]} */
+  const seen = [];
+  const ok = {
+    customer: {
+      export: async (/** @type {any} */ _api, /** @type {any} */ c) => ({ id: c.customerId }),
+      erase: async (/** @type {any} */ _api, /** @type {any} */ c) => {
+        seen.push(c.customerId);
+        return 2;
+      },
+    },
+  };
+  assert.deepEqual(await runCustomerErase(env, 'C1', new Date(), { ok, plain: {} }), { ok: 2 });
+  assert.deepEqual(await runCustomerExport(env, 'C1', new Date(), { ok }), { ok: { id: 'C1' } });
+  assert.deepEqual(seen, ['C1']);
+  const broken = {
+    customer: {
+      export: async () => ({}),
+      erase: async () => {
+        throw new Error('disk full');
+      },
+    },
+  };
+  await assert.rejects(runCustomerErase(env, 'C1', new Date(), { ok, broken }), /disk full/);
+});

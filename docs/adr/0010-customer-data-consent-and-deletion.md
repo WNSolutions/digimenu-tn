@@ -27,6 +27,19 @@ This reverses three rules of the v0.1 draft: dine-in orders asked for nothing pe
 10. **Never** in analytics, application logs, error reports, CI logs, test fixtures, preview databases or the public repository. Test orders never create customer records.
 11. **Go-live gate.** No real customer data is collected at a café until the role tests, consent, customer records with the access log, export and deletion, the approved notice in FR/AR/EN, an encrypted backup with a tested restore, and Ahmed's legal check have all passed. Until then the café runs menu and show-to-waiter only.
 
+## Implementation notes (25 Nov 2026, issue #23)
+
+- **Clients tab** in the staff app, shown to Admin only (`/admin/api/customers`, 404 for every other role, and the attempt is logged). Search by full number (keyed hash), the last three digits, or first name (accents and case ignored; names are decrypted page by page, never searched in clear). Filters: café, current choice (offers, loyalty), dates.
+- **The list masks the phone** (`•• ••• 456`); opening a record shows it in full and is logged as a view.
+- **Export of one person:** one JSON file with the record, every order with its lines, the consent history, and each module's part (the loyalty card and its stamps).
+- **Bulk export:** pages of 200, joined into a CSV in the Admin's browser, so no file is kept on the server. Each page is logged with its record count.
+- **Withdrawal on request:** Admin records that the person no longer wants offers (a `granted = 0` consent, source `admin`). Loyalty is left from the card, or by deletion. Admin never records a consent for someone.
+- **Deletion:** a first tap shows what will happen, then Admin types the last three digits of the number.
+  - Modules erase their part first (`customer.records`, fail-closed). Then one batch puts the keyed hash on the suppression list, removes contact and free-text notes from every order (lines and totals stay, anonymous), and deletes the consents and the record.
+  - Logged with the record id and the number of orders, never the number or the name.
+- **Consent semantics already in place:** each order records the offers choice as ticked or not, so the latest choice wins. Joining loyalty is recorded only when ticked.
+- **Still to do before the go-live gate:** the encrypted weekly backup with a tested restore (deploy repository), and the retention job (proposal: 24 months without an order).
+
 ## Consequences
 
 - **Positive:** a customer base built with provable consent; a leaked database or backup alone does not expose names or phones; every access to customer data is traceable; the design leaves room for a future per-café "marketing access" without moving data.

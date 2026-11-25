@@ -170,7 +170,8 @@
               "order.afterStore",
               "order.statusChanged",
               "staff.requestType",
-              "schedule.daily"
+              "schedule.daily",
+              "customer.records"
             ]
           }
         },

@@ -274,3 +274,8 @@ input {
   position: absolute;
   bottom: max(24px, env(safe-area-inset-bottom));
 }
+
+.a-input--cafe {
+  width: auto;
+  min-width: 10rem;
+}
