@@ -280,8 +280,8 @@ Decision D-027: WNS keeps customer data (first name, phone, order history) for e
 
 | Data | Kept for | Notes |
 |---|---|---|
-| Customer records and their consents | until a deletion request, or the retention period Ahmed sets | Proposal: delete records with no order for 24 months (REQUIREMENTS Q24, open). |
-| Orders | same as customer data for contact fields; anonymous lines as long as aggregates need them | Replaces v0.1's 30-day purge and 13-month roll-up. |
+| Customer records and their consents | until a deletion request, or **24 months without an order** (D-067) | Deleted every night at 03:43 Tunis time by the Worker's cron job (`platform/shell/src/retention.js`), with the loyalty card; no suppression entry, since the person did not ask. |
+| Orders | same as customer data for contact fields and notes; anonymous lines as long as aggregates need them | Replaces v0.1's 30-day purge and 13-month roll-up. |
 | Analytics counters | 24 months | Impact reporting needs at least 12 months. |
 | Audit log | at least 24 months (assumption) | Append-only; readable by Admin. |
 | Sessions, reset codes | until expiry, then pruned daily | — |
