@@ -1,0 +1,49 @@
+{
+  "$schema": "../../core/schemas/module.schema.json",
+  "key": "loyalty",
+  "id": "M-15",
+  "title": {
+    "fr": "Carte de fidélité",
+    "ar": "بطاقة الوفاء",
+    "en": "Loyalty card"
+  },
+  "summary": {
+    "fr": "Le client rejoint la fidélité en commandant : un tampon par commande confirmée par le personnel, une récompense au bout du compte.",
+    "ar": "ينضم الحريف إلى برنامج الوفاء عند الطلب: طابع عن كل طلب يؤكده العاملون، ومكافأة عند اكتمال البطاقة.",
+    "en": "Customers join when they order: one stamp per order staff confirm, and a reward when the card is full."
+  },
+  "version": "0.1.0",
+  "stability": "experimental",
+  "platformApi": 1,
+  "coreApi": "^0.1",
+  "requires": [],
+  "conflicts": [],
+  "settings": {
+    "schema": "settings.schema.json",
+    "version": 1
+  },
+  "texts": {
+    "fr": "i18n/fr.json",
+    "ar": "i18n/ar.json",
+    "en": "i18n/en.json"
+  },
+  "extends": {
+    "client": ["header.action", "sheet.page", "checkout.fields", "postOrder.block"],
+    "staff": ["staff.panel"],
+    "server": ["order.afterStore", "order.statusChanged"]
+  },
+  "data": {
+    "orderExt": [],
+    "itemExt": [],
+    "records": ["loyalty_cards", "loyalty_ledger"],
+    "personalFields": ["firstName"]
+  },
+  "customerRecords": {
+    "access": "read",
+    "purpose": "Links a loyalty card to the customer who joined at checkout, and shows staff the first name and last three digits of the phone number so they can check it is the right person."
+  },
+  "analyticsEvents": [],
+  "tests": "tests/",
+  "guide": "GUIDE.md",
+  "changelog": "CHANGELOG.md"
+}

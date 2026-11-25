@@ -19,6 +19,7 @@ import { indexSnapshot, isOrderable } from '../../../core/menu/snapshot.js';
 import { lineTotal, sum } from '../../../core/money.js';
 import { cleanNote, NOTE_MAX } from '../../../core/list.js';
 import { openStatus } from '../../../core/hours.js';
+import { runAfterStore } from './module-host.js';
 
 const MAX_BODY = 16_384;
 const MAX_LINES = 50;
@@ -41,6 +42,7 @@ const TABLE_LIMIT = { orders: 5, minutes: 10 };
  * @property {{ firstName?: string, phone?: string }} [customer]
  * @property {{ orderUpdates?: boolean, marketing?: boolean, loyalty?: boolean }} [consents]
  * @property {number} [noticeVersion]
+ * @property {Record<string, unknown>} [modules]   what enabled modules' checkout fields sent
  */
 
 /** The channels a café configured for an order type (one module or two, D-063). */
@@ -116,7 +118,7 @@ export async function handleCreateOrder(request, env, now = new Date()) {
 
   // Idempotency first: a retry of a stored order gets the same answer, whatever changed since.
   const existing = await findByClientKey(env, cafe.id, body.clientKey);
-  if (existing) return json(200, existing);
+  if (existing) return json(200, await withModules(env, cafe, existing, body, false, now));
 
   const type = body.type;
   if (type !== 'dine_in' && type !== 'takeaway') return problem(400, 'bad_request');
@@ -245,8 +247,9 @@ export async function handleCreateOrder(request, env, now = new Date()) {
     for (const [purpose, granted] of /** @type {const} */ ([
       ['order_updates', Boolean(body.consents?.orderUpdates)],
       ['marketing', Boolean(body.consents?.marketing)],
-      ...(body.consents && 'loyalty' in body.consents
-        ? [['loyalty', Boolean(body.consents.loyalty)]]
+      // Joining loyalty is recorded only when ticked; leaving is done from the card (ADR-0013).
+      ...(body.consents?.loyalty === true && config.modules?.loyalty?.enabled
+        ? [['loyalty', true]]
         : []),
     ])) {
       writes.push(
@@ -263,18 +266,57 @@ export async function handleCreateOrder(request, env, now = new Date()) {
   } catch (err) {
     // Two taps raced: the other one stored the order.
     const raced = await findByClientKey(env, cafe.id, body.clientKey);
-    if (raced) return json(200, raced);
+    if (raced) return json(200, await withModules(env, cafe, raced, body, false, now));
     throw err;
   }
-  return json(201, {
+  const customer = phoneIdx
+    ? await env.DB.prepare('SELECT id FROM customers WHERE phone_idx = ?1').bind(phoneIdx).first()
+    : null;
+  const stored = {
     id: orderId,
     number,
     status,
+    type,
     total: priced.total,
     lines: priced.lines,
     note,
     table: tableLabel,
-  });
+    customerId: customer ? String(customer.id) : null,
+  };
+  return json(201, await withModules(env, cafe, stored, body, true, now));
+}
+
+/**
+ * The answer to the phone, with what enabled modules add (order.afterStore, fail-open).
+ * The customer id stays on the server.
+ * @param {OrdersEnv} env
+ * @param {any} cafe
+ * @param {NonNullable<Awaited<ReturnType<typeof findByClientKey>>>} order
+ * @param {OrderRequest} body
+ * @param {boolean} isNew
+ * @param {Date} now
+ */
+async function withModules(env, cafe, order, body, isNew, now) {
+  const { customerId, type, ...answer } = order;
+  const modules = await runAfterStore(
+    env,
+    cafe,
+    {
+      order: {
+        id: order.id,
+        number: order.number,
+        status: order.status,
+        type,
+        total: order.total,
+        customerId,
+        isNew,
+      },
+      consents: { ...(body.consents ?? {}) },
+      inputs: body.modules && typeof body.modules === 'object' ? body.modules : {},
+    },
+    now,
+  );
+  return Object.keys(modules).length ? { ...answer, modules } : answer;
 }
 
 /**
@@ -284,19 +326,21 @@ export async function handleCreateOrder(request, env, now = new Date()) {
  */
 async function findByClientKey(env, cafeId, clientKey) {
   const row = await env.DB.prepare(
-    `SELECT id, number, status, total, lines, note, table_label FROM orders WHERE cafe_id = ?1 AND client_key = ?2`,
+    `SELECT id, number, status, type, total, lines, note, table_label, customer_id FROM orders WHERE cafe_id = ?1 AND client_key = ?2`,
   )
     .bind(cafeId, clientKey)
     .first();
   if (!row) return null;
   return {
-    id: row.id,
-    number: row.number,
-    status: row.status,
-    total: row.total,
+    id: String(row.id),
+    number: String(row.number),
+    status: String(row.status),
+    type: String(row.type),
+    total: Number(row.total),
     lines: JSON.parse(String(row.lines)),
-    note: row.note,
-    table: row.table_label,
+    note: String(row.note),
+    table: row.table_label === null ? null : String(row.table_label),
+    customerId: row.customer_id === null ? null : String(row.customer_id),
   };
 }
 

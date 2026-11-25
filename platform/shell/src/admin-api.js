@@ -7,6 +7,8 @@
  *   GET  /admin/api/menu?cafe=<slug>                   the menu tree for the editor
  *   POST /admin/api/menu/variant                       { cafe, id, price?, available? }
  *   POST /admin/api/menu/item                          { cafe, id, available }
+ *   GET  /admin/api/cafe?cafe=<slug>                   name, role and the staff panels switched on
+ *   POST /admin/api/m/<module>/<route>                 a module's staff call (module-host.js)
  *
  * Roles are checked on every call (ADR-0006): staff may change order status and sold-out;
  * prices need a manager or Admin. Every query names the café (café scope).
@@ -18,6 +20,7 @@ import { localDayHour, isoNow } from './clock.js';
 import { loadKeys, open } from './crypto.js';
 import { menuSource, publishChange } from './menu-publish.js';
 import { ulid } from './ids.js';
+import { runStatusChanged, handleStaffModuleRoute, serverModules } from './module-host.js';
 
 const STAFF = ['staff', 'manager', 'admin'];
 const PRICES = ['manager', 'admin'];
@@ -110,7 +113,9 @@ export async function handleAdmin(request, env, route, now = new Date()) {
   if (route === 'orders/status' && write) {
     const id = String(input?.id ?? '');
     const next = String(input?.status ?? '');
-    const row = await env.DB.prepare('SELECT status FROM orders WHERE id = ?1 AND cafe_id = ?2')
+    const row = await env.DB.prepare(
+      'SELECT status, total, customer_id FROM orders WHERE id = ?1 AND cafe_id = ?2',
+    )
       .bind(id, cafe.id)
       .first();
     if (!row) return problem(404, 'unknown_order');
@@ -118,7 +123,7 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       return problem(409, 'bad_transition');
     const at = isoNow(now);
     const reason = next === 'rejected' ? String(input?.reason ?? '').slice(0, 120) : null;
-    await env.DB.prepare(
+    const done = await env.DB.prepare(
       `UPDATE orders SET status = ?1,
               accepted_at = CASE WHEN ?1 = 'accepted' THEN ?2 ELSE accepted_at END,
               closed_at = CASE WHEN ?1 IN ('served', 'rejected', 'unconfirmed') THEN ?2 ELSE closed_at END,
@@ -127,7 +132,45 @@ export async function handleAdmin(request, env, route, now = new Date()) {
     )
       .bind(next, at, reason, id, cafe.id, String(row.status))
       .run();
+    // Only the tap that changed the status runs the modules' hooks (a double tap adds nothing).
+    if (Number(done?.meta?.changes ?? 1) === 1) {
+      await runStatusChanged(
+        env,
+        cafe,
+        {
+          order: {
+            id,
+            total: Number(row.total),
+            customerId: row.customer_id === null ? null : String(row.customer_id),
+          },
+          from: String(row.status),
+          to: next,
+          actor: { userId: account.id, role },
+        },
+        now,
+      );
+    }
     return json(200, { id, status: next });
+  }
+
+  if (route === 'cafe' && !write) {
+    return json(200, {
+      slug: cafe.slug,
+      name: cafe.config.names ?? null,
+      role,
+      modules: serverModules(cafe.config).map(([key]) => key),
+    });
+  }
+
+  if (route.startsWith('m/') && write) {
+    return handleStaffModuleRoute(
+      env,
+      cafe,
+      route.slice(2),
+      input,
+      { userId: account.id, role },
+      now,
+    );
   }
 
   if (route === 'menu' && !write) {

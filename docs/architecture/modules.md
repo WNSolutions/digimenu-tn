@@ -77,6 +77,13 @@ The core owns the URL scheme, pricing arithmetic, list storage, order lifecycle,
 
 The full list is **named and reserved now** so names stay stable, but each point is **built with the first module that needs it** (Tech Lead review). "Go-live" marks the points needed by the modules planned for the 5 pilot cafés. A new point is added only in a core MINOR release, documented here, with a test fixture.
 
+**Built so far:** `list.action` (M-03), and with `loyalty` (M-15): `header.action`, `sheet.page`, `checkout.fields`, `postOrder.block`, `staff.panel`, `order.afterStore`, `order.statusChanged`. How they work today:
+
+- **Customer** (`core/app/extensions.js`, drawn by `core/app/blocks.js`): a contribution returns a description (text, stamps, a code, a form, a button, a link to the module's own sheet page); the core draws it with its own styles and never inserts module HTML. A `sheet.page` may claim a link of its own, `/<café>/<path>` (lowercase letters). A `checkout.fields` consent names a purpose; the box shows the **privacy notice's** text for it, unticked, and appears only if the notice has one. Each module gets `api.storage` (keys under `dm:<café>:<module>:`) and `api.call(route, body)` (POST `/api/m/<module>/<route>`, no cookies).
+- **Server** (`platform/shell/src/module-host.js`): `afterStore` runs after the order is stored **and again on a retried order** (it must answer the same way twice); its answer reaches the phone in `order.modules.<module>`. `statusChanged` runs once per real status change. Both are fail-open. A module's `routes` and `staff.routes` (with a role list per route; managers only when none is given) answer 404 for a café that switched the module off. A module's server code receives everything in `api` (café, settings, database, ids, hashing, customer-data keys, audit log) and imports nothing.
+- **Staff app** (`platform/admin/staff-api.js`): `panel(api)` returns a tab label and a `render(root)`; staff texts live in `i18n/staff.fr.json` and `staff.ar.json` so they never reach the customer page.
+- **Bundling:** module server and staff code is listed in two generated files, `platform/shell/src/server-modules.js` and `platform/admin/staff-modules.js`, written by `node tools/modules/registry.js` and checked by the tests. They are the only platform files that import `modules/`; removing a module folder and running the tool again leaves everything else working.
+
 | # | Point | Side | A module may add | First needed by | Built for |
 |---|---|---|---|---|---|
 | 1 | `menu.itemBadge` | customer | label on an item or variant (icon + text, never colour only) | M-10, M-05, M-09 | Go-live |

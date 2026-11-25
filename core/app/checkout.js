@@ -10,6 +10,7 @@ import { h, icon, bdi } from './dom.js';
 import { openSheet } from './sheet.js';
 import { openWaiter } from './list-view.js';
 import { emptyList } from '../list.js';
+import { renderBlocks } from './blocks.js';
 
 /** @typedef {import('./context.js').Ctx} Ctx */
 /** @typedef {import('./extensions.js').ListAction & { key: string }} Channel */
@@ -166,6 +167,42 @@ export function openCheckout(ctx, channel) {
       ),
     );
   }
+  // Modules' checkout fields (checkout.fields): a consent shows the notice's own text, unticked.
+  const purposes = Object.keys(privacy.optIn ?? {}).filter((p) => p !== 'marketing');
+  const extra = ctx.ext.checkoutFields(
+    { type, lang: ctx.lang, table: type === 'dine_in' ? (boot.table?.label ?? null) : null },
+    purposes,
+  );
+  /** @type {Map<string, HTMLInputElement>} */
+  const moduleConsents = new Map();
+  for (const c of extra) {
+    for (const f of c.fields) {
+      if (f.kind === 'info') {
+        fields.push(h('p', { class: 'dm-checkout-info' }, f.text));
+        continue;
+      }
+      if (moduleConsents.has(f.purpose)) continue;
+      const id = `co-${f.purpose}`;
+      const box = h('input', { type: 'checkbox', id });
+      moduleConsents.set(f.purpose, box);
+      fields.push(
+        h(
+          'label',
+          { class: 'dm-check', for: id },
+          box,
+          h(
+            'span',
+            null,
+            pick(privacy.optIn?.[f.purpose]),
+            f.note ? h('span', { class: 'dm-check-note' }, f.note) : null,
+          ),
+        ),
+      );
+    }
+  }
+  const moduleInputs = Object.fromEntries(
+    extra.filter((c) => c.input !== undefined).map((c) => [c.key, c.input]),
+  );
   fields.push(
     h('p', { class: 'dm-notice' }, pick(privacy.short)),
     h(
@@ -245,8 +282,15 @@ export function openCheckout(ctx, channel) {
           note: ctx.list.note,
           lang: ctx.lang,
           ...(details.firstName || details.phone ? { customer: details } : {}),
-          consents: { orderUpdates: true, marketing: marketing.checked },
+          consents: {
+            orderUpdates: true,
+            marketing: marketing.checked,
+            ...Object.fromEntries(
+              [...moduleConsents].filter(([, box]) => box.checked).map(([p]) => [p, true]),
+            ),
+          },
           noticeVersion: privacy?.version,
+          ...(Object.keys(moduleInputs).length ? { modules: moduleInputs } : {}),
         }),
       });
     } catch {
@@ -260,6 +304,14 @@ export function openCheckout(ctx, channel) {
     ctx.setList(emptyList());
     const next = channel.complete?.(out);
     ctx.announce(t('checkout.saved', { number: out.number }));
+    // Modules' blocks under the number (postOrder.block), from their own server answer.
+    const after = ctx.ext.postOrderBlocks(out, ctx.lang).map(({ key, blocks }) => {
+      const holder = h('div', { class: 'dm-postorder' });
+      /** @param {import('./extensions.js').Block[]} b */
+      const draw = (b) => holder.replaceChildren(...renderBlocks(ctx, b, { key, replace: draw }));
+      draw(blocks);
+      return holder;
+    });
     content.replaceChildren(
       h(
         'div',
@@ -268,6 +320,7 @@ export function openCheckout(ctx, channel) {
         bdi(out.number, 'dm-ticket-number'),
         next?.note ? h('p', { class: 'dm-actions-note' }, next.note) : null,
       ),
+      ...after,
     );
     actions.replaceChildren(
       next

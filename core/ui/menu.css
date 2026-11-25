@@ -1439,3 +1439,121 @@ a.dm-prominent {
   font-size: var(--dm-title-3);
   font-weight: 600;
 }
+
+/* ---- Module content (core/app/blocks.js): what modules describe, drawn by the core ---------- */
+
+.dm-topbar-modules {
+  display: contents;
+}
+
+.dm-checkout-info {
+  margin: var(--dm-space-4) 0 0;
+  padding: var(--dm-space-3);
+  border-radius: var(--dm-radius-m);
+  background: var(--dm-fill);
+  font-size: var(--dm-callout);
+  line-height: var(--dm-lh-ui);
+}
+
+.dm-check-note {
+  display: block;
+  margin-top: var(--dm-space-1);
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+  line-height: var(--dm-lh-ui);
+}
+
+.dm-postorder {
+  display: grid;
+  gap: var(--dm-space-3);
+  padding: var(--dm-space-4);
+  border-radius: var(--dm-radius-l);
+  background: var(--dm-bg-grouped);
+  text-align: center;
+}
+
+.dm-module-page {
+  display: grid;
+  gap: var(--dm-space-4);
+  padding-bottom: var(--dm-space-6);
+}
+
+.dm-block-title {
+  margin: 0;
+  font-size: var(--dm-title-3);
+  font-weight: 600;
+  line-height: var(--dm-lh-tight);
+}
+
+.dm-block-text {
+  margin: 0;
+  font-size: var(--dm-body);
+  line-height: var(--dm-lh-text);
+}
+
+.dm-block-text--muted {
+  color: var(--dm-ink-2);
+  font-size: var(--dm-callout);
+}
+
+.dm-block-text--success {
+  color: var(--dm-success);
+  font-weight: 600;
+}
+
+.dm-block-text--error {
+  color: var(--dm-danger);
+  font-weight: 600;
+}
+
+.dm-stamps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--dm-space-3);
+  max-width: 320px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.dm-stamp {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 2px dashed var(--dm-sep);
+  border-radius: var(--dm-radius-full);
+  color: var(--dm-on-accent);
+}
+
+.dm-stamp.is-on {
+  border: 2px solid var(--dm-accent);
+  background: var(--dm-accent);
+}
+
+.dm-codebox {
+  display: grid;
+  justify-items: center;
+  gap: var(--dm-space-1);
+  padding: var(--dm-space-4);
+  border: 1px solid var(--dm-sep);
+  border-radius: var(--dm-radius-l);
+  background: var(--dm-surface);
+}
+
+.dm-codebox-label {
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+}
+
+.dm-codebox-value {
+  font-size: var(--dm-title-1);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.dm-block-form {
+  display: grid;
+  gap: var(--dm-space-3);
+}

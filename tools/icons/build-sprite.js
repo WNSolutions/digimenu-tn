@@ -30,6 +30,7 @@ export const CUSTOMER_ICONS = [
   'map-pin',
   'utensils',
   'message-circle',
+  'gift',
 ];
 
 /**

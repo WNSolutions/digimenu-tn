@@ -51,6 +51,20 @@ Constraints that shape the design:
 | A paid wallet-pass service (PassKit, Passcreator…) | Monthly cost after the grant, and customer data on a third party. |
 | Only the phone number, no card | Ahmed asked for a card in the phone's wallet; a QR card also lets staff stamp purchases made without DigiMenu. |
 
+## Implementation notes (module 0.1.0, 25 Nov 2026)
+
+What was built first, in the priority order of §10, and where it differs from the text above:
+
+- **(a) Earning** on staff-confirmed orders (Accepter, or Reçue for a WhatsApp order), reversed on Refuser, at most one stamp per order; and a **counter stamp** from the staff app's Fidélité tab, limited to one per card every 10 minutes with an undo.
+- **(b) Web card** at `/<café>/carte` and from a "Fidélité" button in the menu's top bar. It shows the **card number** staff type; the **QR code and staff scanning come in the next step** (no QR library in the release yet, and iPhone browsers cannot scan without one).
+- **(c) Redemption** on the staff app, two taps. The ledger stores the stamps a reward used, so a later change of `stampsNeeded` does not change past rewards.
+- **(d) The rule** is the module's settings in the café configuration (`stampsNeeded`, `reward`, `minOrderTotal`), not a separate `loyalty_rewards` table: every configuration change is already versioned.
+- **Membership instead of a tick on every order.** The join box shows only on a phone without a card. After joining, each order from the same phone number earns while the card is active; the customer leaves from the card page, which records a consent withdrawal and clears the stamps.
+- **Re-issue on a new phone** (§5) is a one-time 10-character code staff give after checking the customer has the number; it works once, for 15 minutes, and the old phone's link stops.
+- **No reveal from a typed number.** A phone that types a member's number gets no card number or token; the order still earns for the member once staff confirm it.
+- **Module code.** The card page, checkout box and after-order block use new core extension points (`header.action`, `sheet.page`, `checkout.fields`, `postOrder.block`); the server side uses `order.afterStore` and `order.statusChanged` (fail-open) plus module routes under `/api/m/loyalty/` and `/admin/api/m/loyalty/`; the staff tab uses `staff.panel`. See [modules](../architecture/modules.md).
+- **(e), (f) Wallet passes** are not built yet: Google Wallet waits for the issuer account (T113), Apple Wallet for Q31.
+
 ## References
 
 - [ADR-0007](0007-order-notifications-staff-screen-and-whatsapp.md) (WhatsApp hand-off, amended by D-063) · [ADR-0008](0008-module-system.md) (modules) · [ADR-0010](0010-customer-data-consent-and-deletion.md) (customer data)

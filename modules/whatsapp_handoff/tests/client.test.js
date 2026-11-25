@@ -130,7 +130,9 @@ test('register contributes the main button in the customer language, message in 
       texts: (lang) => t(lang),
       pick,
       price,
-      contribute: (_point, fn) => void fns.push(fn),
+      storage: { get: () => null, set() {}, remove() {} },
+      call: async () => ({ ok: false, status: 0, data: {} }),
+      contribute: (_point, /** @type {any} */ fn) => void fns.push(fn),
     }),
   );
   assert.equal(fns.length, 1);
