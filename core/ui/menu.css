@@ -429,6 +429,7 @@ bdi,
 
 .dm-item--variants {
   flex-direction: column;
+  align-items: stretch;
   gap: var(--dm-space-1);
 }
 
