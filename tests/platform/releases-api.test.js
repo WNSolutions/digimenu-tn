@@ -113,7 +113,13 @@ async function setup(o = {}) {
       fetch: async (/** @type {Request} */ r) => {
         const m = /^\/r\/([^/]+)\/manifest\.json$/.exec(new URL(r.url).pathname);
         const body = m ? SITE[/** @type {keyof typeof SITE} */ (m[1])] : null;
-        return body ? Response.json(body) : new Response('', { status: 404 });
+        // Like Cloudflare's asset layer in single-page-application mode: a missing file is
+        // answered with the boot page, status 200.
+        return body
+          ? Response.json(body)
+          : new Response('<!doctype html><title>DigiMenu</title>', {
+              headers: { 'content-type': 'text/html' },
+            });
       },
     },
     ADMIN_ON_MAIN_HOST: '1',
@@ -383,6 +389,18 @@ test('the pre-flight refuses a release the café cannot run on, and says why', a
   assert.equal((await s.boot()).data.release.version, '0.16.0');
 
   // Not in the window, retired, or no reason: refused before anything is checked.
+  // A release registered but missing from the site: listed nowhere, never a crash.
+  s.addRelease('0.99.0');
+  const listed = await ahmed('/admin/api/releases?cafe=demo');
+  assert.equal(listed.status, 200);
+  assert.ok(!listed.data.window.some((/** @type {any} */ r) => r.version === '0.99.0'));
+  // A café pinned to it anyway: "not published", not a crash.
+  s.DB.exec("UPDATE cafes SET pinned_release = '0.99.0' WHERE id = 'cafe-demo'");
+  clearCaches();
+  const lost = await s.boot();
+  assert.deepEqual([lost.status, lost.data.error], [503, 'not_published']);
+  s.DB.exec("UPDATE cafes SET pinned_release = '0.16.0' WHERE id = 'cafe-demo'");
+  clearCaches();
   const unknown = await ahmed('/admin/api/releases/pin', {
     cafe: 'demo',
     version: '9.9.9',

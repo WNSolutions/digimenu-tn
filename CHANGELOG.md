@@ -79,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A release that is not on the site is now read as missing: Cloudflare's asset layer answers a missing manifest with the boot page (status 200), which made the boot answer an error 500 instead of "not published" (503), and would have broken the staff app's version card (#24).
 - `npm run demo` builds again with café themes (the theme font is served by the release site), and measures the core exactly as a release ships it (#26).
 - Café information editor: an amount setting typed in DT (the loyalty minimum) was sent as an object; it now sends the amount, and an ambiguous "4500" is refused rather than guessed (#20).
 
