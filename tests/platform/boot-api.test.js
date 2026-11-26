@@ -138,14 +138,19 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   // The CSP blocks style attributes: release code must not write any.
   const core = readFileSync(path.join(site, manifest.entry), 'utf8');
   assert.doesNotMatch(core, /style=/);
-  // "Ma commande" is a file of its own, loaded only after an order; the core imports nothing
-  // at start.
-  const parts = readdirSync(path.join(site, 'r/0.1.0')).filter((f) => f.startsWith('part.'));
-  assert.equal(parts.length, 1);
-  assert.match(parts[0], /^part\.order-track\.[A-Z0-9]+\.js$/);
-  assert.ok(core.includes(`import("./${parts[0]}")`));
+  // "Ma commande" and the Info sheet are files of their own, loaded only when needed; the
+  // core imports nothing at start.
+  const parts = readdirSync(path.join(site, 'r/0.1.0'))
+    .filter((f) => f.startsWith('part.'))
+    .sort();
+  assert.equal(parts.length, 2);
+  assert.match(parts[0], /^part\.info-sheet\.[A-Z0-9]+\.js$/);
+  assert.match(parts[1], /^part\.order-track\.[A-Z0-9]+\.js$/);
+  for (const part of parts) {
+    assert.ok(core.includes(`import("./${part}")`));
+    assert.doesNotMatch(readFileSync(path.join(site, 'r/0.1.0', part), 'utf8'), /style=|^import/);
+  }
   assert.doesNotMatch(core, /(^|[;}])import\s*[{*"]/);
-  assert.doesNotMatch(readFileSync(path.join(site, 'r/0.1.0', parts[0]), 'utf8'), /style=|^import/);
   // Customer pages may not use the camera; the staff app may (scanning loyalty cards).
   assert.match(headers, /\/\*\n(.*\n)*? {2}Permissions-Policy: camera=\(\)/);
   assert.match(

@@ -308,6 +308,7 @@ test('switching on checks the release, dependencies and conflicts; off takes dep
       paid: false,
       client: true,
       customerRecords: 'none',
+      settings: {},
       ...m,
     });
   const catalog = {

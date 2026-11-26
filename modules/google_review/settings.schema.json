@@ -6,6 +6,11 @@
   "additionalProperties": false,
   "properties": {
     "reviewUrl": {
+      "x-labels": { "fr": "Lien des avis Google", "ar": "رابط تقييمات Google" },
+      "x-help": {
+        "fr": "Sur la fiche Google du café : « Demander des avis », puis copier le lien (https://g.page/r/…/review).",
+        "ar": "من صفحة المقهى على Google: «طلب مراجعات» ثم انسخ الرابط (https://g.page/r/…/review)."
+      },
       "type": "string",
       "maxLength": 300,
       "pattern": "^https://(g\\.page|search\\.google\\.com|(www\\.|maps\\.)?google\\.(com|tn)|maps\\.app\\.goo\\.gl)/[^\\s]*$",

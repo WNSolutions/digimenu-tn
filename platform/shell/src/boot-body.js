@@ -16,7 +16,8 @@ import { accentTokens, themeTokens, THEME_FONTS } from '../../../core/ui/accent.
  * @property {import('../../../core/i18n.js').LocalizedText} names
  * @property {{ enabled: import('../../../core/i18n.js').Lang[], default: import('../../../core/i18n.js').Lang }} languages
  * @property {{ unavailable?: 'grey' | 'hide', prices?: 'full' | 'short' }} [menu]
- * @property {{ address?: import('../../../core/i18n.js').LocalizedText }} [info]
+ * @property {{ address?: import('../../../core/i18n.js').LocalizedText, mapUrl?: string,
+ *   phone?: string, social?: string[] }} [info]
  * @property {import('../../../core/hours.js').Hours} [hours]
  * @property {string} [timeZone]
  * @property {{ primaryColor: string, buttonColor?: string, logo?: string, theme?: CafeTheme }} branding
@@ -69,6 +70,25 @@ export function tableStatus(row, code) {
   const valid = Boolean(code) && String(code).toUpperCase() === row.check_code;
   return { label: row.label, valid, ...(valid ? { code: row.check_code } : {}) };
 }
+
+/**
+ * The café's public information for the customer's "Info" sheet (C-06): address, map link,
+ * business phone and social links, as the café published them. Null when there is none.
+ * @param {CafeConfig} config
+ */
+export function publicInfo(config) {
+  const i = config.info ?? {};
+  const out = {
+    ...(i.address ? { address: i.address } : {}),
+    ...(i.mapUrl ? { mapUrl: i.mapUrl } : {}),
+    ...(i.phone ? { phone: i.phone } : {}),
+    ...(i.social?.length ? { social: i.social } : {}),
+  };
+  return Object.keys(out).length ? out : null;
+}
+
+/** @param {ReturnType<typeof publicInfo>} info */
+const withInfo = (info) => (info ? { info } : {});
 
 /**
  * Only enabled modules whose customer code is in the release (MOD-03: off means zero bytes),
@@ -166,7 +186,7 @@ export function bootBody({
       languages: config.languages,
       ...(config.hours ? { hours: config.hours } : {}),
       timeZone: config.timeZone ?? 'Africa/Tunis',
-      ...(config.info?.address ? { info: { address: config.info.address } } : {}),
+      ...withInfo(publicInfo(config)),
       unavailable: config.menu?.unavailable ?? 'grey',
       maxQtyPerLine: config.ordering?.maxQtyPerLine ?? 20,
       ...(config.ordering?.listMaxAgeHours

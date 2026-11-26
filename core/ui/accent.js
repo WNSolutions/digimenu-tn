@@ -102,6 +102,8 @@ function bestLabel(fill) {
  * @property {Record<string, string>} tokens   CSS custom properties to set on :root
  * @property {string[]} errors                 configuration must be refused
  * @property {string[]} warnings               shown to the maintainer
+ * @property {string} [suggestion]             when the colour is refused: a deeper shade that
+ *   passes, for the editor to offer (#20)
  */
 
 /**
@@ -169,6 +171,7 @@ export function accentTokens(branding) {
     },
     errors,
     warnings,
+    ...(errors.length ? { suggestion: lightFill.colour } : {}),
   };
 }
 

@@ -25,12 +25,13 @@
  */
 import { json, problem } from './http.js';
 import { currentAccount, roleIn, sameOrigin } from './auth.js';
-import { resolveCafe, forgetCafe } from './cafes.js';
+import { resolveCafe } from './cafes.js';
 import { releaseManifest } from './releases.js';
 import { missingNeeds } from './module-needs.js';
 import { isoNow } from './clock.js';
 import { ulid } from './ids.js';
 import { MODULE_CATALOG } from './module-catalog.js';
+import { activeVersion, writeVersion } from './config-versions.js';
 
 /**
  * What the catalogue knows about a module (from its manifest, tools/modules/registry.js).
@@ -47,6 +48,29 @@ import { MODULE_CATALOG } from './module-catalog.js';
  * @property {boolean} paid
  * @property {boolean} client     has customer code (so must be in the café's release)
  * @property {string} customerRecords
+ * @property {Record<string, SettingSchema>} settings   the settings schema's properties
+ */
+
+/**
+ * One setting as its module's settings schema describes it (the subset the editor handles;
+ * other keywords may be present).
+ * @typedef {object} SettingSchema
+ * @property {'string' | 'integer' | 'number' | 'boolean' | 'object'} [type]
+ * @property {unknown} [default]
+ * @property {Record<string, SettingSchema>} [properties]
+ * @property {string[]} [required]
+ * @property {boolean} [additionalProperties]
+ * @property {Record<string, string>} [x-labels]   the field's name for staff (fr, ar)
+ * @property {Record<string, string>} [x-help]     one line of help for staff (fr, ar)
+ * @property {'money'} [x-format]                  an amount in millimes, edited in DT
+ * @property {Record<string, Record<string, string>>} [x-enumLabels]   a name for each choice
+ * @property {number} [maxLength]
+ * @property {number} [minLength]
+ * @property {string} [pattern]
+ * @property {unknown[]} [enum]
+ * @property {number} [minimum]
+ * @property {number} [maximum]
+ * @property {string} [description]
  */
 
 /** @typedef {{ key: string, on: boolean, also?: string[], approves?: number }} Change */
@@ -102,70 +126,6 @@ export function applySwitch(config, change) {
   next.modules = next.modules ?? {};
   for (const k of [change.key, ...(change.also ?? [])]) {
     next.modules[k] = { ...(next.modules[k] ?? {}), enabled: k === change.key ? change.on : false };
-  }
-  return next;
-}
-
-/**
- * @param {ModulesEnv} env
- * @param {string} cafeId
- */
-async function activeVersion(env, cafeId) {
-  const row = await env.DB.prepare(
-    `SELECT v.version_no, v.schema_version, v.body FROM cafes c
-       JOIN config_versions v ON v.cafe_id = c.id AND v.version_no = c.active_config_version
-      WHERE c.id = ?1`,
-  )
-    .bind(cafeId)
-    .first();
-  if (!row) throw new Error('no active configuration');
-  return {
-    version: Number(row.version_no),
-    schemaVersion: Number(row.schema_version),
-    config: JSON.parse(String(row.body)),
-  };
-}
-
-/**
- * Writes a new configuration version; an active one replaces the current one.
- * @param {ModulesEnv} env
- * @param {{ id: string, slug: string }} cafe
- * @param {{ config: any, schemaVersion: number, change: Change, by: string, status: 'active' | 'draft', now: Date }} v
- * @returns {Promise<number>} the new version number
- */
-async function writeVersion(env, cafe, v) {
-  const top = await env.DB.prepare(
-    'SELECT MAX(version_no) AS n FROM config_versions WHERE cafe_id = ?1',
-  )
-    .bind(cafe.id)
-    .first();
-  const next = Number(top?.n ?? 0) + 1;
-  const insert = env.DB.prepare(
-    `INSERT INTO config_versions (cafe_id, version_no, schema_version, body, status, created_by, created_at, change)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
-  ).bind(
-    cafe.id,
-    next,
-    v.schemaVersion,
-    JSON.stringify(v.config),
-    v.status,
-    v.by,
-    isoNow(v.now),
-    JSON.stringify(v.change),
-  );
-  if (v.status === 'draft') await insert.run();
-  else {
-    await env.DB.batch([
-      env.DB.prepare(
-        "UPDATE config_versions SET status = 'superseded' WHERE cafe_id = ?1 AND status = 'active'",
-      ).bind(cafe.id),
-      insert,
-      env.DB.prepare('UPDATE cafes SET active_config_version = ?2 WHERE id = ?1').bind(
-        cafe.id,
-        next,
-      ),
-    ]);
-    forgetCafe(cafe.slug);
   }
   return next;
 }
@@ -294,7 +254,7 @@ export async function handleModules(request, env, route, now = new Date()) {
            FROM config_versions v
            LEFT JOIN users u ON u.id = v.created_by
            LEFT JOIN users d ON d.id = v.decided_by
-          WHERE v.cafe_id = ?1 AND v.change IS NOT NULL
+          WHERE v.cafe_id = ?1 AND json_extract(v.change, '$.key') IS NOT NULL
           ORDER BY v.version_no DESC LIMIT 20`,
       )
         .bind(cafe.id)
@@ -451,7 +411,7 @@ async function notices(env, adminId, now) {
          FROM config_versions v
          JOIN cafes c ON c.id = v.cafe_id
          LEFT JOIN users u ON u.id = v.created_by
-        WHERE v.change IS NOT NULL AND v.created_by != ?1
+        WHERE json_extract(v.change, '$.key') IS NOT NULL AND v.created_by != ?1
           AND (v.created_at >= ?2 OR (v.status = 'draft' AND v.decision IS NULL))
         ORDER BY v.created_at DESC LIMIT 50`,
     )

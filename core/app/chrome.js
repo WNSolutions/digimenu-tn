@@ -89,53 +89,12 @@ export function openLanguageMenu(button, ctx) {
 }
 
 /**
- * Café info: address and opening hours.
+ * Café info: address, hours, phone and social links. The sheet loads on the first tap
+ * (core/app/info-sheet.js, its own file outside the core's budget).
  * @param {Ctx} ctx
  */
 export function openInfoSheet(ctx) {
-  const { t } = ctx;
-  const cafe = ctx.boot.cafe;
-  const hours = cafe.hours;
-  const content = h(
-    'div',
-    { class: 'dm-info' },
-    cafe.info?.address
-      ? h(
-          'section',
-          null,
-          h('h3', { class: 'dm-info-h' }, icon('map-pin', 'dm-icon--text'), t('info.address')),
-          langText('p', ctx.pick(cafe.info.address), ctx.lang),
-        )
-      : null,
-    hours
-      ? h(
-          'section',
-          null,
-          h('h3', { class: 'dm-info-h' }, icon('clock', 'dm-icon--text'), t('info.hours')),
-          h(
-            'dl',
-            { class: 'dm-hours' },
-            DAYS.flatMap((d) => [
-              h('dt', null, t(`day.${d}`)),
-              h(
-                'dd',
-                null,
-                (hours[d] ?? []).length
-                  ? (hours[d] ?? []).map(([a, b]) => h('bdi', null, `${a} – ${b}`))
-                  : t('info.closed'),
-              ),
-            ]),
-          ),
-        )
-      : null,
-    h('p', { class: 'dm-footer' }, t('footer.by')),
-  );
-  openSheet({
-    title: ctx.pick(cafe.name).text,
-    content,
-    closeLabel: t('sheet.close'),
-    grabberLabels: [t('sheet.expand'), t('sheet.collapse')],
-    lang: ctx.lang,
-    dir: ctx.dir,
-  });
+  import('./info-sheet.js')
+    .then((m) => m.openInfoSheet(ctx, { h, icon, langText, openSheet, DAYS }))
+    .catch((err) => console.error('info sheet did not load', err));
 }

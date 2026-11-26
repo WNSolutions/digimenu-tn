@@ -6,11 +6,23 @@
   "additionalProperties": false,
   "properties": {
     "number": {
+      "x-labels": { "fr": "Numéro WhatsApp du café", "ar": "رقم واتساب المقهى" },
+      "x-help": {
+        "fr": "Un numéro professionnel que le café accepte de publier, au format +216 suivi de 8 chiffres.",
+        "ar": "رقم مهني يقبل المقهى نشره، بصيغة ‎+216‎ متبوعة بـ 8 أرقام."
+      },
       "type": "string",
       "pattern": "^\\+[1-9][0-9]{6,14}$",
       "description": "The café's WhatsApp number in international format (+216 and 8 digits). A business number the café agrees to publish, never a staff member's personal number unless the owner chooses it. Required for a real café; the demo café has none, so WhatsApp asks whom to send to."
     },
     "messageLanguage": {
+      "x-labels": { "fr": "Langue du message reçu", "ar": "لغة الرسالة المستلمة" },
+      "x-enumLabels": {
+        "default": { "fr": "Langue principale du café", "ar": "اللغة الرئيسية للمقهى" },
+        "fr": { "fr": "Français", "ar": "الفرنسية" },
+        "ar": { "fr": "Arabe", "ar": "العربية" },
+        "en": { "fr": "Anglais", "ar": "الإنجليزية" }
+      },
       "enum": ["default", "fr", "ar", "en"],
       "default": "default",
       "description": "Language of the message staff receive: the café's default language, or a fixed one."

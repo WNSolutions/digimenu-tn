@@ -25,7 +25,23 @@ export const MODULE_CATALOG = {
     ],
     "paid": false,
     "client": true,
-    "customerRecords": "none"
+    "customerRecords": "none",
+    "settings": {
+      "reviewUrl": {
+        "x-labels": {
+          "fr": "Lien des avis Google",
+          "ar": "رابط تقييمات Google"
+        },
+        "x-help": {
+          "fr": "Sur la fiche Google du café : « Demander des avis », puis copier le lien (https://g.page/r/…/review).",
+          "ar": "من صفحة المقهى على Google: «طلب مراجعات» ثم انسخ الرابط (https://g.page/r/…/review)."
+        },
+        "type": "string",
+        "maxLength": 300,
+        "pattern": "^https://(g\\.page|search\\.google\\.com|(www\\.|maps\\.)?google\\.(com|tn)|maps\\.app\\.goo\\.gl)/[^\\s]*$",
+        "description": "The café's own Google review link, from its Google Business Profile (\"Demander des avis\" → copy the link, e.g. https://g.page/r/…/review). Without it the module stays off and the validator warns. Never a page of ours or a form in between: the link goes straight to Google."
+      }
+    }
   },
   "loyalty": {
     "id": "M-15",
@@ -47,7 +63,73 @@ export const MODULE_CATALOG = {
     "needs": [],
     "paid": false,
     "client": true,
-    "customerRecords": "read"
+    "customerRecords": "read",
+    "settings": {
+      "stampsNeeded": {
+        "x-labels": {
+          "fr": "Tampons pour une récompense",
+          "ar": "عدد الأختام لمكافأة"
+        },
+        "x-help": {
+          "fr": "Un changement compte pour les nouveaux tampons ; ceux déjà donnés restent.",
+          "ar": "التغيير يخص الأختام الجديدة فقط؛ الأختام السابقة تبقى."
+        },
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 50,
+        "default": 10,
+        "description": "Stamps needed for one reward (\"10 commandes = 1 café offert\"). A change applies to new stamps only: stamps already given stay."
+      },
+      "reward": {
+        "x-labels": {
+          "fr": "Récompense",
+          "ar": "المكافأة"
+        },
+        "x-help": {
+          "fr": "Telle que les clients la lisent, par exemple « 1 café offert ».",
+          "ar": "كما يقرؤها الحرفاء، مثلًا «قهوة مجانية»."
+        },
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fr"
+        ],
+        "description": "The reward, as customers and staff read it. French required; Arabic and English fall back to French.",
+        "properties": {
+          "fr": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "ar": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "en": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          }
+        }
+      },
+      "minOrderTotal": {
+        "x-labels": {
+          "fr": "Commande minimum pour un tampon",
+          "ar": "أدنى مبلغ طلب لختم"
+        },
+        "x-help": {
+          "fr": "En DT ; 0 = chaque commande.",
+          "ar": "بالدينار؛ 0 = كل طلب."
+        },
+        "x-format": "money",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000,
+        "default": 0,
+        "description": "Smallest order total, in millimes, that earns a stamp (0 = every order). Counter stamps are the staff's choice."
+      }
+    }
   },
   "whatsapp_handoff": {
     "id": "M-03",
@@ -69,6 +151,53 @@ export const MODULE_CATALOG = {
     "needs": [],
     "paid": false,
     "client": true,
-    "customerRecords": "none"
+    "customerRecords": "none",
+    "settings": {
+      "number": {
+        "x-labels": {
+          "fr": "Numéro WhatsApp du café",
+          "ar": "رقم واتساب المقهى"
+        },
+        "x-help": {
+          "fr": "Un numéro professionnel que le café accepte de publier, au format +216 suivi de 8 chiffres.",
+          "ar": "رقم مهني يقبل المقهى نشره، بصيغة ‎+216‎ متبوعة بـ 8 أرقام."
+        },
+        "type": "string",
+        "pattern": "^\\+[1-9][0-9]{6,14}$",
+        "description": "The café's WhatsApp number in international format (+216 and 8 digits). A business number the café agrees to publish, never a staff member's personal number unless the owner chooses it. Required for a real café; the demo café has none, so WhatsApp asks whom to send to."
+      },
+      "messageLanguage": {
+        "x-labels": {
+          "fr": "Langue du message reçu",
+          "ar": "لغة الرسالة المستلمة"
+        },
+        "x-enumLabels": {
+          "default": {
+            "fr": "Langue principale du café",
+            "ar": "اللغة الرئيسية للمقهى"
+          },
+          "fr": {
+            "fr": "Français",
+            "ar": "الفرنسية"
+          },
+          "ar": {
+            "fr": "Arabe",
+            "ar": "العربية"
+          },
+          "en": {
+            "fr": "Anglais",
+            "ar": "الإنجليزية"
+          }
+        },
+        "enum": [
+          "default",
+          "fr",
+          "ar",
+          "en"
+        ],
+        "default": "default",
+        "description": "Language of the message staff receive: the café's default language, or a fixed one."
+      }
+    }
   }
 };
