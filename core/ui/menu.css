@@ -621,6 +621,44 @@ bdi,
   overflow: hidden;
 }
 
+/* Modules' labels on an item (#29): icon and text, never colour alone. */
+.dm-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--dm-border);
+  border-radius: 999px;
+  color: var(--dm-ink-2);
+  font-size: var(--dm-footnote);
+  line-height: 1.4;
+}
+
+.dm-badge-icon {
+  inline-size: 14px;
+  block-size: 14px;
+  flex: none;
+}
+
+.dm-itemsheet-extras {
+  display: grid;
+  gap: var(--dm-space-3);
+  margin: 0 0 var(--dm-space-4);
+}
+
+.dm-itemsheet-extras .dm-badges {
+  margin: 0;
+}
+
 .dm-item-end {
   position: relative;
   z-index: 1;

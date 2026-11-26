@@ -133,6 +133,7 @@ export function openItemSheet(item, ctx) {
     item.description
       ? langText('p', ctx.pick(item.description), ctx.lang, 'dm-itemsheet-desc')
       : null,
+    ctx.itemExtras?.(item),
     variantGroup,
     anyOrderable ? [stepper, maxNote, noteField] : null,
     live,

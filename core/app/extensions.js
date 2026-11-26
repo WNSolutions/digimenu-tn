@@ -18,6 +18,10 @@
  *   postOrder.block  blocks under the order number once the order is stored
  *   orderStatus.block blocks on "Ma commande" for the status staff last set (#26)
  *   footer.link      one link in the menu's footer, e.g. "Laisser un avis Google" (#26)
+ *   menu.itemBadge   small labels on an item (icon + text), from its `ext.<module>` data (#29)
+ *   menu.itemDetail  blocks in the item sheet, from the same data (#29)
+ * The two item points are drawn by core/app/item-extras.js, a file loaded only when a module
+ * contributes to them (outside the core's size budget).
  */
 import { translator, pick } from '../i18n.js';
 import { formatPrice } from '../money.js';
@@ -33,6 +37,8 @@ export const CLIENT_POINTS = /** @type {const} */ ([
   'postOrder.block',
   'orderStatus.block',
   'footer.link',
+  'menu.itemBadge',
+  'menu.itemDetail',
 ]);
 /** @typedef {typeof CLIENT_POINTS[number]} ClientPoint */
 
@@ -157,6 +163,13 @@ export const CLIENT_POINTS = /** @type {const} */ ([
  */
 
 /**
+ * What an item point receives: the item's own data for this module (`items.ext.<module>`).
+ * @typedef {{ ext: unknown, lang: Lang, item: { id: string } }} ItemContext
+ * A label on an item: text always; an icon as SVG path data (24 × 24), optional.
+ * @typedef {{ text: string, icon?: { paths: string[] } }} ItemBadge
+ */
+
+/**
  * What a module receives in `register(api)`.
  * @typedef {object} ModuleApi
  * @property {string} key
@@ -175,6 +188,8 @@ export const CLIENT_POINTS = /** @type {const} */ ([
  *   (point: 'checkout.fields', fn: (c: CheckoutContext) => CheckoutContribution | null): void,
  *   (point: 'postOrder.block', fn: (c: PostOrderContext) => Block[] | null): void,
  *   (point: 'orderStatus.block', fn: (c: OrderStatusContext) => Block[] | null): void,
+ *   (point: 'menu.itemBadge', fn: (c: ItemContext) => ItemBadge[] | null): void,
+ *   (point: 'menu.itemDetail', fn: (c: ItemContext) => Block[] | null): void,
  *   (point: 'footer.link', fn: (c: { lang: Lang }) => FooterLink | null): void,
  * }} contribute
  */
@@ -221,6 +236,8 @@ export function createRegistry(report = (message, err) => console.error(message,
   const orderStatus = [];
   /** @type {{ key: string, fn: (c: { lang: Lang }) => FooterLink | null }[]} */
   const footerLinks = [];
+  /** Item points (#29), called by item-extras.js with each item's own data. */
+  const itemPoints = { 'menu.itemBadge': [], 'menu.itemDetail': [] };
 
   /** @param {string} key */
   function storageFor(key) {
@@ -274,6 +291,8 @@ export function createRegistry(report = (message, err) => console.error(message,
   }
 
   return {
+    /** @type {Record<'menu.itemBadge' | 'menu.itemDetail', { key: string, fn: Function }[]>} */
+    itemPoints,
     /**
      * Runs a module's `register` with its API. A module that throws adds nothing.
      * @param {BootModule} mod
@@ -311,6 +330,7 @@ export function createRegistry(report = (message, err) => console.error(message,
             'postOrder.block': postOrder,
             'orderStatus.block': orderStatus,
             'footer.link': footerLinks,
+            ...itemPoints,
           };
           const list = /** @type {any} */ (lists)[point];
           if (!list) throw new Error(`unknown extension point: ${point}`);

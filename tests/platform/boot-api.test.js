@@ -138,14 +138,15 @@ test('the release build writes hashed files, a manifest and a CSP that allows on
   // The CSP blocks style attributes: release code must not write any.
   const core = readFileSync(path.join(site, manifest.entry), 'utf8');
   assert.doesNotMatch(core, /style=/);
-  // "Ma commande" and the Info sheet are files of their own, loaded only when needed; the
-  // core imports nothing at start.
+  // "Ma commande", the Info sheet and the modules' item labels (#29) are files of their own,
+  // loaded only when needed; the core imports nothing at start.
   const parts = readdirSync(path.join(site, 'r/0.1.0'))
     .filter((f) => f.startsWith('part.'))
     .sort();
-  assert.equal(parts.length, 2);
+  assert.equal(parts.length, 3);
   assert.match(parts[0], /^part\.info-sheet\.[A-Z0-9]+\.js$/);
-  assert.match(parts[1], /^part\.order-track\.[A-Z0-9]+\.js$/);
+  assert.match(parts[1], /^part\.item-extras\.[A-Z0-9]+\.js$/);
+  assert.match(parts[2], /^part\.order-track\.[A-Z0-9]+\.js$/);
   for (const part of parts) {
     assert.ok(core.includes(`import("./${part}")`));
     assert.doesNotMatch(readFileSync(path.join(site, 'r/0.1.0', part), 'utf8'), /style=|^import/);

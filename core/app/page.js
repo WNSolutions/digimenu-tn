@@ -290,6 +290,15 @@ export function renderPage(root, ctx) {
     h('div', { class: 'dm-capsule-wrap' }, capsule),
   );
 
+  // Modules' item labels and sheet blocks (#29): their own file, only when a module gives any.
+  ctx.ready?.then(() => {
+    const p = ctx.ext.itemPoints;
+    if (p['menu.itemBadge'].length + p['menu.itemDetail'].length)
+      import('./item-extras.js')
+        .then((m) => m.decorate(main, ctx, { h, renderBlocks }))
+        .catch((err) => console.error('item-extras did not load', err));
+  });
+
   // ---- Behaviour: the order this phone sent last, followed until served ------------------------
   // "Ma commande" loads only once there is an order to follow (its own file, outside the core's
   // budget); it gets the core's functions rather than importing them. A redraw (language
@@ -440,7 +449,7 @@ function itemRow(item, ctx, hideSoldOut, maxQty) {
     const v = item.variants[0];
     return h(
       'li',
-      { class: `dm-item${itemSoldOut ? ' is-soldout' : ''}` },
+      { class: `dm-item${itemSoldOut ? ' is-soldout' : ''}`, 'data-item': item.id },
       head,
       h(
         'div',
@@ -453,7 +462,7 @@ function itemRow(item, ctx, hideSoldOut, maxQty) {
   }
   return h(
     'li',
-    { class: `dm-item dm-item--variants${itemSoldOut ? ' is-soldout' : ''}` },
+    { class: `dm-item dm-item--variants${itemSoldOut ? ' is-soldout' : ''}`, 'data-item': item.id },
     head,
     h(
       'ul',

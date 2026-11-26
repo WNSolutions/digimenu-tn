@@ -51,6 +51,7 @@ export async function menuSource(db, cafeId) {
               name: parse(/** @type {string} */ (it.name)),
               description: parse(/** @type {string} */ (it.description)),
               available: Boolean(it.available),
+              ext: parse(/** @type {string} */ (it.ext)),
               variants: variants
                 .filter((v) => v.item_id === it.id)
                 .map((v) => ({

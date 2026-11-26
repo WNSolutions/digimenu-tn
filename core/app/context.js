@@ -57,6 +57,8 @@ export const TEXTS = { fr, ar, en };
  * @property {() => Date} now
  * @property {() => ReturnType<typeof import('../list.js').checkList>} check   the list checked against the menu (cached)
  * @property {import('./extensions.js').Registry} ext   contributions of the enabled modules
+ * @property {(item: import('../menu/snapshot.js').Item) => HTMLElement | null} [itemExtras]
+ *   modules' labels and blocks for the item sheet, once item-extras.js has loaded (#29)
  * @property {Storage | null} [storage]   the phone's localStorage, or null when refused
  * @property {(t: import('./order-store.js').Tracked) => void} [trackOrder]
  *   follow an order just sent ("Ma commande", order-track.js)

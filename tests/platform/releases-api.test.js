@@ -47,7 +47,7 @@ const SCHEMA = dataSchema();
  */
 function manifest(version, o = {}) {
   const modules = Object.fromEntries(
-    ['google_review', 'loyalty', 'whatsapp_handoff']
+    ['dietary_tags', 'google_review', 'loyalty', 'whatsapp_handoff']
       .filter((k) => !o.drop?.includes(k))
       .map((k) => [
         k,
