@@ -511,6 +511,16 @@ input {
   font-weight: 700;
 }
 
+/* Four periods (Ventes, #28): two by two on a phone, one row where there is room. */
+.a-segment--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.a-segment--grid button {
+  padding: 0 8px;
+}
+
 .a-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -519,6 +529,7 @@ input {
 
 .a-tile {
   display: grid;
+  align-content: start;
   gap: 2px;
   padding: 12px 14px;
   border: 1px solid var(--dm-sep);
@@ -539,6 +550,21 @@ input {
 
 .a-tile-small {
   font-variant-numeric: tabular-nums;
+}
+
+.a-tile-lines {
+  display: grid;
+}
+
+.a-tile--wide {
+  grid-column: 1 / -1;
+}
+
+/* Amounts ("1 250,000 DT") fit a phone's two-column tiles (#28). */
+.a-tile-value--fit {
+  min-width: 0;
+  font-size: clamp(1.15rem, 5.2vw, 1.75rem);
+  overflow-wrap: anywhere;
 }
 
 .a-bars {

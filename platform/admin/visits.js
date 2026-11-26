@@ -9,6 +9,8 @@
  * and the same numbers as a table: nothing depends on colour or on hovering.
  */
 
+import { bars as drawBars, columns as drawColumns, csvCell } from './charts.js';
+
 /** @type {Record<'fr' | 'ar', Record<string, string>>} */
 export const VISITS_TEXT = {
   fr: {
@@ -125,13 +127,6 @@ export function byWeek(days) {
     .sort((a, b) => a.week.localeCompare(b.week));
 }
 
-/** One CSV cell, safe for spreadsheets. @param {unknown} v */
-function cell(v) {
-  const s = String(v ?? '');
-  const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
-  return /[",\n;]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
-}
-
 /**
  * The impact files: one for all cafés, one per café. Counts only.
  * @param {{ from: string, to: string, cafes: { slug: string, days: any[], totals: any }[] }} data
@@ -140,7 +135,9 @@ export function impactCsv(data) {
   const head = ['cafe', 'day', 'visits', 'with_table', 'without_table', 'fr', 'ar', 'en', 'other'];
   /** @param {string} slug @param {any} r */
   const line = (slug, r) =>
-    [slug, r.day, r.visits, r.withTable, r.noTable, r.fr, r.ar, r.en, r.other].map(cell).join(',');
+    [slug, r.day, r.visits, r.withTable, r.noTable, r.fr, r.ar, r.en, r.other]
+      .map(csvCell)
+      .join(',');
   /** @param {{ slug: string, days: any[], totals: any }[]} cafes */
   const file = (cafes) =>
     [
@@ -173,60 +170,13 @@ export function visitsView(body, d) {
   const pct = (/** @type {number} */ n, /** @type {number} */ of) =>
     of ? `${Math.round((n / of) * 100)}\u00a0%` : '—';
   let span = 28;
-  // Sizes go through the style object: the staff app's security policy blocks style="…".
-  const sized = (
-    /** @type {HTMLElement} */ el,
-    /** @type {'inlineSize' | 'blockSize'} */ prop,
-    /** @type {number} */ share,
-  ) => {
-    el.style[prop] = `${Math.round(share * 1000) / 10}%`;
-    return el;
-  };
   const content = h('div', { class: 'a-stack' });
 
-  /** Horizontal bars, one hue, the value written at the end of each. */
-  const bars = (/** @type {{ label: string, value: number }[]} */ rows) => {
-    const max = Math.max(1, ...rows.map((r) => r.value));
-    return h(
-      'ul',
-      { class: 'a-bars' },
-      ...rows.map((r) =>
-        h(
-          'li',
-          { class: 'a-bar-row' },
-          h('span', { class: 'a-bar-label' }, r.label),
-          h(
-            'span',
-            { class: 'a-bar-track', 'aria-hidden': 'true' },
-            sized(h('span', { class: 'a-bar-fill' }), 'inlineSize', r.value / max),
-          ),
-          h('span', { class: 'a-bar-value' }, String(r.value)),
-        ),
-      ),
-    );
-  };
-
-  /** Vertical columns for the days or hours, the busiest one labelled. */
+  const bars = (/** @type {{ label: string, value: number }[]} */ rows) => drawBars(h, rows);
   const columns = (
     /** @type {{ label: string, short: string, value: number }[]} */ rows,
     /** @type {string} */ name,
-  ) => {
-    const max = Math.max(1, ...rows.map((r) => r.value));
-    const top = rows.findIndex((r) => r.value === max && max > 0);
-    return h(
-      'div',
-      { class: 'a-cols', role: 'img', 'aria-label': name },
-      ...rows.map((r, i) =>
-        h(
-          'div',
-          { class: 'a-col', title: r.label },
-          h('span', { class: 'a-col-value' }, i === top ? String(r.value) : ''),
-          sized(h('span', { class: 'a-col-fill' }), 'blockSize', r.value / max),
-          h('span', { class: 'a-col-label' }, r.short),
-        ),
-      ),
-    );
-  };
+  ) => drawColumns(h, rows, name);
 
   /**
    * The modules' cards, from their own counters for the period. A card that fails is left out.
