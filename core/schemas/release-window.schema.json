@@ -68,11 +68,16 @@
           "minimum": 1,
           "description": "Must match the platform shell of the deployment, or the deploy is refused."
         },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "Toolkit commit the release is built from. Without it, the deploy builds from the tag v<version>."
+        },
         "dataSchema": {
           "type": "object",
           "additionalProperties": false,
           "required": ["min", "max"],
-          "description": "Database schema versions this release can work with. Every release in the window must accept the current one.",
+          "description": "Database migrations: min is the one the release was built against (its manifest's dataSchema; it needs at least that one), max the newest it was checked with. Migrations only add (expand, then contract), so a release keeps working on a newer database until a MAJOR release says otherwise. Every release in the window must accept the current one.",
           "properties": {
             "min": { "type": "integer", "minimum": 1 },
             "max": { "type": "integer", "minimum": 1 }
@@ -81,7 +86,7 @@
         "artifactSha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$",
-          "description": "Checksum of the immutable build attached to the GitHub Release."
+          "description": "SHA-256 of the release's files, as tools/release/window.js digest prints it for r/<version>/. The deploy rebuilds the release from its commit or tag and refuses a different digest: what runs is what Ahmed approved."
         },
         "addedOn": {
           "type": "string",

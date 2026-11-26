@@ -6,6 +6,7 @@ maintain it: no prior DevOps experience needed.
 | Guide                                                    | Read it when you want to…                                                  |
 | -------------------------------------------------------- | -------------------------------------------------------------------------- |
 | [Branching and releases](branching-and-releases.md)      | make a change, open a pull request, release a version or roll a café back |
+| [Rolling a café back](rollback.md)                       | put a café back on its previous version in under 15 minutes, or rehearse it |
 | [Continuous integration (CI)](ci.md)                     | understand the automatic checks, or fix a red ❌ on a pull request         |
 | [Environments](environments.md)                          | know where the code runs: your laptop, preview, production                 |
 | [Secrets](secrets.md)                                    | handle a password, token or key, or react to a leak                        |

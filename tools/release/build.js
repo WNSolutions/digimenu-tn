@@ -13,7 +13,10 @@
  *   ├── fonts/                     display fonts café themes may choose (ADR-0014, SIL OFL)
  *   ├── admin/                     the staff app
  *   └── r/<version>/
- *       ├── manifest.json          what /api/boot reads: entry, CSS, modules and their texts
+ *       ├── manifest.json          what /api/boot reads: entry, CSS, modules and their texts;
+ *       │                          and what a café's pin pre-flight checks (#24): the database
+ *       │                          migration it was built against, the configuration and menu
+ *       │                          snapshot formats it reads, each module's version
  *       ├── app.<hash>.js          the customer core (≤ 20 KB gzipped, checked here)
  *       ├── app.<hash>.css
  *       └── m/<module>.<hash>.js   one file per module with customer code
@@ -22,7 +25,8 @@
  *                               [--brand <dir>] [--media <dir>]
  *
  * `--keep` copies earlier releases' `r/<version>/` folders into the output, so a window of up
- * to 3 releases can be deployed together. `--brand` and `--media` take the private deploy
+ * to 3 releases can be deployed together (tools/release/window.js registers them), with the
+ * theme fonts they name that this build no longer has. `--brand` and `--media` take the private deploy
  * repo's `brand/` and `media/` folders: the DigiMenu logo files and real cafés' logos are not in
  * this public repository (D-022), and are not covered by its MIT licence. The tool never deploys.
  */
@@ -41,6 +45,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { build } from 'esbuild';
+import { SNAPSHOT_SCHEMA } from '../../core/menu/snapshot.js';
 
 const HELP = `Usage: node tools/release/build.js --version <x.y.z> [--out dist/public] [--keep <dir>]
        [--brand <dir>] [--media <dir>]
@@ -54,6 +59,23 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const TARGET = ['es2022', 'chrome100', 'safari15.4', 'firefox110'];
 const BUDGET_CORE_GZ = 20 * 1024;
 export const PLATFORM_API = 1;
+
+/** The newest database migration (platform/migrations/NNNN_*.sql) this release is built against. */
+export function dataSchema() {
+  const numbers = readdirSync(path.join(root, 'platform/migrations'))
+    .map((f) => /^(\d{4})_.*\.sql$/.exec(f)?.[1])
+    .filter(Boolean)
+    .map(Number);
+  return Math.max(...numbers);
+}
+
+/** The configuration format this release reads (core/schemas/cafe-config.schema.json). */
+export function configSchema() {
+  const schema = JSON.parse(
+    readFileSync(path.join(root, 'core/schemas/cafe-config.schema.json'), 'utf8'),
+  );
+  return Number(schema.properties.schemaVersion.const);
+}
 
 /** The brand fonts the build copies to /brand/fonts/ (platform/brand/brand.css names them). */
 export const BRAND_FONTS = [
@@ -278,7 +300,7 @@ export async function buildRelease({ version, out, keep, brand, media }) {
   // Parts loaded only when needed (their names carry their own hash).
   for (const part of parts) writeFileSync(path.join(base, part.file), part.text);
 
-  /** @type {Record<string, { entry: string, texts: Record<string, Record<string, string>>, needs?: string[] }>} */
+  /** @type {Record<string, { entry: string, version: string, settingsVersion: number, texts: Record<string, Record<string, string>>, needs?: string[] }>} */
   const modules = {};
   const modulesDir = path.join(root, 'modules');
   for (const key of readdirSync(modulesDir).sort()) {
@@ -291,6 +313,9 @@ export async function buildRelease({ version, out, keep, brand, media }) {
     const needs = manifest.settings?.needs ?? [];
     modules[key] = {
       entry: `/r/${version}/${file}`,
+      version: String(manifest.version),
+      // Another settings format than the café's release: the pin pre-flight refuses the move.
+      settingsVersion: Number(manifest.settings?.version ?? 1),
       // Settings without which the boot leaves the module out (module-needs.js).
       ...(needs.length ? { needs } : {}),
       texts: Object.fromEntries(
@@ -346,6 +371,8 @@ export async function buildRelease({ version, out, keep, brand, media }) {
     platformApi: PLATFORM_API,
     entry: `/r/${version}/${entry}`,
     css: `/r/${version}/${cssFile}`,
+    dataSchema: dataSchema(),
+    reads: { config: [configSchema()], snapshot: [SNAPSHOT_SCHEMA] },
     modules,
   };
   writeFileSync(path.join(base, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
@@ -355,6 +382,12 @@ export async function buildRelease({ version, out, keep, brand, media }) {
       if (old !== version)
         cpSync(path.join(keep, 'r', old), path.join(out, 'r', old), { recursive: true });
     }
+    // Theme fonts an older release's styles name, that this build dropped: kept, never replaced.
+    const fonts = path.join(keep, 'fonts');
+    if (existsSync(fonts))
+      for (const f of readdirSync(fonts))
+        if (!existsSync(path.join(out, 'fonts', f)))
+          cpSync(path.join(fonts, f), path.join(out, 'fonts', f));
   }
   return {
     manifest,

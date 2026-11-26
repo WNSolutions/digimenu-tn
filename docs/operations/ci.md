@@ -32,7 +32,7 @@ steps, are placeholders today: they print what they will do.
 | --- | --- | --- |
 | `checks.yml` | stage 1 hygiene on every push and pull request | automatic |
 | `deploy.yml` | deploy the release window to preview or production; no café pin changes | accounts in `DEPLOY_ALLOWED_ACTORS` (Ahmed; later the Tech Lead) |
-| `pin-cafe.yml` | move one café to another release of the window (fallback when the admin app is down) | back to an older release: `PIN_ALLOWED_ACTORS`; forward: `DEPLOY_ALLOWED_ACTORS` only (D-021) |
+| `pin-cafe.yml` | move one café to another release of the window, with the staff app's rules and pre-flight (`tools/release/pin.js`); the fallback when the staff app is unavailable | back to the release the café ran before: `PIN_ALLOWED_ACTORS`; any other move: `DEPLOY_ALLOWED_ACTORS` only (D-021) |
 | `publish-media.yml` | publish logos, photos and daily fallback menus to `digimenu-media` | `DEPLOY_ALLOWED_ACTORS` |
 | `backup.yml` | weekly encrypted D1 export (age, to `BACKUP_RECIPIENT`), kept 8 weeks as an artifact, with a restore drill on every run | `DEPLOY_ALLOWED_ACTORS` (manual runs) |
 | `migrate.yml` | D1 migrations: plan (dry run), backup, apply, verify, undo | plan: `PIN_ALLOWED_ACTORS`; the others: `DEPLOY_ALLOWED_ACTORS` |

@@ -33,7 +33,9 @@ Planned milestones: **v0.1.0** at the end of Sprint 1 (demo café only), the go-
 
 - **Size:** at most **3** releases (`previous`, `stable`, `candidate`). In normal operation the window holds **2** (stable + candidate); 3 is a ceiling for the time a rollback target is still needed.
 - **Where it is declared:** `releases.json` in the private deploy repository. Its shape is [`release-window.schema.json`](../../core/schemas/release-window.schema.json); an [example](../../core/schemas/examples/release-window.example.json) shows a stable release and a pending candidate.
-- **Adding a release changes no café.** Pins are untouched. A test asserts that every café's boot response and home page are byte-identical before and after the deploy.
+- **How it is assembled** (#24): the deploy builds each release of the window from its commit or tag, puts them on one site with `tools/release/build.js --keep` (each in `r/<version>/`, with the theme fonts an older one names), and checks each one's digest (`tools/release/window.js digest`) against `artifactSha256` in `releases.json`, so what runs is what Ahmed approved. `tools/release/window.js sql` then registers the releases on the site in the `releases` table and marks every other one `retired`.
+- **Adding a release changes no café.** Pins are untouched. A test asserts that a café's boot answer and the staff app's café list are byte-identical before and after a release is added (`tests/platform/releases-api.test.js`).
+- **A release leaves only when no café uses it.** Before anything changes, the deploy lists the cafés pinned to a release that the new site would no longer carry (`tools/release/window.js check`) and stops if there is one: those cafés would stop loading. The demo café is the exception, since the deploy re-seeds it on the new release (and keeps that move in its history, so it can be rolled back).
 - **Compatibility gate.** Every release in the window must accept the current database schema and `platformApi`, or the deploy is blocked.
 - **Leaving the window.** A release is removed only when no café is pinned to it.
 - **What is shared by all cafés.** The platform shell, the café hub and the database schema are not pinned per café. They are kept small, change rarely, and a shell rollback applies to every café at once.
@@ -42,13 +44,17 @@ Planned milestones: **v0.1.0** at the end of Sprint 1 (demo café only), the go-
 
 The pin lives in the database (`cafes.pinned_release`, with every change kept in `release_pins`). The shell sends each request to the pinned release's files and server hooks. Every café runs published code only (MOD-15), there is one deployable artifact, and each café moves on its own (MOD-08).
 
-**Pin pre-flight (automatic, before every pin change):**
+Each release says what it needs in its `manifest.json` (written by `tools/release/build.js`): the database migration it was built against (`dataSchema`), the configuration and menu snapshot formats it reads (`reads`), and each module's version and settings format (`settingsVersion`). A release built before #24 says nothing and is read as configuration format 0 and snapshot format 1, the only ones that existed.
 
-1. Validate the café's configuration against the target release.
-2. If the configuration format differs, run the migration as a dry run and show the difference.
-3. Create a new configuration version (the old one is kept).
-4. Rebuild the menu snapshot with the target release.
-5. Switch release, configuration version and snapshot in one atomic database batch.
+**Pin pre-flight (automatic, before every pin change; `platform/shell/src/releases-api.js`):**
+
+1. The target release is in the window, on the site, and made for this platform (`platformApi`).
+2. The database has at least the migration it was built against (`data_schema`).
+3. It reads the café's configuration format (`config_format`) and the format of its published menu (`snapshot_format`).
+4. It has the customer code of every module the café has switched on (`module_missing`), with the same settings format as the café's current release (`settings_format`).
+5. The pin, the history row (from, to, who, why, the configuration version at that moment) and the audit line are written in one database batch, and only if the café is still on the release the move started from; otherwise nothing is written (`changed_meanwhile`).
+
+Every refusal names the reason in the staff app. Configuration and snapshot formats are the same in every release so far, so a move never migrates or rebuilds anything: the configuration and the menu stay exactly as they are. When a MAJOR release changes a format, it brings its `migrate(from, to)` function, and the pre-flight runs it as a dry run, creates a new configuration version and rebuilds the snapshot before the switch (still one batch); until then such a release is refused.
 
 ## Who can do what
 
@@ -86,7 +92,7 @@ The pin lives in the database (`cafes.pinned_release`, with every change kept in
 
 | Situation | Action (written procedure) | Who | Time |
 |---|---|---|---|
-| A new release misbehaves at one café | Admin app → Café → Release → "Back to previous" (pre-flight in reverse; the previous configuration version is re-activated) | Maintainer or Admin | 2–5 min |
+| A new release misbehaves at one café | Staff app → café → **Modules** → **Version de ce café** → **Revenir à la version précédente**, one line saying why, confirm. Same pre-flight; the configuration and menu are untouched. Fallback without the staff app: the deploy repo's **Pin café** workflow. Written procedure: [rolling a café back](../operations/rollback.md) | Maintainer or Admin | 2–5 min |
 | One module is failing (e.g. orders) | Kill switch: module off → Publish. The café falls back to "show to waiter" | Maintainer or Admin | ≤ 10 min |
 | A platform shell deploy breaks every café | Cloudflare dashboard → Worker `digimenu` → Deployments → previous version → Rollback. Table pages keep working meanwhile because they are static | Admin (a maintainer with the guide, if asked) | ≤ 5 min |
 | Wrong menu change | Undo, or restore a menu revision | Manager, Maintainer | ≤ 1 min |
