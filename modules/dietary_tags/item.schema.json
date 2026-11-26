@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WNSolutions/digimenu-tn/modules/dietary_tags/item.schema.json",
+  "title": "dietary_tags item data",
+  "description": "What one item carries in items.ext.dietary_tags. A fixed list, so every tag has its icon and its text in each language; the café ticks what applies.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tags": {
+      "x-labels": { "fr": "Régimes et allergènes", "ar": "الأنظمة الغذائية ومسببات الحساسية" },
+      "x-help": {
+        "fr": "Cochez ce qui s’applique à cet article. Le café en est responsable ; les clients lisent aussi « demandez au personnel en cas d’allergie ».",
+        "ar": "اختر ما ينطبق على هذا الصنف. المقهى مسؤول عن ذلك؛ ويقرأ الحرفاء أيضًا «اسأل العاملين في حالة الحساسية»."
+      },
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 19,
+      "items": {
+        "enum": [
+          "vegetarian",
+          "vegan",
+          "gluten_free",
+          "lactose_free",
+          "spicy",
+          "gluten",
+          "crustaceans",
+          "eggs",
+          "fish",
+          "peanuts",
+          "soy",
+          "milk",
+          "nuts",
+          "celery",
+          "mustard",
+          "sesame",
+          "sulphites",
+          "lupin",
+          "molluscs"
+        ]
+      },
+      "x-enumLabels": {
+        "vegetarian": { "fr": "Végétarien", "ar": "نباتي" },
+        "vegan": { "fr": "Vegan", "ar": "نباتي صرف" },
+        "gluten_free": { "fr": "Sans gluten", "ar": "خالٍ من الغلوتين" },
+        "lactose_free": { "fr": "Sans lactose", "ar": "خالٍ من اللاكتوز" },
+        "spicy": { "fr": "Épicé", "ar": "حار" },
+        "gluten": { "fr": "Contient du gluten", "ar": "يحتوي على الغلوتين" },
+        "crustaceans": { "fr": "Contient des crustacés", "ar": "يحتوي على القشريات" },
+        "eggs": { "fr": "Contient des œufs", "ar": "يحتوي على البيض" },
+        "fish": { "fr": "Contient du poisson", "ar": "يحتوي على السمك" },
+        "peanuts": { "fr": "Contient des arachides", "ar": "يحتوي على الفول السوداني" },
+        "soy": { "fr": "Contient du soja", "ar": "يحتوي على الصويا" },
+        "milk": { "fr": "Contient du lait", "ar": "يحتوي على الحليب" },
+        "nuts": { "fr": "Contient des fruits à coque", "ar": "يحتوي على المكسرات" },
+        "celery": { "fr": "Contient du céleri", "ar": "يحتوي على الكرفس" },
+        "mustard": { "fr": "Contient de la moutarde", "ar": "يحتوي على الخردل" },
+        "sesame": { "fr": "Contient du sésame", "ar": "يحتوي على السمسم" },
+        "sulphites": { "fr": "Contient des sulfites", "ar": "يحتوي على الكبريتيت" },
+        "lupin": { "fr": "Contient du lupin", "ar": "يحتوي على الترمس" },
+        "molluscs": { "fr": "Contient des mollusques", "ar": "يحتوي على الرخويات" }
+      }
+    }
+  }
+}

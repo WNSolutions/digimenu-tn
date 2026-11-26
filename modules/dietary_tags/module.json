@@ -1,0 +1,44 @@
+{
+  "$schema": "../../core/schemas/module.schema.json",
+  "key": "dietary_tags",
+  "id": "M-10",
+  "title": {
+    "fr": "Allergènes et régimes",
+    "ar": "مسببات الحساسية والأنظمة الغذائية",
+    "en": "Allergens and dietary tags"
+  },
+  "summary": {
+    "fr": "Sur chaque article, des étiquettes avec icône : végétarien, vegan, sans gluten, sans lactose, épicé, et les 14 allergènes à déclarer. Avec la mention « Étiquettes fournies par le café : demandez au personnel en cas d’allergie ».",
+    "ar": "على كل صنف علامات بأيقونة: نباتي، نباتي صرف، خالٍ من الغلوتين، خالٍ من اللاكتوز، حار، ومسببات الحساسية الأربع عشرة. مع عبارة «العلامات يقدّمها المقهى: اسأل العاملين في حالة الحساسية».",
+    "en": "On each item, labels with an icon: vegetarian, vegan, gluten-free, lactose-free, spicy, and the 14 allergens to declare. With the note “Tags are provided by the café: ask staff about allergies”."
+  },
+  "version": "0.1.0",
+  "stability": "experimental",
+  "platformApi": 1,
+  "coreApi": "^0.1",
+  "requires": [],
+  "conflicts": [],
+  "texts": {
+    "fr": "i18n/fr.json",
+    "ar": "i18n/ar.json",
+    "en": "i18n/en.json"
+  },
+  "extends": {
+    "client": ["menu.itemBadge", "menu.itemDetail"],
+    "staff": ["admin.itemFields"]
+  },
+  "data": {
+    "orderExt": [],
+    "itemExt": ["tags"],
+    "records": [],
+    "personalFields": []
+  },
+  "itemSchema": "item.schema.json",
+  "customerRecords": {
+    "access": "none"
+  },
+  "analyticsEvents": [],
+  "tests": "tests/",
+  "guide": "GUIDE.md",
+  "changelog": "CHANGELOG.md"
+}

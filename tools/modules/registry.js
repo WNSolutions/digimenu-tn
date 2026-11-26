@@ -126,6 +126,10 @@ export function renderCatalog() {
       customerRecords: m.customerRecords?.access ?? 'none',
       // The settings a Manager may fill in, for the form in "Infos du café" (#20).
       settings: schema.properties ?? {},
+      // What the module stores per item, for the menu editor's fields (#29).
+      itemFields: m.itemSchema
+        ? (JSON.parse(readFileSync(path.join(dir, key, m.itemSchema), 'utf8')).properties ?? {})
+        : {},
     };
   }
   return [

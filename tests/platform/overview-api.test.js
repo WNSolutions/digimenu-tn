@@ -111,7 +111,7 @@ test('each café: release, modules on, last menu change, last visit and last ord
   assert.equal(demo.status, 'live');
   assert.equal(demo.release, '0.1.0');
   const keys = demo.modules.map((/** @type {any} */ m) => m.key);
-  assert.deepEqual(keys, ['google_review', 'loyalty', 'whatsapp_handoff']);
+  assert.deepEqual(keys, ['dietary_tags', 'google_review', 'loyalty', 'whatsapp_handoff']);
   assert.equal(
     demo.modules.find((/** @type {any} */ m) => m.key === 'google_review').title.fr,
     'Avis Google',

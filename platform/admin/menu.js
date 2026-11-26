@@ -191,6 +191,9 @@ export function menuView(body, d) {
   const pick = (text) => (text ? text[lang] || text.fr || '' : '');
   /** The café's languages (from the menu answer). */
   let langs = ['fr'];
+  /** What the café's modules store per item (#29): { <module>: { title, fields } }. */
+  /** @type {Record<string, { title: any, fields: Record<string, any> }>} */
+  let itemFields = {};
   let uid = 0;
   /** The panel open now (one at a time) and where to come back after a reload. */
   let openKey = '';
@@ -570,6 +573,75 @@ export function menuView(body, d) {
   }
 
   /**
+   * The item's fields from the café's modules (#29): a list of choices becomes boxes to tick,
+   * named in the staff's language; saved on their own, as one change of the item.
+   * @param {any} it
+   */
+  function moduleFields(it) {
+    return Object.entries(itemFields).map(([key, m]) => {
+      const mNote = h('p', { class: 'a-muted', role: 'status' });
+      /** @type {Record<string, HTMLInputElement[]>} */
+      const boxes = {};
+      const sets = Object.entries(m.fields)
+        .filter(([, f]) => f.type === 'array' && Array.isArray(f.items?.enum))
+        .map(([name, f]) => {
+          const have = new Set(it.ext?.[key]?.[name] ?? []);
+          boxes[name] = f.items.enum.map(
+            (/** @type {string} */ v) =>
+              /** @type {HTMLInputElement} */ (
+                h('input', { type: 'checkbox', value: v, checked: have.has(v) })
+              ),
+          );
+          return h(
+            'fieldset',
+            { class: 'a-stack a-choices' },
+            h('legend', { class: 'a-label' }, pick(f['x-labels']) || name),
+            f['x-help'] ? h('p', { class: 'a-muted' }, pick(f['x-help'])) : null,
+            ...boxes[name].map((box) =>
+              h(
+                'label',
+                { class: 'a-check' },
+                box,
+                pick(f['x-enumLabels']?.[box.value]) || box.value,
+              ),
+            ),
+          );
+        });
+      return h(
+        'div',
+        { class: 'a-stack a-variantedit', 'data-module': key },
+        h('h4', { class: 'a-subtitle' }, pick(m.title) || key),
+        ...sets,
+        h(
+          'button',
+          {
+            type: 'button',
+            class: 'a-btn',
+            onclick: () =>
+              edit(
+                {
+                  op: 'item.update',
+                  id: it.id,
+                  ext: {
+                    [key]: Object.fromEntries(
+                      Object.entries(boxes).map(([name, list]) => [
+                        name,
+                        list.filter((b) => b.checked).map((b) => b.value),
+                      ]),
+                    ),
+                  },
+                },
+                mNote,
+              ),
+          },
+          t('save'),
+        ),
+        mNote,
+      );
+    });
+  }
+
+  /**
    * One item: name, availability, prices; for editors a panel with everything else.
    * @param {any} it @param {any} g @param {boolean} editor @param {{ id: string, label: string }[]} groups
    */
@@ -650,6 +722,7 @@ export function menuView(body, d) {
             ),
             arrange('item', it.id, pNote),
             pNote,
+            ...moduleFields(it),
             h('h4', { class: 'a-subtitle' }, t('variants')),
             ...variants,
             h(
@@ -792,6 +865,7 @@ export function menuView(body, d) {
     if (res.status !== 200) return body.replaceChildren(h('p', { class: 'a-error' }, t('error')));
     const editor = ['manager', 'maintainer', 'admin'].includes(res.data.role);
     langs = res.data.languages?.length ? res.data.languages : ['fr'];
+    itemFields = res.data.itemFields ?? {};
     const v = editor ? await d.api(`/menu/versions?cafe=${encodeURIComponent(d.cafe)}`) : null;
     body.replaceChildren(
       h('p', { class: 'a-muted' }, editor ? t('intro') : t('staffIntro')),

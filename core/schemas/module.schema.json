@@ -289,6 +289,10 @@
       "default": [],
       "description": "Allow-listed analytics event names. Counts only, never personal data."
     },
+    "itemSchema": {
+      "$ref": "#/$defs/relativePath",
+      "description": "JSON Schema of what the module stores for one item in items.ext.<key> (#29). The menu editor shows it as fields (x-labels, x-help, x-enumLabels) and the server refuses anything else. Its top-level properties are the data.itemExt fields."
+    },
     "tests": {
       "$ref": "#/$defs/relativePath",
       "description": "Folder with the module's tests."

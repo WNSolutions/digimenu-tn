@@ -39,6 +39,7 @@ export const SNAPSHOT_SCHEMA = 1;
  * @property {LocalizedText} name
  * @property {LocalizedText} [description]
  * @property {boolean} [available]
+ * @property {Record<string, unknown>} [ext]   modules' data for this item, by module key (#29)
  * @property {SourceVariant[]} variants
  *
  * @typedef {object} SourceGroup
@@ -62,7 +63,7 @@ export const SNAPSHOT_SCHEMA = 1;
 /**
  * @typedef {{ id: string, name?: LocalizedText, price: number, available: boolean }} Variant
  * @typedef {{ id: string, name: LocalizedText, description?: LocalizedText, available: boolean,
- *   variants: Variant[] }} Item
+ *   variants: Variant[], ext?: Record<string, unknown> }} Item
  * @typedef {{ id: string, title?: LocalizedText, description?: LocalizedText, items: Item[] }} Group
  * @typedef {{ id: string, title: LocalizedText, subtitle?: LocalizedText, groups: Group[] }} Category
  * @typedef {{ schemaVersion: number, rev: number, categories: Category[] }} Snapshot
@@ -93,6 +94,23 @@ function cleanText(text) {
     if (typeof value === 'string' && value.trim() !== '') out[lang] = value.trim();
   }
   return out.fr === '' && !out.ar && !out.en ? undefined : out;
+}
+
+/**
+ * Modules' data for an item (#29): kept by module key, plain objects only; nothing when empty.
+ * What each module may store is checked by the menu editor against the module's item schema.
+ * @param {unknown} ext
+ * @returns {Record<string, unknown> | undefined}
+ */
+export function cleanExt(ext) {
+  if (!ext || typeof ext !== 'object' || Array.isArray(ext)) return undefined;
+  const out = Object.fromEntries(
+    Object.entries(ext).filter(
+      ([k, v]) =>
+        /^[a-z][a-z0-9_]{1,30}$/.test(k) && v && typeof v === 'object' && !Array.isArray(v),
+    ),
+  );
+  return Object.keys(out).length ? out : undefined;
 }
 
 /**
@@ -160,12 +178,14 @@ export function buildSnapshot(source, rev) {
           continue;
         }
         const description = cleanText(item.description);
+        const ext = cleanExt(item.ext);
         items.push({
           id: item.id,
           name,
           ...(description ? { description } : {}),
           available: item.available !== false,
           variants,
+          ...(ext ? { ext } : {}),
         });
       }
       if (items.length === 0) continue;

@@ -172,6 +172,8 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
             name: it.name,
             description: it.description ?? null,
             available: it.available ?? true,
+            // Modules' data for the item (#29), e.g. { "dietary_tags": { "tags": ["vegan"] } }.
+            ext: it.ext ?? {},
           }),
         );
         it.variants.forEach((v, vi) => {

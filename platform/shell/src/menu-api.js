@@ -16,7 +16,9 @@
  *   group.add { categoryId, title? }       group.update { id, title?, description? }
  *   group.move { id, dir }                 group.delete { id }      (empty, and not the last one)
  *   item.add { groupId, name, description?, price, variant? }   with its first variant
- *   item.update { id, name?, description?, groupId? }           groupId moves it (at the end)
+ *   item.update { id, name?, description?, groupId?, ext? }     groupId moves it (at the end);
+ *                                          ext: { <module>: data | null }, checked against the
+ *                                          module's item schema (#29); null removes it
  *   item.move { id, dir }                  item.delete { id }       (with its variants)
  *   variant.add { itemId, name?, price }   variant.update { id, name?, price? }
  *   variant.move { id, dir }               variant.delete { id }    (never the last one)
@@ -31,6 +33,8 @@ import { resolveCafe, clearCaches } from './cafes.js';
 import { publishChange } from './menu-publish.js';
 import { isoNow } from './clock.js';
 import { ulid } from './ids.js';
+import { settingOk } from './info-api.js';
+import { MODULE_CATALOG } from './module-catalog.js';
 
 const EDIT = ['manager', 'maintainer', 'admin'];
 const LANGS = ['fr', 'ar', 'en'];
@@ -165,6 +169,29 @@ async function last(db, kind, parentId, cafeId) {
     .bind(...(parent ? [cafeId, parentId] : [cafeId]))
     .first();
   return Number(r?.s ?? 0) + 1;
+}
+
+/**
+ * An item's module data after an edit (#29). Each module's part must match its item schema;
+ * empty lists are dropped, and a module left with nothing is removed.
+ * @param {Record<string, unknown>} current
+ * @param {unknown} edit   { <module>: data | null }
+ * @param {Record<string, import('./modules-api.js').CatalogEntry>} [catalog]
+ */
+export function itemExt(current, edit, catalog = MODULE_CATALOG) {
+  if (!edit || typeof edit !== 'object' || Array.isArray(edit))
+    throw new Refused(400, 'bad_request');
+  const next = { ...current };
+  for (const [key, value] of Object.entries(edit)) {
+    const fields = Object.hasOwn(catalog, key) ? catalog[key].itemFields : null;
+    if (!fields || !Object.keys(fields).length) throw new Refused(422, 'unknown_module');
+    if (value !== null && !settingOk({ type: 'object', properties: fields }, value))
+      throw new Refused(422, 'bad_item_data');
+    const kept = Object.entries(value ?? {}).filter(([, v]) => !(Array.isArray(v) && !v.length));
+    if (kept.length) next[key] = Object.fromEntries(kept);
+    else delete next[key];
+  }
+  return next;
 }
 
 /** @param {unknown} v */
@@ -349,6 +376,7 @@ export async function plan(db, cafe, input, now) {
       if ('name' in input) set(r, 'name', cleanText(input.name, langs, MAX_NAME));
       if ('description' in input)
         set(r, 'description', cleanText(input.description, langs, MAX_TEXT, true));
+      if ('ext' in input) set(r, 'ext', itemExt(parse(r.ext) ?? {}, input.ext));
       if ('groupId' in input && input.groupId !== r.sub_group_id) {
         const group = await row(db, 'group', input.groupId, c);
         writes.push(
@@ -471,7 +499,7 @@ export function treeWrites(db, cafeId, tree) {
         w.push(
           db
             .prepare(
-              'INSERT INTO items (id, cafe_id, category_id, sub_group_id, sort, name, description, available) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)',
+              'INSERT INTO items (id, cafe_id, category_id, sub_group_id, sort, name, description, available, ext) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)',
             )
             .bind(
               it.id,
@@ -482,6 +510,8 @@ export function treeWrites(db, cafeId, tree) {
               text(it.name),
               text(it.description ?? null),
               it.available ? 1 : 0,
+              // Modules' data for the item (#29) comes back with it.
+              JSON.stringify(it.ext ?? {}),
             ),
         );
         for (const v of it.variants ?? [])

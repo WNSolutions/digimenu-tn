@@ -49,14 +49,18 @@ import { activeVersion, writeVersion } from './config-versions.js';
  * @property {boolean} client     has customer code (so must be in the café's release)
  * @property {string} customerRecords
  * @property {Record<string, SettingSchema>} settings   the settings schema's properties
+ * @property {Record<string, SettingSchema>} itemFields   what the module stores per item (#29)
  */
 
 /**
  * One setting as its module's settings schema describes it (the subset the editor handles;
  * other keywords may be present).
  * @typedef {object} SettingSchema
- * @property {'string' | 'integer' | 'number' | 'boolean' | 'object'} [type]
+ * @property {'string' | 'integer' | 'number' | 'boolean' | 'object' | 'array'} [type]
  * @property {unknown} [default]
+ * @property {SettingSchema} [items]      for an array: what each entry is
+ * @property {boolean} [uniqueItems]
+ * @property {number} [maxItems]
  * @property {Record<string, SettingSchema>} [properties]
  * @property {string[]} [required]
  * @property {boolean} [additionalProperties]

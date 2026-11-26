@@ -2,7 +2,7 @@
 
 **Optional features**, one folder per module. Each café switches modules on or off by configuration only; the code is the same for every café.
 
-**Status:** three modules, all experimental: [`whatsapp_handoff`](whatsapp_handoff/GUIDE.md) (M-03), [`loyalty`](loyalty/GUIDE.md) (M-15) and [`google_review`](google_review/GUIDE.md) (M-14), loaded by the customer page's extension registry ([`core/app/extensions.js`](../core/app/extensions.js)), the server's module host and the staff app. Still to come: `languages` (M-12) and the full config validator.
+**Status:** four modules, all experimental: [`whatsapp_handoff`](whatsapp_handoff/GUIDE.md) (M-03), [`loyalty`](loyalty/GUIDE.md) (M-15), [`google_review`](google_review/GUIDE.md) (M-14) and [`dietary_tags`](dietary_tags/GUIDE.md) (M-10), loaded by the customer page's extension registry ([`core/app/extensions.js`](../core/app/extensions.js)), the server's module host and the staff app. Still to come: `languages` (M-12) and the full config validator.
 
 A module's `client.js` exports `register(api)` and imports nothing: everything it may use comes in `api`.
 
@@ -15,6 +15,7 @@ modules/<key>/
 ├── staff.js               staff screen and admin contributions (optional)
 ├── server.js              server hooks (optional)
 ├── settings.schema.json   settings with safe defaults
+├── item.schema.json       what it stores per item, shown as fields in the menu editor (optional)
 ├── i18n/fr.json, ar.json, en.json
 ├── tests/
 ├── GUIDE.md               one page for maintainers

@@ -74,6 +74,12 @@ export function settingOk(schema, value) {
     return schema.maximum === undefined || value <= schema.maximum;
   }
   if (schema.type === 'boolean') return typeof value === 'boolean';
+  if (schema.type === 'array') {
+    if (!Array.isArray(value)) return false;
+    if (schema.maxItems !== undefined && value.length > schema.maxItems) return false;
+    if (schema.uniqueItems && new Set(value).size !== value.length) return false;
+    return !schema.items || value.every((x) => settingOk(/** @type {any} */ (schema.items), x));
+  }
   const props = schema.properties;
   if (schema.type === 'object' && props) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false;

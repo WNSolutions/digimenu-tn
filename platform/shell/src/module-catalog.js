@@ -3,6 +3,145 @@
 
 /** @type {Record<string, import('./modules-api.js').CatalogEntry>} */
 export const MODULE_CATALOG = {
+  "dietary_tags": {
+    "id": "M-10",
+    "title": {
+      "fr": "Allergènes et régimes",
+      "ar": "مسببات الحساسية والأنظمة الغذائية",
+      "en": "Allergens and dietary tags"
+    },
+    "summary": {
+      "fr": "Sur chaque article, des étiquettes avec icône : végétarien, vegan, sans gluten, sans lactose, épicé, et les 14 allergènes à déclarer. Avec la mention « Étiquettes fournies par le café : demandez au personnel en cas d’allergie ».",
+      "ar": "على كل صنف علامات بأيقونة: نباتي، نباتي صرف، خالٍ من الغلوتين، خالٍ من اللاكتوز، حار، ومسببات الحساسية الأربع عشرة. مع عبارة «العلامات يقدّمها المقهى: اسأل العاملين في حالة الحساسية».",
+      "en": "On each item, labels with an icon: vegetarian, vegan, gluten-free, lactose-free, spicy, and the 14 allergens to declare. With the note “Tags are provided by the café: ask staff about allergies”."
+    },
+    "version": "0.1.0",
+    "stability": "experimental",
+    "requires": [],
+    "requiresAnyOf": [],
+    "conflicts": [],
+    "needs": [],
+    "paid": false,
+    "client": true,
+    "customerRecords": "none",
+    "settings": {},
+    "itemFields": {
+      "tags": {
+        "x-labels": {
+          "fr": "Régimes et allergènes",
+          "ar": "الأنظمة الغذائية ومسببات الحساسية"
+        },
+        "x-help": {
+          "fr": "Cochez ce qui s’applique à cet article. Le café en est responsable ; les clients lisent aussi « demandez au personnel en cas d’allergie ».",
+          "ar": "اختر ما ينطبق على هذا الصنف. المقهى مسؤول عن ذلك؛ ويقرأ الحرفاء أيضًا «اسأل العاملين في حالة الحساسية»."
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "maxItems": 19,
+        "items": {
+          "enum": [
+            "vegetarian",
+            "vegan",
+            "gluten_free",
+            "lactose_free",
+            "spicy",
+            "gluten",
+            "crustaceans",
+            "eggs",
+            "fish",
+            "peanuts",
+            "soy",
+            "milk",
+            "nuts",
+            "celery",
+            "mustard",
+            "sesame",
+            "sulphites",
+            "lupin",
+            "molluscs"
+          ]
+        },
+        "x-enumLabels": {
+          "vegetarian": {
+            "fr": "Végétarien",
+            "ar": "نباتي"
+          },
+          "vegan": {
+            "fr": "Vegan",
+            "ar": "نباتي صرف"
+          },
+          "gluten_free": {
+            "fr": "Sans gluten",
+            "ar": "خالٍ من الغلوتين"
+          },
+          "lactose_free": {
+            "fr": "Sans lactose",
+            "ar": "خالٍ من اللاكتوز"
+          },
+          "spicy": {
+            "fr": "Épicé",
+            "ar": "حار"
+          },
+          "gluten": {
+            "fr": "Contient du gluten",
+            "ar": "يحتوي على الغلوتين"
+          },
+          "crustaceans": {
+            "fr": "Contient des crustacés",
+            "ar": "يحتوي على القشريات"
+          },
+          "eggs": {
+            "fr": "Contient des œufs",
+            "ar": "يحتوي على البيض"
+          },
+          "fish": {
+            "fr": "Contient du poisson",
+            "ar": "يحتوي على السمك"
+          },
+          "peanuts": {
+            "fr": "Contient des arachides",
+            "ar": "يحتوي على الفول السوداني"
+          },
+          "soy": {
+            "fr": "Contient du soja",
+            "ar": "يحتوي على الصويا"
+          },
+          "milk": {
+            "fr": "Contient du lait",
+            "ar": "يحتوي على الحليب"
+          },
+          "nuts": {
+            "fr": "Contient des fruits à coque",
+            "ar": "يحتوي على المكسرات"
+          },
+          "celery": {
+            "fr": "Contient du céleri",
+            "ar": "يحتوي على الكرفس"
+          },
+          "mustard": {
+            "fr": "Contient de la moutarde",
+            "ar": "يحتوي على الخردل"
+          },
+          "sesame": {
+            "fr": "Contient du sésame",
+            "ar": "يحتوي على السمسم"
+          },
+          "sulphites": {
+            "fr": "Contient des sulfites",
+            "ar": "يحتوي على الكبريتيت"
+          },
+          "lupin": {
+            "fr": "Contient du lupin",
+            "ar": "يحتوي على الترمس"
+          },
+          "molluscs": {
+            "fr": "Contient des mollusques",
+            "ar": "يحتوي على الرخويات"
+          }
+        }
+      }
+    }
+  },
   "google_review": {
     "id": "M-14",
     "title": {
@@ -41,7 +180,8 @@ export const MODULE_CATALOG = {
         "pattern": "^https://(g\\.page|search\\.google\\.com|(www\\.|maps\\.)?google\\.(com|tn)|maps\\.app\\.goo\\.gl)/[^\\s]*$",
         "description": "The café's own Google review link, from its Google Business Profile (\"Demander des avis\" → copy the link, e.g. https://g.page/r/…/review). Without it the module stays off and the validator warns. Never a page of ours or a form in between: the link goes straight to Google."
       }
-    }
+    },
+    "itemFields": {}
   },
   "loyalty": {
     "id": "M-15",
@@ -129,7 +269,8 @@ export const MODULE_CATALOG = {
         "default": 0,
         "description": "Smallest order total, in millimes, that earns a stamp (0 = every order). Counter stamps are the staff's choice."
       }
-    }
+    },
+    "itemFields": {}
   },
   "whatsapp_handoff": {
     "id": "M-03",
@@ -198,6 +339,7 @@ export const MODULE_CATALOG = {
         "default": "default",
         "description": "Language of the message staff receive: the café's default language, or a fixed one."
       }
-    }
+    },
+    "itemFields": {}
   }
 };

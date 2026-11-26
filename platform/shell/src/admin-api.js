@@ -21,6 +21,7 @@ import { localDayHour, isoNow } from './clock.js';
 import { loadKeys, open } from './crypto.js';
 import { notifyHub } from './cafe-hub.js';
 import { menuSource, publishChange } from './menu-publish.js';
+import { MODULE_CATALOG } from './module-catalog.js';
 import { ulid } from './ids.js';
 import { runStatusChanged, handleStaffModuleRoute, serverModules } from './module-host.js';
 
@@ -264,6 +265,16 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       rev: cafe.menuRev,
       role,
       languages: cafe.config.languages?.enabled ?? ['fr'],
+      // What the café's switched-on modules store per item, for the item's fields (#29).
+      itemFields: Object.fromEntries(
+        Object.entries(MODULE_CATALOG)
+          .filter(
+            ([key, m]) =>
+              Object.keys(m.itemFields ?? {}).length &&
+              cafe.config.modules?.[key]?.enabled === true,
+          )
+          .map(([key, m]) => [key, { title: m.title, fields: m.itemFields }]),
+      ),
     });
   }
 
