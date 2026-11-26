@@ -2,7 +2,7 @@
 
 Numbered **SQL migrations** for the D1 database. They change the shape of the database; they never carry real data.
 
-**Status:** [`0001_init.sql`](0001_init.sql) platform, configuration, menu and analytics tables · `0002` orders, customers, consents, privacy notice · `0003` accounts, sessions, one-time codes · `0004` loyalty cards and ledger · [`0005_ordering_pause.sql`](0005_ordering_pause.sql) pause orders (#29) · [`0006_config_changes.sql`](0006_config_changes.sql) what each configuration version changed, and Admin's decision on a Maintainer's request (#21). · [`0007_menu_versions.sql`](0007_menu_versions.sql) the menu tree of each recent revision, for restore, and who made each menu change (#20).
+**Status:** [`0001_init.sql`](0001_init.sql) platform, configuration, menu and analytics tables · `0002` orders, customers, consents, privacy notice · `0003` accounts, sessions, one-time codes · `0004` loyalty cards and ledger · [`0005_ordering_pause.sql`](0005_ordering_pause.sql) pause orders (#29) · [`0006_config_changes.sql`](0006_config_changes.sql) what each configuration version changed, and Admin's decision on a Maintainer's request (#21). · [`0007_menu_versions.sql`](0007_menu_versions.sql) the menu tree of each recent revision, for restore, and who made each menu change (#20). · [`0008_order_handled_by.sql`](0008_order_handled_by.sql) who last moved an order on, shown on every staff device (#16).
 
 ## What lives here
 

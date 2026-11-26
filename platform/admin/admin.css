@@ -784,3 +784,32 @@ input {
 .a-additem {
   justify-self: start;
 }
+
+/* ---------- Staff screen: live line and waiting orders (#16) ---------- */
+
+.a-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--dm-footnote);
+  color: var(--dm-ink-2);
+  white-space: nowrap;
+}
+
+.a-live::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dm-ink-3, #999);
+}
+
+.a-live.is-on::before {
+  background: #1f8a4c;
+}
+
+.a-waiting {
+  margin: 0;
+  border-inline-start: 4px solid var(--dm-accent);
+  font-weight: 600;
+}
