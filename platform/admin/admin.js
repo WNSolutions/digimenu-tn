@@ -15,9 +15,14 @@ import { visitsView, VISITS_TEXT } from './visits.js';
 import { modulesView, noticeBar, MODULES_TEXT } from './modules.js';
 import { infoView, INFO_TEXT } from './info.js';
 import { menuView } from './menu.js';
+import { connectLive } from './live.js';
 
 const API = '/admin/api';
+/** Without the café hub (or while it reconnects): check every 10 s. With it: every minute. */
 const POLL_MS = 10_000;
+const SAFETY_POLL_MS = 60_000;
+/** While an order waits for someone to take it, the alert repeats this often (#16: ≤ 60 s). */
+const ALERT_MS = 30_000;
 
 /** @type {Record<string, Record<string, string>>} */
 const TEXT = {
@@ -42,8 +47,17 @@ const TEXT = {
     orders: 'Commandes',
     menu: 'Carte',
     signOut: 'Se déconnecter',
-    sound: 'Activer le son',
-    soundOn: 'Son activé',
+    sound: 'Commencer le service',
+    soundOn: 'Service en cours',
+    shiftHelp:
+      'Touchez « Commencer le service » : le son est activé, un essai sonne et l’écran reste allumé.',
+    awakeTip:
+      'Cet appareil ne peut pas rester allumé tout seul : réglez la mise en veille de l’écran sur 30 minutes ou « Jamais » (Réglages › Affichage), et branchez-le.',
+    waiting1: '1 commande attend quelqu’un.',
+    waitingN: '{n} commandes attendent quelqu’un.',
+    by: 'par {n}',
+    live: 'En direct',
+    reconnecting: 'Reconnexion…',
     none: "Pas encore de commande aujourd'hui.",
     table: 'Table {t}',
     takeaway: 'À emporter',
@@ -101,8 +115,16 @@ const TEXT = {
     orders: 'الطلبات',
     menu: 'القائمة',
     signOut: 'خروج',
-    sound: 'تفعيل الصوت',
-    soundOn: 'الصوت مفعّل',
+    sound: 'بدء الخدمة',
+    soundOn: 'الخدمة جارية',
+    shiftHelp: 'اضغط «بدء الخدمة»: يُفعَّل الصوت ويرنّ تنبيه تجريبي وتبقى الشاشة مضاءة.',
+    awakeTip:
+      'هذا الجهاز لا يستطيع إبقاء الشاشة مضاءة وحده: اضبط إطفاء الشاشة على 30 دقيقة أو «أبدًا» (الإعدادات › العرض)، ووصّله بالشاحن.',
+    waiting1: 'طلب واحد ينتظر من يأخذه.',
+    waitingN: '{n} طلبات تنتظر من يأخذها.',
+    by: 'بواسطة {n}',
+    live: 'مباشر',
+    reconnecting: 'إعادة الاتصال…',
     none: 'لا طلبات اليوم بعد.',
     table: 'الطاولة {t}',
     takeaway: 'للأخذ',
@@ -263,6 +285,11 @@ function brandScreen(card) {
 }
 
 function signInView() {
+  // Signed out: no live line, no alert.
+  state.live?.close();
+  state.live = null;
+  state.liveCafe = '';
+  setWaiting(0);
   const username = h('input', {
     class: 'a-input',
     id: 'u',
@@ -407,7 +434,8 @@ function setupView() {
 
 /**
  * @type {{ me: any, cafe: string, view: string, timer: number, known: Set<string>,
- *   audio: AudioContext | null, panels: { key: string, label: string, render: (root: HTMLElement) => void }[],
+ *   audio: AudioContext | null, shift: boolean, awake: boolean | null, waiting: number,
+ *   alert: number, live: import('./live.js').Live | null, liveCafe: string, panels: { key: string, label: string, render: (root: HTMLElement) => void }[],
  *   cards: import('./visits.js').ModuleCard[], notice: HTMLElement | null,
  *   admin: boolean, cafes: { slug: string, name: any, role: string }[] }}
  *   view: 'orders', 'menu', 'team', 'visits', 'modules', 'info', 'account', 'customers' or 'm:<module>';
@@ -420,6 +448,12 @@ const state = {
   timer: 0,
   known: new Set(),
   audio: null,
+  shift: false,
+  awake: null,
+  waiting: 0,
+  alert: 0,
+  live: null,
+  liveCafe: '',
   panels: [],
   cards: [],
   notice: null,
@@ -515,6 +549,95 @@ async function start() {
   }
 }
 
+/**
+ * "Commencer le service" (#16): unlocks sound (browsers need a tap), plays a test sound and
+ * keeps the screen awake where the browser can; elsewhere the screen says how.
+ */
+async function startShift() {
+  state.audio = state.audio ?? new AudioContext();
+  try {
+    await state.audio.resume();
+  } catch {
+    /* sound stays off until the next tap */
+  }
+  beep();
+  state.shift = true;
+  await keepAwake();
+  render();
+}
+
+/** Asks the browser to keep the screen on (released when the page is hidden: asked again). */
+async function keepAwake() {
+  if (!state.shift) return;
+  const nav = /** @type {any} */ (navigator);
+  try {
+    if (nav.wakeLock) {
+      await nav.wakeLock.request('screen');
+      state.awake = true;
+      return;
+    }
+  } catch {
+    /* refused (battery saver) */
+  }
+  state.awake = false;
+}
+
+/** The live line to the café on screen: opened once per café, kept while signed in. */
+function ensureLive() {
+  if (!state.me || !state.cafe) return;
+  if (state.live && state.liveCafe === state.cafe) return;
+  state.live?.close();
+  state.liveCafe = state.cafe;
+  state.live = connectLive(state.cafe, {
+    onEvent: () => {
+      // Something changed at the café: fetch now, on any screen (alerts sound everywhere).
+      if (state.view === 'orders') {
+        clearTimeout(state.timer);
+        const body = document.querySelector('main');
+        if (body) ordersView(/** @type {HTMLElement} */ (body));
+      } else checkWaiting();
+    },
+    onState: () => {
+      const dot = document.querySelector('.a-live');
+      if (dot) drawLive(/** @type {HTMLElement} */ (dot));
+    },
+  });
+}
+
+/** @param {HTMLElement} el */
+function drawLive(el) {
+  const on = Boolean(state.live?.connected());
+  el.textContent = on ? t('live') : t('reconnecting');
+  el.classList.toggle('is-on', on);
+}
+
+/** On another screen: how many orders wait, so the alert keeps sounding. */
+async function checkWaiting() {
+  const res = await api(`/orders?cafe=${encodeURIComponent(state.cafe)}`);
+  if (res.status !== 200) return;
+  const orders = /** @type {any[]} */ (res.data.orders);
+  const fresh = orders.some((o) => !state.known.has(o.id) && state.known.size > 0);
+  for (const o of orders) state.known.add(o.id);
+  setWaiting(orders.filter((o) => WAITING.includes(o.status)).length);
+  if (fresh) beep();
+}
+
+const WAITING = ['received', 'handoff'];
+
+/**
+ * While an order waits for someone to take it, the alert repeats; it stops on every device
+ * as soon as one person takes it (their status reaches the others through the hub).
+ * @param {number} n
+ */
+function setWaiting(n) {
+  state.waiting = n;
+  if (n && !state.alert) state.alert = window.setInterval(() => beep(), ALERT_MS);
+  if (!n && state.alert) {
+    clearInterval(state.alert);
+    state.alert = 0;
+  }
+}
+
 function beep() {
   if (!state.audio) return;
   const o = state.audio.createOscillator();
@@ -546,15 +669,10 @@ function topBar() {
     {
       type: 'button',
       class: 'a-topbtn',
-      'aria-pressed': String(Boolean(state.audio)),
-      onclick: () => {
-        state.audio = state.audio ?? new AudioContext();
-        beep();
-        sound.textContent = t('soundOn');
-        sound.setAttribute('aria-pressed', 'true');
-      },
+      'aria-pressed': String(state.shift),
+      onclick: () => startShift(),
     },
-    state.audio ? t('soundOn') : t('sound'),
+    state.shift ? t('soundOn') : t('sound'),
   );
   const current = state.cafes.find((c) => c.slug === state.cafe);
   const mark = h('span', { class: 'a-mark' });
@@ -665,6 +783,7 @@ async function goCafe(slug, view) {
 
 function render() {
   clearTimeout(state.timer);
+  ensureLive();
   const body = h('main', { class: 'a-wrap a-stack' });
   app.replaceChildren(
     topBar(),
@@ -734,7 +853,29 @@ async function ordersView(body) {
     }
     const firstLoad = state.known.size === 0;
     const bar = pauseBar(res.data.paused, res.data.role, body);
+    const waiting = orders.filter((/** @type {any} */ o) => WAITING.includes(o.status)).length;
+    setWaiting(waiting);
+    const live = h('span', { class: 'a-live', role: 'status' });
+    drawLive(live);
     body.replaceChildren(
+      h(
+        'div',
+        { class: 'a-row a-spread' },
+        state.shift ? h('span') : h('p', { class: 'a-muted' }, t('shiftHelp')),
+        live,
+      ),
+      ...(state.shift && state.awake === false
+        ? [h('p', { class: 'a-card a-paused' }, t('awakeTip'))]
+        : []),
+      ...(waiting
+        ? [
+            h(
+              'p',
+              { class: 'a-card a-waiting', role: 'alert' },
+              waiting === 1 ? t('waiting1') : t('waitingN', { n: String(waiting) }),
+            ),
+          ]
+        : []),
       ...(bar ? [bar] : []),
       ...(orders.length
         ? orders.map((/** @type {any} */ o) => orderCard(o, !firstLoad && !state.known.has(o.id)))
@@ -743,8 +884,12 @@ async function ordersView(body) {
     for (const o of orders) state.known.add(o.id);
     if (fresh) beep();
   }
+  ensureLive();
   if (state.view === 'orders' && !document.hidden)
-    state.timer = window.setTimeout(() => ordersView(body), POLL_MS);
+    state.timer = window.setTimeout(
+      () => ordersView(body),
+      state.live?.connected() ? SAFETY_POLL_MS : POLL_MS,
+    );
 }
 
 /**
@@ -839,6 +984,9 @@ function orderCard(o, isNew) {
           ? h('span', { class: 'a-badge a-badge--wa' }, t('whatsapp'))
           : null,
         h('span', { class: 'a-badge' }, t(`st_${o.status}`)),
+        o.handledBy && !WAITING.includes(o.status)
+          ? h('span', { class: 'a-muted' }, t('by', { n: o.handledBy }))
+          : null,
       ),
     ),
     h(
@@ -877,8 +1025,13 @@ function orderCard(o, isNew) {
   );
 }
 
+// Back from sleep, lock or another app: reconnect, keep the screen on, show what was missed.
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && state.me && state.view === 'orders') render();
+  if (document.hidden || !state.me) return;
+  state.live?.wake();
+  keepAwake();
+  if (state.view === 'orders') render();
+  else checkWaiting();
 });
 
 start().catch(() => signInView());

@@ -19,6 +19,7 @@ import { currentAccount, roleIn, sameOrigin } from './auth.js';
 import { resolveCafe, clearCaches, forgetCafe } from './cafes.js';
 import { localDayHour, isoNow } from './clock.js';
 import { loadKeys, open } from './crypto.js';
+import { notifyHub } from './cafe-hub.js';
 import { menuSource, publishChange } from './menu-publish.js';
 import { ulid } from './ids.js';
 import { runStatusChanged, handleStaffModuleRoute, serverModules } from './module-host.js';
@@ -100,9 +101,10 @@ export async function handleAdmin(request, env, route, now = new Date()) {
     const since = url.searchParams.get('since');
     const rows = (
       await env.DB.prepare(
-        `SELECT id, number, type, channel, status, table_label, lines, note, total, contact_ct, lang, created_at, accepted_at, closed_at, reject_reason
-           FROM orders WHERE cafe_id = ?1 AND day = ?2 ${role === 'maintainer' ? 'AND is_test = 1' : ''} ${since ? 'AND (created_at > ?3 OR accepted_at > ?3 OR closed_at > ?3)' : ''}
-          ORDER BY created_at DESC LIMIT 200`,
+        `SELECT o.id, o.number, o.type, o.channel, o.status, o.table_label, o.lines, o.note, o.total, o.contact_ct, o.lang, o.created_at, o.accepted_at, o.closed_at, o.reject_reason, u.display_name AS handled_by
+           FROM orders o LEFT JOIN users u ON u.id = o.handled_by
+          WHERE o.cafe_id = ?1 AND o.day = ?2 ${role === 'maintainer' ? 'AND o.is_test = 1' : ''} ${since ? 'AND (o.created_at > ?3 OR o.accepted_at > ?3 OR o.closed_at > ?3)' : ''}
+          ORDER BY o.created_at DESC LIMIT 200`,
       )
         .bind(...(since ? [cafe.id, day, since] : [cafe.id, day]))
         .all()
@@ -137,6 +139,8 @@ export async function handleAdmin(request, env, route, now = new Date()) {
         contact,
         createdAt: r.created_at,
         rejectReason: r.reject_reason,
+        // Staff first names only ("Acceptée par Sami"), on every device (#16).
+        handledBy: r.handled_by === null ? null : String(r.handled_by),
       });
     }
     const pause = await env.DB.prepare('SELECT ordering_paused_at FROM cafes WHERE id = ?1')
@@ -169,10 +173,11 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       `UPDATE orders SET status = ?1,
               accepted_at = CASE WHEN ?1 = 'accepted' THEN ?2 ELSE accepted_at END,
               closed_at = CASE WHEN ?1 IN ('served', 'rejected', 'unconfirmed') THEN ?2 ELSE closed_at END,
-              reject_reason = COALESCE(?3, reject_reason)
+              reject_reason = COALESCE(?3, reject_reason),
+              handled_by = ?7
         WHERE id = ?4 AND cafe_id = ?5 AND status = ?6`,
     )
-      .bind(next, at, reason, id, cafe.id, String(row.status))
+      .bind(next, at, reason, id, cafe.id, String(row.status), account.id)
       .run();
     // Only the tap that changed the status runs the modules' hooks (a double tap adds nothing).
     if (Number(done?.meta?.changes ?? 1) === 1) {
@@ -192,6 +197,8 @@ export async function handleAdmin(request, env, route, now = new Date()) {
         now,
       );
     }
+    // The other devices stop alerting and show who took it (#16).
+    await notifyHub(env, cafe.id, { type: 'status', id, status: next, by: account.displayName });
     return json(200, { id, status: next });
   }
 
@@ -218,6 +225,7 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       ),
     ]);
     forgetCafe(cafe.slug);
+    await notifyHub(env, cafe.id, { type: 'pause', paused });
     return json(200, { paused: paused ? isoNow(now) : null });
   }
 

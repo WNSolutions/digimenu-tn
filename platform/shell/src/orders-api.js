@@ -18,6 +18,7 @@ import { normalizePhone } from '../../../core/phone.js';
 import { indexSnapshot, isOrderable } from '../../../core/menu/snapshot.js';
 import { lineTotal, sum } from '../../../core/money.js';
 import { cleanNote, NOTE_MAX } from '../../../core/list.js';
+import { notifyHub } from './cafe-hub.js';
 import { openStatus } from '../../../core/hours.js';
 import { runAfterStore } from './module-host.js';
 
@@ -285,6 +286,8 @@ export async function handleCreateOrder(request, env, now = new Date()) {
     table: tableLabel,
     customerId: customer ? String(customer.id) : null,
   };
+  // Every staff device of the café hears about it at once (café hub; never fails the order).
+  await notifyHub(env, cafe.id, { type: 'order', id: orderId, number });
   return json(201, await withModules(env, cafe, stored, body, true, now));
 }
 

@@ -302,7 +302,7 @@ These design assumptions were tested on a Worker on Cloudflare's free plan, 23 a
 |---|---|---|
 | `/<café>/t/<table>` can be served as **one static file** without running the Worker | menus must keep working when the request quota runs out | **Confirmed**: `assets.not_found_handling = "single-page-application"` serves `index.html` to browsers; 0 Worker runs seen |
 | PBKDF2 at ≈ 30,000–40,000 iterations fits p99 ≤ 7 ms of CPU | password sign-in within the 10 ms free CPU limit | **Failed**: only 20,000 fit (about 0.2 ms per 1,000 iterations) → browser-side stretching at 600,000 + server pepper, D-053 ([ADR-0006](../adr/0006-accounts-passwords-and-roles.md)) |
-| Durable Object WebSocket hibernation on the free plan | staff screen without polling | **Confirmed**: two sockets kept, pushes delivered before and after hibernation |
+| Durable Object WebSocket hibernation on the free plan | staff screen without polling | **Confirmed**: two sockets kept, pushes delivered before and after hibernation. **Built (#16):** `platform/shell/src/cafe-hub.js`, binding `CAFE_HUB` in `platform/wrangler.template.jsonc` |
 | AES-GCM field encryption costs ≤ 50 µs per record | encrypted customer fields | **Confirmed**: about 8 µs per record |
 | A 150-line menu renders at the edge within the 10 ms CPU limit | server render when needed | **Confirmed**: about 1–4 ms |
 

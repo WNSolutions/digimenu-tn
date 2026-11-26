@@ -35,6 +35,14 @@
     },
   ],
 
+  // The café hub (issue #16): one Durable Object per café keeps the staff devices connected
+  // over hibernating WebSockets and pushes them new orders. SQLite-backed, as the free plan
+  // requires (spike 0005).
+  "durable_objects": {
+    "bindings": [{ "name": "CAFE_HUB", "class_name": "CafeHub" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["CafeHub"] }],
+
   "observability": { "enabled": true },
 
   // Nightly jobs at 02:43 UTC (03:43 in Tunis): the retention rule, D-067.

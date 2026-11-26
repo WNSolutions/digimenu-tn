@@ -14,6 +14,10 @@ import { handleVisits } from './visits-api.js';
 import { handleModules } from './modules-api.js';
 import { handleInfo } from './info-api.js';
 import { handleMenu } from './menu-api.js';
+import { liveRoute } from './cafe-hub.js';
+
+// The café hub is a Durable Object class: the runtime finds it among the Worker's exports.
+export { CafeHub } from './cafe-hub.js';
 import { handleModuleRoute } from './module-host.js';
 import { resolveCafe } from './cafes.js';
 import { runRetention } from './retention.js';
@@ -91,6 +95,8 @@ export default {
           return await handleInfo(request, env, route);
         if (route === 'menu/edit' || route === 'menu/versions' || route === 'menu/restore')
           return await handleMenu(request, env, route);
+        if (route === 'live' || route === 'live/presence')
+          return await liveRoute(request, env, route);
         return await handleAdmin(request, env, route);
       }
       return env.ASSETS.fetch(request);
