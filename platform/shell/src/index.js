@@ -13,6 +13,7 @@ import { handleTeam } from './team-api.js';
 import { handleVisits } from './visits-api.js';
 import { handleModules } from './modules-api.js';
 import { handleInfo } from './info-api.js';
+import { handleMenu } from './menu-api.js';
 import { handleModuleRoute } from './module-host.js';
 import { resolveCafe } from './cafes.js';
 import { runRetention } from './retention.js';
@@ -88,6 +89,8 @@ export default {
           return await handleModules(request, env, route);
         if (route === 'info' || route === 'info/restore')
           return await handleInfo(request, env, route);
+        if (route === 'menu/edit' || route === 'menu/versions' || route === 'menu/restore')
+          return await handleMenu(request, env, route);
         return await handleAdmin(request, env, route);
       }
       return env.ASSETS.fetch(request);

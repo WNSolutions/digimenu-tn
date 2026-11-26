@@ -249,7 +249,12 @@ export async function handleAdmin(request, env, route, now = new Date()) {
   }
 
   if (route === 'menu' && !write) {
-    return json(200, { menu: await menuSource(env.DB, cafe.id), rev: cafe.menuRev, role });
+    return json(200, {
+      menu: await menuSource(env.DB, cafe.id),
+      rev: cafe.menuRev,
+      role,
+      languages: cafe.config.languages?.enabled ?? ['fr'],
+    });
   }
 
   if ((route === 'menu/variant' || route === 'menu/item') && write) {
@@ -304,6 +309,7 @@ export async function handleAdmin(request, env, route, now = new Date()) {
       writes,
       changes,
       actorRole: role,
+      actor: account.id,
       now,
     });
     await env.DB.prepare(

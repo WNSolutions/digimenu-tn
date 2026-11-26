@@ -5,7 +5,7 @@
  * switched-on module that has a staff panel (staff.panel, e.g. Fidélité).
  * Plain DOM, text set with textContent only.
  */
-import { parsePrice, formatPrice } from '../../core/money.js';
+import { formatPrice } from '../../core/money.js';
 import { STAFF_MODULES } from './staff-modules.js';
 import { staffTexts } from './staff-api.js';
 import { scanQr } from './scanner.js';
@@ -14,6 +14,7 @@ import { teamView, accountView, TEAM_TEXT } from './team.js';
 import { visitsView, VISITS_TEXT } from './visits.js';
 import { modulesView, noticeBar, MODULES_TEXT } from './modules.js';
 import { infoView, INFO_TEXT } from './info.js';
+import { menuView } from './menu.js';
 
 const API = '/admin/api';
 const POLL_MS = 10_000;
@@ -61,11 +62,7 @@ const TEXT = {
     st_rejected: 'Refusée',
     st_unconfirmed: 'Pas reçue',
     total: 'Total',
-    available: 'Disponible',
     save: 'Enregistrer',
-    saved: 'Enregistré',
-    priceAsk: '« {v} » : {a} ou {b} ?',
-    priceBad: 'Prix non valable.',
     offline: 'Connexion perdue. Nouvel essai…',
     noAccess: "Ce compte n'a accès à aucun café.",
     cafe: 'Café',
@@ -124,11 +121,7 @@ const TEXT = {
     st_rejected: 'مرفوضة',
     st_unconfirmed: 'لم تصل',
     total: 'المجموع',
-    available: 'متوفر',
     save: 'حفظ',
-    saved: 'حُفظ',
-    priceAsk: '«{v}»: {a} أو {b}؟',
-    priceBad: 'سعر غير صالح.',
     offline: 'انقطع الاتصال. إعادة المحاولة…',
     noAccess: 'هذا الحساب لا يصل إلى أي مقهى.',
     cafe: 'المقهى',
@@ -689,7 +682,7 @@ function render() {
     signedOut: signInView,
   };
   if (state.view === 'orders') ordersView(body);
-  else if (state.view === 'menu') menuView(body);
+  else if (state.view === 'menu') menuView(body, teamDeps);
   else if (state.view === 'account') accountView(body, teamDeps);
   else if (state.view === 'visits' && ['manager', 'maintainer', 'admin'].includes(cafeRole())) {
     visitsView(body, { ...teamDeps, admin: state.admin, cards: state.cards });
@@ -882,121 +875,6 @@ function orderCard(o, isNew) {
       h('div', { class: 'a-row' }, ...(actions[o.status] ?? [])),
     ),
   );
-}
-
-/** @param {HTMLElement} body */
-async function menuView(body) {
-  const res = await api(`/menu?cafe=${encodeURIComponent(state.cafe)}`);
-  if (res.status === 401) return signInView();
-  if (res.status !== 200) return body.replaceChildren(h('p', { class: 'a-error' }, t('error')));
-  const canPrice = ['manager', 'admin'].includes(res.data.role);
-  const nodes = [];
-  for (const c of res.data.menu.categories) {
-    nodes.push(h('h2', { class: 'a-cat' }, pick(c.title)));
-    for (const g of c.groups) {
-      for (const it of g.items) {
-        const item = h('div', { class: 'a-item' });
-        const itemAvail = h('input', { type: 'checkbox', checked: it.available });
-        itemAvail.addEventListener('change', () =>
-          save(
-            '/menu/item',
-            { id: it.id, available: /** @type {HTMLInputElement} */ (itemAvail).checked },
-            item,
-          ),
-        );
-        item.append(
-          h(
-            'div',
-            { class: 'a-row a-spread' },
-            h('strong', null, pick(it.name)),
-            h('label', { class: 'a-switch' }, itemAvail, t('available')),
-          ),
-        );
-        for (const v of it.variants) {
-          const price = h('input', {
-            class: 'a-input a-input--price',
-            inputmode: 'decimal',
-            value: formatPrice(v.price).replace(/\s?DT$/, ''),
-            disabled: !canPrice,
-            'aria-label': `${pick(it.name)} ${pick(v.name)}`,
-          });
-          const avail = h('input', { type: 'checkbox', checked: v.available });
-          const note = h('span', { class: 'a-muted', role: 'status' });
-          avail.addEventListener('change', () =>
-            save(
-              '/menu/variant',
-              { id: v.id, available: /** @type {HTMLInputElement} */ (avail).checked },
-              note,
-            ),
-          );
-          const saveBtn = h(
-            'button',
-            {
-              type: 'button',
-              class: 'a-btn',
-              hidden: !canPrice,
-              onclick: () => savePrice(v.id, /** @type {HTMLInputElement} */ (price).value, note),
-            },
-            t('save'),
-          );
-          item.append(
-            h(
-              'div',
-              { class: 'a-variant' },
-              h('span', { class: 'a-variant-name' }, pick(v.name)),
-              price,
-              saveBtn,
-              h('label', { class: 'a-switch' }, avail, t('available')),
-              note,
-            ),
-          );
-        }
-        nodes.push(item);
-      }
-    }
-  }
-  body.replaceChildren(...nodes);
-}
-
-/** @param {string} id @param {string} text @param {HTMLElement} note */
-async function savePrice(id, text, note) {
-  const parsed = parsePrice(text);
-  if (parsed.ok) return save('/menu/variant', { id, price: parsed.millimes }, note);
-  if (parsed.reason === 'ambiguous' && parsed.choices) {
-    // A whole number such as 4500: ask which one (D-045).
-    const [a, b] = parsed.choices;
-    note.replaceChildren(
-      t('priceAsk', { v: text, a: formatPrice(a), b: formatPrice(b) }),
-      ' ',
-      h(
-        'button',
-        {
-          type: 'button',
-          class: 'a-btn',
-          onclick: () => save('/menu/variant', { id, price: a }, note),
-        },
-        formatPrice(a),
-      ),
-      h(
-        'button',
-        {
-          type: 'button',
-          class: 'a-btn',
-          onclick: () => save('/menu/variant', { id, price: b }, note),
-        },
-        formatPrice(b),
-      ),
-    );
-    return;
-  }
-  note.textContent = t('priceBad');
-}
-
-/** @param {string} path @param {any} body @param {HTMLElement} note */
-async function save(path, body, note) {
-  const res = await api(path, { cafe: state.cafe, ...body });
-  if (res.status === 401) return signInView();
-  note.textContent = res.status === 200 ? t('saved') : t('error');
 }
 
 document.addEventListener('visibilitychange', () => {
