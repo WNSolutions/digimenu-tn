@@ -839,3 +839,17 @@ input {
   border-inline-start: 4px solid var(--dm-accent);
   font-weight: 600;
 }
+
+/* Admin's overview (#28): alerts first, then the café's facts as plain lines. */
+.a-alerts,
+.a-facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.a-facts {
+  gap: 4px;
+  color: var(--dm-ink-2);
+  font-size: 0.9375rem;
+}

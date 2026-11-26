@@ -13,6 +13,7 @@ import { customersView, CUSTOMER_TEXT } from './customers.js';
 import { teamView, accountView, TEAM_TEXT } from './team.js';
 import { visitsView, VISITS_TEXT } from './visits.js';
 import { salesView, SALES_TEXT } from './sales.js';
+import { overviewView, OVERVIEW_TEXT } from './overview.js';
 import { modulesView, noticeBar, MODULES_TEXT } from './modules.js';
 import { infoView, INFO_TEXT } from './info.js';
 import { menuView } from './menu.js';
@@ -439,7 +440,7 @@ function setupView() {
  *   alert: number, live: import('./live.js').Live | null, liveCafe: string, panels: { key: string, label: string, render: (root: HTMLElement) => void }[],
  *   cards: import('./visits.js').ModuleCard[], notice: HTMLElement | null,
  *   admin: boolean, cafes: { slug: string, name: any, role: string }[] }}
- *   view: 'orders', 'menu', 'team', 'visits', 'sales', 'modules', 'info', 'account', 'customers' or 'm:<module>';
+ *   view: 'orders', 'menu', 'team', 'overview' (Admin), 'visits', 'sales', 'modules', 'info', 'account', 'customers' or 'm:<module>';
  *   cards: the switched-on modules' cards on "Visites"
  */
 const state = {
@@ -724,6 +725,7 @@ function topBar() {
     h(
       'nav',
       { class: 'a-wrap a-tabs', 'aria-label': t('tabs') },
+      state.admin ? tab('overview', OVERVIEW_TEXT[/** @type {'fr' | 'ar'} */ (lang)].tab) : null,
       tab('orders', t('orders')),
       tab('menu', t('menu')),
       ...state.panels.map((p) => tab(`m:${p.key}`, p.label)),
@@ -779,6 +781,7 @@ async function goCafe(slug, view) {
   if (
     (state.view.startsWith('m:') && !state.panels.some((p) => `m:${p.key}` === state.view)) ||
     (['team', 'sales'].includes(state.view) && !['manager', 'admin'].includes(cafeRole())) ||
+    (state.view === 'overview' && !state.admin) ||
     (['visits', 'modules', 'info'].includes(state.view) && !manage)
   )
     state.view = 'orders';
@@ -809,6 +812,14 @@ function render() {
   else if (state.view === 'account') accountView(body, teamDeps);
   else if (state.view === 'visits' && ['manager', 'maintainer', 'admin'].includes(cafeRole())) {
     visitsView(body, { ...teamDeps, admin: state.admin, cards: state.cards });
+  } else if (state.view === 'overview' && state.admin) {
+    overviewView(body, {
+      h,
+      lang: /** @type {'fr' | 'ar'} */ (lang),
+      api,
+      openCafe: (slug) => goCafe(slug, 'orders'),
+      signedOut: signInView,
+    });
   } else if (state.view === 'sales' && ['manager', 'admin'].includes(cafeRole())) {
     salesView(body, { ...teamDeps, admin: state.admin, price: formatPrice });
   } else if (state.view === 'team' && ['manager', 'admin'].includes(cafeRole())) {
