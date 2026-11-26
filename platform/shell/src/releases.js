@@ -46,8 +46,15 @@ export async function releaseManifest(assets, version, origin) {
   const response = await assets.fetch(new Request(new URL(`/r/${version}/manifest.json`, origin)));
   if (!response.ok) return null;
   /** @type {ReleaseManifest} */
-  const manifest = await response.json();
-  if (manifest.platformApi !== PLATFORM_API) return null;
+  let manifest;
+  try {
+    manifest = await response.json();
+  } catch {
+    // Not a manifest: the asset layer answers a missing file with the boot page (single-page
+    // application mode), so a release that is not on the site comes back as HTML.
+    return null;
+  }
+  if (manifest?.version !== version || manifest.platformApi !== PLATFORM_API) return null;
   manifests.set(version, manifest);
   return manifest;
 }
