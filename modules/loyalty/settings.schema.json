@@ -6,6 +6,11 @@
   "additionalProperties": false,
   "properties": {
     "stampsNeeded": {
+      "x-labels": { "fr": "Tampons pour une récompense", "ar": "عدد الأختام لمكافأة" },
+      "x-help": {
+        "fr": "Un changement compte pour les nouveaux tampons ; ceux déjà donnés restent.",
+        "ar": "التغيير يخص الأختام الجديدة فقط؛ الأختام السابقة تبقى."
+      },
       "type": "integer",
       "minimum": 2,
       "maximum": 50,
@@ -13,6 +18,11 @@
       "description": "Stamps needed for one reward (\"10 commandes = 1 café offert\"). A change applies to new stamps only: stamps already given stay."
     },
     "reward": {
+      "x-labels": { "fr": "Récompense", "ar": "المكافأة" },
+      "x-help": {
+        "fr": "Telle que les clients la lisent, par exemple « 1 café offert ».",
+        "ar": "كما يقرؤها الحرفاء، مثلًا «قهوة مجانية»."
+      },
       "type": "object",
       "additionalProperties": false,
       "required": ["fr"],
@@ -24,6 +34,9 @@
       }
     },
     "minOrderTotal": {
+      "x-labels": { "fr": "Commande minimum pour un tampon", "ar": "أدنى مبلغ طلب لختم" },
+      "x-help": { "fr": "En DT ; 0 = chaque commande.", "ar": "بالدينار؛ 0 = كل طلب." },
+      "x-format": "money",
       "type": "integer",
       "minimum": 0,
       "maximum": 1000000,

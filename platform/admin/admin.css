@@ -683,3 +683,63 @@ input {
 .a-noticewrap {
   padding-top: 16px;
 }
+
+/* ---------- Café information (#20) ---------- */
+
+.a-help {
+  margin: 0;
+  font-size: var(--dm-footnote);
+}
+
+.a-subtitle {
+  margin: 8px 0 0;
+  font-size: var(--dm-body);
+  font-weight: 700;
+}
+
+.a-day {
+  padding-block: 8px;
+  border-top: 1px solid var(--dm-sep);
+}
+
+.a-span {
+  flex-wrap: wrap;
+}
+
+.a-time {
+  width: 7.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.a-colour {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--dm-sep);
+  border-radius: var(--dm-radius-m);
+  background: none;
+}
+
+.a-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--dm-sep);
+  border-radius: var(--dm-radius-m);
+  background: var(--dm-bg);
+}
+
+.a-sample {
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--dm-radius-full);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.a-sample-link {
+  font-weight: 600;
+}

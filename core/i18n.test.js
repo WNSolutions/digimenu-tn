@@ -16,8 +16,10 @@ import {
 /** @param {string} lang @returns {Record<string, string>} */
 const load = (lang) => ({
   ...JSON.parse(readFileSync(new URL(`./i18n/${lang}.json`, import.meta.url), 'utf8')),
-  // "Ma commande" keeps its texts in its own files, loaded with it (core/app/order-track.js).
+  // Parts that load on their own keep their texts in their own folders, loaded with them:
+  // "Ma commande" (core/app/order-track.js) and the café's Info sheet (core/app/info-sheet.js).
   ...JSON.parse(readFileSync(new URL(`./i18n/order/${lang}.json`, import.meta.url), 'utf8')),
+  ...JSON.parse(readFileSync(new URL(`./i18n/info/${lang}.json`, import.meta.url), 'utf8')),
 });
 const texts = Object.fromEntries(LANGS.map((l) => [l, load(l)]));
 

@@ -1800,3 +1800,22 @@ a.dm-prominent {
   color: var(--dm-ink-2);
   font-size: var(--dm-footnote);
 }
+
+/* ---------- Info sheet: map, phone and social links (#20) ---------- */
+
+.dm-info-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--dm-accent-text);
+  font-weight: 600;
+}
+
+.dm-info-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--dm-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

@@ -108,6 +108,9 @@ export function renderCatalog() {
   const catalog = {};
   for (const key of keys) {
     const m = JSON.parse(readFileSync(path.join(dir, key, 'module.json'), 'utf8'));
+    const schemaFile = m.settings?.schema ? path.join(dir, key, m.settings.schema) : null;
+    const schema =
+      schemaFile && existsSync(schemaFile) ? JSON.parse(readFileSync(schemaFile, 'utf8')) : {};
     catalog[key] = {
       id: m.id,
       title: m.title,
@@ -121,6 +124,8 @@ export function renderCatalog() {
       paid: m.externalService?.paid === true,
       client: existsSync(path.join(dir, key, 'client.js')),
       customerRecords: m.customerRecords?.access ?? 'none',
+      // The settings a Manager may fill in, for the form in "Infos du café" (#20).
+      settings: schema.properties ?? {},
     };
   }
   return [

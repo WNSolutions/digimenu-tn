@@ -2,7 +2,7 @@
 
 **Interface texts of the core**, one file per language: `fr.json`, `ar.json`, `en.json`. Texts live outside the code, so adding or correcting a language never touches code (MOD-17).
 
-A part of the page that loads on its own keeps its texts in its own folder, loaded with it: `order/` holds the texts of **Ma commande** (`core/app/order-track.js`), which loads only once the phone has sent an order.
+A part of the page that loads on its own keeps its texts in its own folder, loaded with it: `order/` holds the texts of **Ma commande** (`core/app/order-track.js`), which loads only once the phone has sent an order; `info/` those of the café's **Info** sheet (`core/app/info-sheet.js`), which loads when the customer opens it.
 
 **Status:** In progress — [`fr.json`](fr.json), [`ar.json`](ar.json) and [`en.json`](en.json) hold the customer page texts (Sprint 1). The Arabic texts still need a review by a native speaker.
 

@@ -25,7 +25,7 @@ export const TEXTS = { fr, ar, en };
  * @property {{ slug: string, name: LocalizedText, logo?: string,
  *   languages: { enabled: Lang[], default: Lang },
  *   hours?: import('../hours.js').Hours, timeZone?: string,
- *   info?: { address?: LocalizedText },
+ *   info?: { address?: LocalizedText, mapUrl?: string, phone?: string, social?: string[] },
  *   unavailable: 'grey' | 'hide', maxQtyPerLine: number, listMaxAgeHours?: number,
  *   accent?: Record<string, string>, prices?: 'full' | 'short',
  *   theme?: { dark: boolean, font?: string, cover?: string, logo?: 'plate' | 'bare' } }} cafe
