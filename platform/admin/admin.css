@@ -743,3 +743,44 @@ input {
 .a-sample-link {
   font-weight: 600;
 }
+
+/* ---------- Menu editor (#20) ---------- */
+
+.a-cathead {
+  margin-top: 8px;
+}
+
+.a-cathead .a-cat,
+.a-grouphead .a-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.a-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--dm-sep);
+  border-radius: var(--dm-radius-m);
+  background: var(--dm-bg);
+}
+
+.a-panel[hidden] {
+  display: none;
+}
+
+.a-variantedit {
+  padding-top: 12px;
+  border-top: 1px solid var(--dm-sep);
+}
+
+.a-price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.a-additem {
+  justify-self: start;
+}

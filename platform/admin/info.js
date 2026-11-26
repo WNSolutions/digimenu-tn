@@ -563,7 +563,11 @@ export function infoView(body, d) {
       settingReaders.push(() => {
         const raw = one.el.value.trim();
         if (!raw) return [m.key, name, ''];
-        if (money) return [m.key, name, parsePrice(raw) ?? raw];
+        if (money) {
+          // An amount in DT; "4500" is ambiguous here too, so it is refused rather than guessed.
+          const parsed = parsePrice(raw);
+          return [m.key, name, parsed.ok ? parsed.millimes : raw];
+        }
         if (numeric) return [m.key, name, Number(raw.replace(',', '.'))];
         return [m.key, name, raw];
       });

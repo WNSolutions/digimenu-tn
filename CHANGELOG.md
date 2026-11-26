@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Menu editor (#20, part 2: US-27, US-06, C-08): in the staff app's **Carte** tab a Manager (or Maintainer, Admin) adds, edits, moves, hides and deletes categories, sub-groups, items and variants, in each of the café's languages, with prices ("4500" asks "4,500 DT or 4 500,000 DT?", D-045). Staff still only mark items and variants sold out. A category or sub-group is deleted only when empty, and an item keeps at least one price. Every change is a revision with one line per field: what, before, after, account and role. The **Versions** card lists them and restores an earlier menu in one tap ("Annuler le dernier changement", "Revenir à cette version"), sold-out and hidden entries included; the restore is itself a revision that can be undone. The tree of the last 50 revisions per café is kept (migration `0007_menu_versions.sql`). `POST /admin/api/menu/edit`, `GET /admin/api/menu/versions`, `POST /admin/api/menu/restore`.
+
 - Café information editor (#20, part 1: US-28, C-06, C-07, C-08, ADR-0012): the staff app's **Infos** tab (Manager, Maintainer, Admin; not Staff) edits the address in the café's languages, the map link, the business phone (typed as people type it, stored as +216…), up to 6 social links, opening hours per day (up to 3 spans, after midnight allowed), the brand colour and an optional button colour with a live preview, and the modules' settings from their schemas (e.g. the Google review link, the WhatsApp number, the loyalty reward). A colour too light for buttons is refused with a deeper shade to use, one tap away. Every save is a configuration version with who, when and which fields changed; "Annuler le dernier changement" and "Revenir à cette version" restore earlier information without touching module switches. `GET/POST /admin/api/info`, `POST /admin/api/info/restore`.
 - Customer **Info** sheet: address with "Voir sur la carte", hours per day, the phone to call with one tap and the café's social links, FR/AR/EN. It loads as its own file on the first tap (1.4 KB gzipped); the core went down to 19.6 KB.
 
@@ -72,5 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `npm run demo` builds again with café themes (the theme font is served by the release site), and measures the core exactly as a release ships it (#26).
+- Café information editor: an amount setting typed in DT (the loyalty minimum) was sent as an object; it now sends the amount, and an ambiguous "4500" is refused rather than guessed (#20).
 
 [Unreleased]: https://github.com/WNSolutions/digimenu-tn/commits/main
