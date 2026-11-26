@@ -95,7 +95,7 @@ version (D-021).
 
 | Problem                                    | What to do                                                                                                                         | Who                              | Time     |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------- |
-| New release misbehaves at one café         | Admin app → Café → Release → "Back to previous release". Fallback: `pin-cafe.yml` in the deploy repo                             | trained youth (Maintainer role)  | 2–5 min  |
+| New release misbehaves at one café         | Staff app → café → **Modules** → **Version de ce café** → **Revenir à la version précédente** ([step by step](rollback.md)). Fallback: `pin-cafe.yml` in the deploy repo | trained youth (Maintainer role)  | 2–5 min  |
 | One module fails (for example ordering)    | Kill switch: staff app → café → **Modules** → **Désactiver** → tap again to confirm. Live at once; every phone within a minute. The café falls back to "show to waiter". Admin sees it on next opening | trained youth (Maintainer role)  | ≤ 2 min  |
 | The platform deploy breaks every café      | Cloudflare dashboard → Workers → `digimenu` → Deployments → previous version → Rollback                                           | Ahmed / Tech Lead (youth with the guide) | ≤ 5 min |
 | Wrong menu change                          | Undo, or restore a menu revision in the admin app                                                                                  | owner, youth                     | ≤ 1 min  |

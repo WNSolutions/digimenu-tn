@@ -10,7 +10,10 @@
  * - Manager: sees the switches and the history; asks Admin.
  *
  * Switching off asks a second tap on the same button (no browser dialog).
+ *
+ * On top, the café's version and the way back to the previous one (release.js, #24).
  */
+import { releaseCard } from './release.js';
 
 /** @type {Record<'fr' | 'ar', Record<string, string>>} */
 export const MODULES_TEXT = {
@@ -178,6 +181,7 @@ export function modulesView(body, d) {
   };
   /** @type {Record<string, any>} */
   let byKey = {};
+  const release = releaseCard({ ...d, names: (keys) => names(keys, byKey, lang) });
 
   /** @param {{ status: number, data: any }} res */
   function failed(res) {
@@ -388,10 +392,19 @@ export function modulesView(body, d) {
     list.replaceChildren(...v.modules.map((/** @type {any} */ m) => card(m, v)));
     drawHistory(v.history);
     manager.hidden = v.role !== 'manager';
+    // After the modules: switching one off can make another release possible.
+    await release.load();
   }
 
   const manager = h('p', { class: 'a-card a-paused', hidden: true }, t('managerNote'));
-  body.replaceChildren(h('p', { class: 'a-muted' }, t('intro')), manager, message, list, history);
+  body.replaceChildren(
+    release.el,
+    h('p', { class: 'a-muted' }, t('intro')),
+    manager,
+    message,
+    list,
+    history,
+  );
   load();
 }
 

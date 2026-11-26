@@ -51,7 +51,7 @@ export async function handleCafeList(request, env, now = new Date()) {
   const admin = account.roles.some((r) => r.role === 'admin');
   const rows = (
     await env.DB.prepare(
-      `SELECT c.id, c.slug, c.status, v.body FROM cafes c
+      `SELECT c.id, c.slug, c.status, c.pinned_release, v.body FROM cafes c
          JOIN config_versions v ON v.cafe_id = c.id AND v.version_no = c.active_config_version
         WHERE c.status != 'closed' ORDER BY c.slug`,
     ).all()
@@ -63,6 +63,8 @@ export async function handleCafeList(request, env, now = new Date()) {
       status: String(r.status),
       name: JSON.parse(String(r.body)).names ?? null,
       role: roleIn(account, String(r.id)),
+      // The release each café runs (#24): for the café picker and the admin overview (#28).
+      release: String(r.pinned_release),
     }));
   return json(200, { cafes, admin });
 }

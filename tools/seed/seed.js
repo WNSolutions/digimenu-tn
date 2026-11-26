@@ -8,7 +8,9 @@
  *   node tools/seed/seed.js --cafe cafes/demo --release 0.1.0 [--replace] [--out seed.sql]
  *
  * `--replace` first removes the café's menu, tables and configuration (never its orders,
- * customers or counters). Use it on preview, or to re-import a café that is not live yet.
+ * customers, counters or release history). Use it on preview, or to re-import a café that is
+ * not live yet. When it moves the café to another release, the move is kept in `release_pins`
+ * ("seed"), so the previous release stays one tap away for a rollback (#24).
  * The SQL holds no personal data: cafés' folders never do.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -87,7 +89,6 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
       'menu_snapshots',
       'menu_changes',
       'tables',
-      'release_pins',
     ]) {
       lines.push(`DELETE FROM ${t} WHERE cafe_id = ${sql(cafeId)};`);
     }
@@ -95,6 +96,9 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
 
   lines.push(
     `INSERT INTO releases (version, status, platform_api, data_schema_min, data_schema_max, added_at) VALUES (${sql(release)}, 'stable', 1, 1, 1, ${sql(now)}) ON CONFLICT (version) DO NOTHING;`,
+    // An existing café moved to another release: the move is history (before the café row
+    // changes, so the release it ran before is known).
+    `INSERT OR IGNORE INTO release_pins (id, cafe_id, release, previous_release, pinned_by, reason, config_version, pinned_at) SELECT ${sql(`pin-${info.slug}-${now}`)}, id, ${sql(release)}, pinned_release, 'seed', 'seed', 1, ${sql(now)} FROM cafes WHERE id = ${sql(cafeId)} AND pinned_release != ${sql(release)};`,
     insert('cafes', {
       id: cafeId,
       slug: info.slug,
@@ -117,16 +121,7 @@ export function seedSql({ dir, release, replace = false, now = new Date().toISOS
       created_by: 'seed',
       created_at: now,
     }),
-    insert('release_pins', {
-      id: `pin-${info.slug}-1`,
-      cafe_id: cafeId,
-      release,
-      previous_release: null,
-      pinned_by: 'seed',
-      reason: 'first seed',
-      config_version: 1,
-      pinned_at: now,
-    }),
+    `INSERT INTO release_pins (id, cafe_id, release, previous_release, pinned_by, reason, config_version, pinned_at) SELECT ${sql(`pin-${info.slug}-1`)}, ${sql(cafeId)}, ${sql(release)}, NULL, 'seed', 'first seed', 1, ${sql(now)} WHERE NOT EXISTS (SELECT 1 FROM release_pins WHERE cafe_id = ${sql(cafeId)});`,
   );
 
   const rows = parseCsv(tablesCsv);
